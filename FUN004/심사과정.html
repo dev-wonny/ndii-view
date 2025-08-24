@@ -1,0 +1,4596 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>식약처 민원 시스템 - 와이어프레임</title>
+  <style>
+    :root{
+      --bg:#f7f8fa; --card:#ffffff; --line:#e5e7eb; --text:#111827; --muted:#6b7280; --primary:#2563eb; --danger:#dc2626; --ok:#059669; --warn:#d97706;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;color:var(--text);background:var(--bg)}
+    header{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:12px;align-items:center}
+    header h1{font-size:18px;margin:0 12px 0 0}
+    header select, header button{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+    .container{padding:16px;max-width:1400px;margin:0 auto}
+    .hidden{display:none !important}
+    .row{display:grid;gap:12px}
+    .row.two{grid-template-columns:1fr 1fr}
+    .row.three{grid-template-columns:280px 1fr 280px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+    .card h3{margin:0 0 8px 0;font-size:16px}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+    .toolbar input,.toolbar select,.toolbar button{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+    table{width:100%;border-collapse:separate;border-spacing:0}
+    th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}
+    th{color:var(--muted);font-weight:600;background:#fafafa;position:sticky;top:0}
+    tr:hover td{background:#fafafa}
+    tr.selected td{background:#e3f2fd}
+    tr.selected:hover td{background:#bbdefb}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer}
+    .btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+    .btn.warn{background:var(--warn);color:#fff;border-color:var(--warn)}
+    .btn.ok{background:var(--ok);color:#fff;border-color:var(--ok)}
+    .btn-sm{padding:4px 8px;font-size:12px}
+    .reviewer-view.hidden{display:none}
+    .approver-view.hidden{display:none}
+    .dept-status{line-height:1.6}
+    .dept-status .status{margin:2px 0;display:inline-block}
+    .dept-request{line-height:1.6}
+    .dept-request .status{margin:2px 0;display:inline-block;font-size:11px}
+    h4{margin:16px 0 8px 0;font-size:14px;color:var(--muted)}
+    h5{margin:12px 0 6px 0;font-size:13px;color:var(--muted)}
+    .status{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;font-size:12px;border:1px solid var(--line);background:#fff}
+    .status.ok{border-color:#bbf7d0;background:#ecfdf5;color:#166534}
+    .status.wait{border-color:#fde68a;background:#fffbeb;color:#92400e}
+    .status.bad{border-color:#fecaca;background:#fef2f2;color:#7f1d1d}
+    .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
+    .kpi .n{font-size:24px;font-weight:700}
+    .split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .tabbar{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:8px;flex-wrap:wrap}
+    .tabbar button{border:none;background:transparent;padding:10px 12px;border-bottom:2px solid transparent;cursor:pointer}
+    .tabbar button.active{border-color:var(--primary);color:var(--primary);font-weight:600}
+    .pill{padding:2px 8px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:12px}
+    .timeline{list-style:none;padding:0;margin:0}
+    .timeline li{display:flex;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line)}
+    .timeline time{color:var(--muted);font-size:12px;min-width:110px}
+    .grid-cols-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    .right{display:flex;justify-content:flex-end}
+    .muted{color:var(--muted)}
+    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, monospace;font-size:12px;background:#f8fafc;border:1px dashed var(--line);border-radius:8px;padding:8px;white-space:pre-wrap}
+    
+    /* Modal styles */
+    .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:100;display:flex;align-items:center;justify-content:center}
+    .modal.hidden{display:none}
+    .modal-content{background:#fff;border-radius:12px;width:90%;max-width:800px;max-height:80vh;overflow:hidden}
+    .modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--line)}
+    .modal-header h3{margin:0}
+    .close{background:none;border:none;font-size:24px;cursor:pointer;color:var(--muted)}
+    .modal-body{padding:16px;overflow-y:auto;max-height:60vh}
+    
+    /* CASE-02 추가 스타일 */
+    .info-table{width:100%;border-collapse:collapse;margin-bottom:16px}
+    .info-table td{padding:8px 12px;border-bottom:1px solid var(--line);font-size:13px}
+    .info-table td:first-child{font-weight:600;color:var(--muted);width:120px}
+    .file-table{width:100%;border-collapse:collapse}
+    .file-table th,.file-table td{padding:8px 12px;border-bottom:1px solid var(--line);font-size:13px}
+    .file-table th{background:#fafafa;font-weight:600;color:var(--muted)}
+    .file-table tr:hover td{background:#fafafa}
+    
+    /* 링크 스타일 */
+    .link{color:var(--primary);text-decoration:none;cursor:pointer}
+    .link:hover{text-decoration:underline;color:var(--primary-dark)}
+    
+    /* 머지필드 스타일 */
+    .merge-field{color:var(--primary);background:var(--primary-light);padding:2px 6px;border-radius:4px;cursor:pointer;font-weight:500;margin:0 2px}
+    .merge-field:hover{background:var(--primary);color:white}
+    
+    /* INTK-01 추가 스타일 */
+    .form-group{margin-bottom:16px}
+    .form-group label{display:block;margin-bottom:8px;font-weight:600;color:var(--muted)}
+    .form-group input[type="checkbox"]{margin-right:8px}
+    .form-group input[type="checkbox"]+span{margin-left:4px}
+    
+    /* 보완요청 횟수 상태 */
+    .status.error{background:var(--error);color:white}
+    
+    /* 부서 선택 스타일 */
+    #deptTypeSelect{min-width:150px}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>신약 심사자 배정 시스템 wireframe</h1>
+    <label>화면 선택
+      <select id="viewSelect">
+        <option value="INTK-01">INTK-01 허가부서 접수함</option>
+        <option value="ASGN-01">ASGN-01 심사자 배정(테이블)</option>
+        <option value="REVIEW-00">REVIEW-00 심사자 - 나의 심사 목록</option>
+        <option value="REVIEW-01">REVIEW-01 심사 작업(공통)</option>
+        <option value="APPR-01">APPR-01 검토함</option>
+        <option value="APPR-02">APPR-02 결재함</option>
+        <option value="NTFY-01">NTFY-01 결과통보 작성</option>
+        <option value="CASE-02">CASE-02 민원 상세(탭형)</option>
+        <option value="MGR-01">MGR-01 부서별 관리자</option>
+      </select>
+    </label>
+    <div class="right" style="flex:1"></div>
+  </header>
+
+  <div class="container">
+
+    <!-- INTK-01 -->
+    <section id="INTK-01" class="card">
+      <h3>INTK-01 · 허가부서 접수함</h3>
+      
+      <!-- 부서 선택 -->
+      <div class="toolbar" style="margin-bottom:16px">
+        <label>허가부서:
+          <select id="deptTypeSelect">
+            <option value="bio">바이오허가 TF</option>
+            <option value="synthetic">합성의약품팀</option>
+          </select>
+        </label>
+        <div style="flex:1"></div>
+        <button class="btn" onclick="refreshIntkList()">새로고침</button>
+      </div>
+      
+      <div class="toolbar">
+        <select id="reviewTypeFilter"><option value="">전체 심사유형</option><option value="품질·안유">품질·안유</option><option value="RMP">RMP</option><option value="GMP">GMP</option></select>
+        <select id="statusFilter"><option value="">상태(전체)</option><option value="미배정">미배정</option><option value="배정완료">배정완료</option><option value="보완요청">보완요청</option><option value="민원 완료">민원 완료</option></select>
+        <input type="date" id="startDate" placeholder="시작일"/>
+        <input type="date" id="endDate" placeholder="종료일"/>
+        <input id="searchInput" placeholder="품목/민원번호/신청인 검색"/>
+        <button class="btn" onclick="searchIntkList()">조회</button>
+        <button class="btn" onclick="exportIntkList()">엑셀</button>
+        <div style="flex:1"></div>
+      </div>
+      <div class="split">
+        <div class="card">
+          <table id="intkTable">
+            <thead>
+              <tr>
+                <th>민원번호</th>
+                <th>품목명</th>
+                <th>신청인</th>
+                <th>민원 신청일</th>
+                <th>민원 종료일</th>
+                <th>보완요청 횟수</th>
+                <th>부서별 협의요청 날짜</th>
+                <th>상태</th>
+                <th>액션</th>
+              </tr>
+            </thead>
+            <tbody id="intkTableBody">
+              <!-- 데이터가 동적으로 생성됩니다 -->
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="card">
+          <h4>민원 상세 정보</h4>
+          <p class="muted">테이블에서 민원을 선택하면 상세 정보가 표시됩니다.</p>
+          <div id="intkDetail" class="mono" style="margin-top:12px;min-height:200px;background:#f8fafc;border:1px dashed var(--line);border-radius:8px;padding:12px;">
+            민원을 선택해주세요
+          </div>
+          
+          <hr style="margin:16px 0"/>
+          
+          <h4>협의 의뢰 생성</h4>
+          <div class="toolbar">
+            <button class="btn" id="qaRequestBtn">품질·안유 협의 요청</button>
+            <button class="btn" id="rmpRequestBtn">RMP 협의 요청</button>
+            <button class="btn" id="gmpRequestBtn">GMP 협의 요청</button>
+            <button class="btn primary" id="completeAssignmentBtn">배정완료</button>
+          </div>
+          <div id="requestResult" class="mono" style="margin-top:8px;color:var(--ok);min-height:20px;"></div>
+          
+          <hr style="margin:16px 0"/>
+          
+          <h4>보완요청 관리</h4>
+          <div class="toolbar">
+            <button class="btn" id="viewRevisionHistoryBtn" onclick="viewRevisionHistory()">보완요청 이력</button>
+          </div>
+          <div id="revisionResult" class="mono" style="margin-top:8px;color:var(--warn);min-height:20px;"></div>
+        </div>
+      </div>
+      
+      <!-- 협의 의뢰 생성 기능을 오른쪽 상세 정보 패널에 통합 -->
+    </section>
+    
+    <!-- 보완요청 이력 모달 -->
+    <div id="revisionHistoryModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>보완요청 이력</h3>
+          <button class="close" onclick="closeRevisionHistoryModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="revisionHistoryContent">
+            <!-- 보완요청 이력이 여기에 표시됩니다 -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ASGN-01 -->
+    <section id="ASGN-01" class="card hidden">
+      <h3>ASGN-01 심사자 배정(테이블 기반)</h3>
+      <div class="toolbar">
+        <label>부서 선택:
+          <select id="deptSelect" onchange="loadDeptData()">
+            <option value="qa">품질·안유과</option>
+            <option value="rmp">RMP과</option>
+            <option value="gmp">GMP과</option>
+            <option value="stats">사전상담과</option>
+            <option value="gcp">임상정책과</option>
+            <option value="test">백신검정과/혈액제제검정과</option>
+            <option value="bio">바이오의약품연구과</option>
+            <option value="advanced">첨단바이오융복합연구과</option>
+            <option value="needle">구강소화기기과</option>
+            <option value="cosmetic">화장품심사과</option>
+          </select>
+        </label>
+        <select id="reviewTypeFilter"><option value="">심사유형(전체)</option><option value="품질·안유">품질·안유</option><option value="RMP">RMP</option><option value="GMP">GMP</option></select>
+        <select id="statusFilter"><option value="">상태(전체)</option><option value="미배정">미배정</option><option value="배정완료">배정완료</option></select>
+        <input type="date" id="startDate" placeholder="시작일"/>
+        <input type="date" id="endDate" placeholder="종료일"/>
+        <button class="btn" onclick="searchAssignments()">조회</button>
+        <div style="flex:1"></div>
+        <button class="btn" id="btnAssignHistory">배정 이력</button>
+      </div>
+      <div class="row two">
+        <div class="card">
+          <h3>심사 대상</h3>
+          <table id="taskTable">
+            <thead><tr>
+              <th style="width:36px"><input type="checkbox" id="chkAll"/></th>
+              <th>민원번호</th><th>품목명</th><th>신청인</th><th>민원 신청일</th><th>배정상태</th>
+            </tr></thead>
+            <tbody id="taskTableBody">
+              <!-- 데이터가 동적으로 생성됩니다 -->
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h3>심사자 목록</h3>
+          <table id="assigneeTable">
+            <thead><tr><th></th><th>심사자명</th><th>소속부서</th><th>전문분야</th></tr></thead>
+            <tbody id="assigneeTableBody">
+              <!-- 데이터가 동적으로 생성됩니다 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="actions" style="margin-top:8px">
+        <button class="btn primary" id="btnAssign">배정</button>
+      </div>
+      <div id="assignResult" class="mono" style="margin-top:8px">배정 결과 로그가 여기에 표시됩니다.</div>
+      
+      <!-- 배정 이력 모달 -->
+      <div id="assignHistoryModal" class="modal hidden">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>배정 이력</h3>
+            <button class="close" id="closeAssignHistory">&times;</button>
+          </div>
+          <div class="modal-body">
+            <table id="assignHistoryTable">
+              <thead>
+                <tr><th>배정일시</th><th>민원번호</th><th>품목명</th><th>심사자</th><th>소속부서</th><th>상태</th></tr>
+              </thead>
+              <tbody id="assignHistoryBody">
+                <!-- 배정 이력이 여기에 동적으로 추가됩니다 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REVIEW-00 -->
+    <section id="REVIEW-00" class="card hidden">
+      <h3>REVIEW-00 심사자 - 나의 심사 목록</h3>
+      <div class="toolbar">
+        <select id="reviewTypeFilter"><option value="">심사유형(전체)</option><option value="품질·안유">품질·안유</option><option value="RMP">RMP</option><option value="GMP">GMP</option></select>
+        <select id="statusFilter"><option value="">상태(전체)</option><option value="배정완료">배정완료</option><option value="심사중">심사중</option><option value="민원 완료">민원 완료</option></select>
+        <input type="date" id="startDate" placeholder="시작일"/>
+        <input type="date" id="endDate" placeholder="종료일"/>
+        <input id="searchInput" placeholder="심사원명/민원번호/품목명/신청인 검색"/>
+        <button class="btn" id="searchBtn">조회</button>
+        <button class="btn" onclick="showAllReviews()">전체 보기</button>
+        <div style="flex:1"></div>
+        <button class="btn">엑셀</button>
+      </div>
+      
+      <div class="card">
+        <table id="myReviewTable">
+          <thead>
+            <tr>
+              <th style="width:36px"></th>
+              <th>민원번호</th>
+              <th>품목명</th><th>신청인</th>
+              <th>배정일</th>
+              <th>부서</th>
+              <th>심사완료일</th>
+              <th>상태</th>
+              <th>액션</th>
+            </tr>
+          </thead>
+          <tbody id="myReviewTableBody">
+            <!-- 나의 심사 목록이 여기에 동적으로 표시됩니다 -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- REVIEW-01 -->
+    <section id="REVIEW-01" class="card hidden">
+      <h3>REVIEW-01 · 심사 작업(공통)</h3>
+      <div class="kpis">
+        <div class="kpi"><div class="muted">민원번호</div><div class="n" id="review01민원번호" style="cursor:pointer;text-decoration:underline;color:var(--primary)" onclick="goToCase02FromReview01()">-</div></div>
+        <div class="kpi"><div class="muted">품목명</div><div class="n">-</div></div>
+        <div class="kpi"><div class="muted">부서</div><div class="n">-</div></div>
+        <div class="kpi"><div class="muted">배정받은 날짜</div><div class="n">-</div></div>
+        <div class="kpi"><div class="muted">완료한 날짜</div><div class="n">-</div></div>
+        <div class="kpi"><div class="muted">상태</div><div class="n">-</div></div>
+      </div>
+      <div class="row two" style="margin-top:12px">
+        <div class="card">
+          <h3>제출자료</h3>
+          <ul>
+            <li>임상시험결과.pdf</li>
+            <li>제조/품질관리보고서.pdf</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>심사 폼 (플러그인)</h3>
+          <div class="toolbar">
+            <select><option>유형 선택</option><option>품질·안유</option><option>RMP</option><option>GMP</option></select>
+          </div>
+          <label>주요 검토사항</label>
+          <textarea style="width:100%;height:120px"></textarea>
+          <label>결론/사유</label>
+          <textarea style="width:100%;height:100px"></textarea>
+          <div class="actions" style="margin-top:8px">
+            <button class="btn">임시저장</button>
+            <button class="btn primary" id="submitReviewBtn">검토 상신</button>
+          </div>
+        </div>
+      </div>
+      <div class="row two" style="margin-top:12px">
+        <div class="card">
+          <h3>첨부</h3>
+          <div class="mono">첨부 drag & drop 영역</div>
+        </div>
+        <div class="card">
+          <h3>협의 요청 목록</h3>
+          <div style="margin-bottom:12px">
+            <select id="consultationDept" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:4px;">
+              <option value="">협의 요청할 부서를 선택하세요</option>
+              <option value="품질·안유">품질·안유</option>
+              <option value="RMP">RMP</option>
+              <option value="GMP">GMP</option>
+              <option value="사전상담과">사전상담과</option>
+              <option value="임상정책과">임상정책과</option>
+              <option value="백신검정과/혈액제제검정과">백신검정과/혈액제제검정과</option>
+              <option value="바이오의약품연구과">바이오의약품연구과</option>
+              <option value="첨단바이오융복합연구과">첨단바이오융복합연구과</option>
+              <option value="구강소화기기과">구강소화기기과</option>
+              <option value="화장품심사과">화장품심사과</option>
+            </select>
+          </div>
+          <div style="margin-top:12px">
+            <textarea id="consultationMessage" placeholder="협의 요청 문구를 입력하세요..." style="width:100%;height:60px;margin-bottom:8px;padding:8px;border:1px solid var(--border);border-radius:4px;resize:vertical;"></textarea>
+            <button class="btn btn-sm" onclick="addConsultationRequest()">협의요청 추가</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 협의요청 진행상황 -->
+      <div class="row" style="margin-top:12px">
+        <div class="card">
+          <h3>협의 요청 진행 상황</h3>
+          <div id="consultationProgress">
+            <div class="mono" style="color:var(--muted)">협의요청이 없습니다.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- APPR-01 -->
+    <section id="APPR-01" class="card hidden">
+      <h3>APPR-01 · 검토함</h3>
+      
+      <!-- 검토자 역할 선택 -->
+      <div class="toolbar" style="margin-bottom:16px">
+        <label>검토자 역할:
+          <select id="reviewerRole">
+            <option value="dept">각부서 검토자</option>
+            <option value="main">허가부서 검토자</option>
+          </select>
+        </label>
+        <div style="flex:1"></div>
+        <button class="btn" id="refreshReviewList">새로고침</button>
+      </div>
+      
+      <!-- 각부서 검토자 화면 -->
+      <div id="deptReviewer" class="reviewer-view">
+        <h4>각부서 검토자 - 심사자들의 심사 결과 목록</h4>
+        <div class="toolbar">
+          <select><option>심사자(전체)</option><option>김심사</option><option>박품질</option><option>이유효</option></select>
+          <select><option>심사유형(전체)</option><option>품질·안유</option><option>RMP</option><option>GMP</option></select>
+          <select><option>상태(전체)</option><option>검토대기</option><option>검토중</option><option>검토완료</option></select>
+          <input type="date" placeholder="시작일"/>
+          <input type="date" placeholder="종료일"/>
+          <button class="btn">조회</button>
+        </div>
+        
+        <div class="card">
+          <table id="deptReviewTable">
+            <thead>
+              <tr>
+                <th style="width:36px"></th>
+                <th>민원번호</th>
+                <th>품목명</th>
+                <th>심사자</th>
+                <th>심사유형</th>
+                <th>심사완료일</th>
+                <th>검토상태</th>
+                <th>액션</th>
+              </tr>
+            </thead>
+            <tbody id="deptReviewTableBody">
+              <tr>
+                <td><input type="radio" name="deptReview" value="1"/></td>
+                <td>A25-00123</td>
+                <td>신약A 주사제</td>
+                <td>김심사</td>
+                <td>품질·안유</td>
+                <td>2025-08-25</td>
+                <td><span class="status wait">검토대기</span></td>
+                <td><button class="btn btn-sm" onclick="startDeptReview(1)">검토 시작</button></td>
+              </tr>
+              <tr>
+                <td><input type="radio" name="deptReview" value="2"/></td>
+                <td>A25-00131</td>
+                <td>바이오B</td>
+                <td>박품질</td>
+                <td>RMP</td>
+                <td>2025-08-26</td>
+                <td><span class="status warn">검토중</span></td>
+                <td><button class="btn btn-sm primary" onclick="continueDeptReview(2)">검토 계속</button></td>
+              </tr>
+              <tr>
+                <td><input type="radio" name="deptReview" value="3"/></td>
+                <td>A25-00145</td>
+                <td>신약C 캡슐</td>
+                <td>이유효</td>
+                <td>GMP</td>
+                <td>2025-08-27</td>
+                <td><span class="status ok">검토완료</span></td>
+                <td><button class="btn btn-sm ok" onclick="viewDeptReview(3)">결과 보기</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- 검토 내용은 팝업으로 표시되므로 여기에는 표시하지 않음 -->
+      </div>
+      
+      <!-- 허가부서 검토자 화면 -->
+      <div id="mainReviewer" class="reviewer-view hidden">
+        <h4>허가부서 검토자 - 다른 부서들의 심사결과 종합 검토</h4>
+        <div class="toolbar">
+          <select><option>부서(전체)</option><option>품질·안유과</option><option>RMP과</option><option>GMP과</option></select>
+          <select><option>상태(전체)</option><option>검토대기</option><option>검토중</option><option>검토완료</option></select>
+          <input type="date" placeholder="시작일"/>
+          <input type="date" placeholder="종료일"/>
+          <button class="btn">조회</button>
+        </div>
+        
+        <div class="card">
+          <table id="mainReviewTable">
+            <thead>
+              <tr>
+                <th style="width:36px"></th>
+                <th>민원번호</th>
+                <th>품목명</th>
+                <th>신청인</th>
+                <th>부서별 상태</th>
+                <th>종합검토상태</th>
+                <th>액션</th>
+              </tr>
+            </thead>
+            <tbody id="mainReviewTableBody">
+              <tr>
+                <td><input type="radio" name="mainReview" value="1"/></td>
+                <td>A25-00123</td>
+                <td>신약A 주사제</td>
+                <td>한빛제약</td>
+                <td>
+                  <div class="dept-status">
+                    <span class="status ok">품질·안유: 완료</span><br/>
+                    <span class="status ok">RMP: 완료</span><br/>
+                    <span class="status wait">GMP: 대기</span>
+                  </div>
+                </td>
+                <td><span class="status wait">검토대기</span></td>
+                <td><button class="btn btn-sm" onclick="startMainReview(1)">종합검토 시작</button></td>
+              </tr>
+              <tr>
+                <td><input type="radio" name="mainReview" value="2"/></td>
+                <td>A25-00131</td>
+                <td>바이오B</td>
+                <td>유니바이오</td>
+                <td>
+                  <div class="dept-status">
+                    <span class="status ok">품질·안유: 완료</span><br/>
+                    <span class="status ok">RMP: 완료</span><br/>
+                    <span class="status ok">GMP: 완료</span>
+                  </div>
+                </td>
+                <td><span class="status warn">검토중</span></td>
+                <td><button class="btn btn-sm primary" onclick="continueMainReview(2)">검토 계속</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- 종합 검토 의견은 팝업으로 표시되므로 여기에는 표시하지 않음 -->
+      </div>
+    </section>
+
+    <!-- MGR-01 -->
+    <section id="MGR-01" class="card hidden">
+      <h3>MGR-01 · 부서별 관리자</h3>
+      
+      <!-- 부서 선택 -->
+      <div class="toolbar" style="margin-bottom:16px">
+        <label>부서 선택:
+          <select id="deptSelect">
+            <option value="qa">품질·안유과</option>
+            <option value="rmp">RMP과</option>
+            <option value="gmp">GMP과</option>
+            <option value="stats">사전상담과</option>
+            <option value="gcp">임상정책과</option>
+            <option value="test">백신검정과/혈액제제검정과</option>
+            <option value="bio">바이오의약품연구과</option>
+            <option value="advanced">첨단바이오융복합연구과</option>
+            <option value="needle">구강소화기기과</option>
+            <option value="cosmetic">화장품심사과</option>
+          </select>
+        </label>
+        <label>기간 선택:
+          <select id="periodSelect">
+            <option value="current">이번달</option>
+            <option value="last">지난달</option>
+            <option value="quarter">이번 분기</option>
+            <option value="year">올해</option>
+          </select>
+        </label>
+        <div style="flex:1"></div>
+        <button class="btn" id="refreshDeptStats">새로고침</button>
+        <button class="btn" id="exportDeptReport">보고서 내보내기</button>
+      </div>
+      
+      <!-- 부서별 통계 요약 -->
+      <div class="kpis" style="margin-bottom:24px">
+        <div class="kpi">
+          <div class="muted">총 심사원</div>
+          <div class="n" id="totalReviewers">0</div>
+        </div>
+        <div class="kpi">
+          <div class="muted">이번달 참여자</div>
+          <div class="n" id="activeReviewers">0</div>
+        </div>
+        <div class="kpi">
+          <div class="muted">진행중인 심사</div>
+          <div class="n" id="ongoingCases">0</div>
+        </div>
+        <div class="kpi">
+          <div class="muted">완료된 심사</div>
+          <div class="n" id="completedCases">0</div>
+        </div>
+        <div class="kpi">
+          <div class="muted">총 소요시간</div>
+          <div class="n" id="totalHours">0h</div>
+        </div>
+        <div class="kpi">
+          <div class="muted">평균 처리시간</div>
+          <div class="n" id="avgProcessingTime">0h</div>
+        </div>
+      </div>
+      
+      <!-- 심사원별 상세 현황 -->
+      <div class="card">
+        <h3>심사원별 이번달 심사 현황</h3>
+        <div class="toolbar">
+          <select id="reviewerFilter">
+            <option value="all">전체 심사원</option>
+            <option value="active">참여한 심사원</option>
+            <option value="inactive">미참여 심사원</option>
+          </select>
+          <div style="flex:1"></div>
+          <input type="text" placeholder="심사원명 검색"/>
+          <button class="btn">검색</button>
+        </div>
+        
+        <table id="deptReviewerTable">
+          <thead>
+            <tr>
+              <th>심사원명</th>
+              <th>직급</th>
+              <th>전문분야</th>
+              <th>완료된 심사건수</th>
+              <th>진행중인 심사건수</th>
+              <th>총 소요시간</th>
+              <th>평균 소요시간</th>
+              <th>상세보기</th>
+            </tr>
+          </thead>
+          <tbody id="deptReviewerTableBody">
+            <!-- 심사원별 데이터가 동적으로 생성됩니다 -->
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- 월별 추이 차트 -->
+      <div class="row two" style="margin-top:24px">
+        <div class="card">
+          <h3>월별 심사 건수 추이</h3>
+          <div id="monthlyCaseChart" style="height:300px;background:#f8fafc;border:1px dashed var(--line);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted)">
+            차트 영역 (월별 심사 건수)
+          </div>
+        </div>
+        <div class="card">
+          <h3>월별 소요시간 추이</h3>
+          <div id="monthlyHoursChart" style="height:300px;background:#f8fafc;border:1px dashed var(--line);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted)">
+            차트 영역 (월별 소요시간)
+          </div>
+        </div>
+      </div>
+      
+      <!-- 심사원별 상세 모달 -->
+      <div id="reviewerDetailModal" class="modal hidden">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 id="reviewerDetailTitle">심사원 상세 현황</h3>
+            <button class="close" onclick="closeReviewerDetailModal()">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div id="reviewerDetailContent">
+              <!-- 심사원별 상세 정보가 동적으로 생성됩니다 -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- APPR-02 -->
+    <section id="APPR-02" class="card hidden">
+      <h3>APPR-02 · 결재함(과장/부장)</h3>
+      
+      <!-- 결재자 역할 선택 -->
+      <div class="toolbar" style="margin-bottom:16px">
+        <label>결재자 역할:
+          <select id="approverRole">
+            <option value="main">허가부서 결재자</option>
+            <option value="dept">각 부서 결재자</option>
+          </select>
+        </label>
+        <div style="flex:1"></div>
+        <button class="btn" id="refreshApprovalList">새로고침</button>
+      </div>
+      
+      <!-- 허가부서 결재자 화면 -->
+      <div id="mainApprover" class="approver-view">
+        <h4>허가부서 결재자 - 다른 부서들의 심사결과 종합 결재</h4>
+        
+        <!-- 민원 목록 -->
+        <div class="card">
+          <h3>결재 대기 민원 목록</h3>
+          <div class="toolbar">
+            <select><option>상태(전체)</option><option>결재대기</option><option>결재중</option><option>결재완료</option></select>
+            <select><option>부서(전체)</option><option>품질·안유과</option><option>RMP과</option><option>GMP과</option></select>
+            <input type="date" placeholder="시작일"/>
+            <input type="date" placeholder="종료일"/>
+            <button class="btn">조회</button>
+          </div>
+          
+          <table id="mainApprovalTable">
+            <thead>
+              <tr>
+                <th style="width:36px"></th>
+                <th>민원번호</th>
+                <th>품목명</th>
+                <th>신청인</th>
+                <th>부서별 상태</th>
+                <th>종합검토상태</th>
+                <th>결재상태</th>
+                <th>액션</th>
+              </tr>
+            </thead>
+            <tbody id="mainApprovalTableBody">
+              <tr data-case-id="1">
+                <td><input type="radio" name="mainApproval" value="1"/></td>
+                <td>A25-00123</td>
+                <td>신약A 주사제</td>
+                <td>한빛제약</td>
+                <td>
+                  <div class="dept-status">
+                    <span class="status ok">품질·안유: 완료</span><br/>
+                    <span class="status ok">RMP: 완료</span><br/>
+                    <span class="status ok">GMP: 완료</span>
+                  </div>
+                </td>
+                <td><span class="status ok">검토완료</span></td>
+                <td><span class="status wait">결재대기</span></td>
+                <td><button class="btn btn-sm" onclick="startMainApproval(1)">결재 시작</button></td>
+              </tr>
+              <tr data-case-id="2">
+                <td><input type="radio" name="mainApproval" value="2"/></td>
+                <td>A25-00131</td>
+                <td>바이오B</td>
+                <td>유니바이오</td>
+                <td>
+                  <div class="dept-status">
+                    <span class="status ok">품질·안유: 완료</span><br/>
+                    <span class="status ok">RMP: 완료</span><br/>
+                    <span class="status wait">GMP: 대기</span>
+                  </div>
+                </td>
+                <td><span class="status wait">검토대기</span></td>
+                <td><span class="status wait">결재대기</span></td>
+                <td><button class="btn btn-sm" disabled>GMP 대기</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- 선택된 민원 상세 -->
+        <div id="mainApprovalDetail" class="hidden">
+          <div class="card">
+            <h3>민원 상세 - 다른 부서 협의 요청 결과</h3>
+            <div class="row two">
+              <div>
+                <h4>기본 정보</h4>
+                <div class="mono">
+                  민원번호: A25-00123<br/>
+                  품목명: 신약A 주사제<br/>
+                  신청인: 한빛제약<br/>
+                  민원 신청일: 2025-08-20
+                </div>
+              </div>
+              <div>
+                <h4>진행 상황</h4>
+                <div class="mono">
+                  품질·안유: 검토완료 → 결재완료<br/>
+                  RMP: 검토완료 → 결재완료<br/>
+                  GMP: 검토완료 → 결재완료<br/>
+                  종합검토: 완료 → 결재대기
+                </div>
+              </div>
+            </div>
+            
+            <h4>부서별 심사 결과 문서</h4>
+            <div class="tabbar" id="mainApprovalTabs">
+              <button data-tab="qa" class="active">품질·안유</button>
+              <button data-tab="rmp">RMP</button>
+              <button data-tab="gmp">GMP</button>
+              <button data-tab="summary">종합검토</button>
+            </div>
+            <div id="mainApprovalTabBodies">
+              <div data-body="qa">
+                <h5>품질·안유과 심사 결과</h5>
+                <div class="mono">
+                  <strong>심사자:</strong> 김심사<br/>
+                  <strong>심사일:</strong> 2025-08-25<br/>
+                  <strong>결론:</strong> 적합(조건부)<br/>
+                  <strong>주요 검토사항:</strong><br/>
+                  - 임상시험 결과 적절<br/>
+                  - 안전성 데이터 충분<br/>
+                  - 보완사항: 추가 안전성 모니터링 필요<br/>
+                  <strong>검토자:</strong> 박품질<br/>
+                  <strong>검토일:</strong> 2025-08-26<br/>
+                  <strong>검토의견:</strong> 심사 결과 적절, 승인 권고
+                </div>
+              </div>
+              <div data-body="rmp" class="hidden">
+                <h5>RMP과 심사 결과</h5>
+                <div class="mono">
+                  <strong>심사자:</strong> 이유효<br/>
+                  <strong>심사일:</strong> 2025-08-26<br/>
+                  <strong>결론:</strong> 적합<br/>
+                  <strong>주요 검토사항:</strong><br/>
+                  - 위험관리계획 적절<br/>
+                  - 추가 위험요소 없음<br/>
+                  <strong>검토자:</strong> 최안전<br/>
+                  <strong>검토일:</strong> 2025-08-27<br/>
+                  <strong>검토의견:</strong> 심사 결과 적절, 승인 권고
+                </div>
+              </div>
+              <div data-body="gmp" class="hidden">
+                <h5>GMP과 심사 결과</h5>
+                <div class="mono">
+                  <strong>심사자:</strong> 이제조<br/>
+                  <strong>심사일:</strong> 2025-08-27<br/>
+                  <strong>결론:</strong> 적합<br/>
+                  <strong>주요 검토사항:</strong><br/>
+                  - 제조시설 기준 충족<br/>
+                  - 품질관리체계 적절<br/>
+                  <strong>검토자:</strong> 정품질<br/>
+                  <strong>검토일:</strong> 2025-08-28<br/>
+                  <strong>검토의견:</strong> 심사 결과 적절, 승인 권고
+                </div>
+              </div>
+              <div data-body="summary" class="hidden">
+                <h5>종합검토 결과</h5>
+                <div class="mono">
+                  <strong>종합검토자:</strong> 허가부서 김종합<br/>
+                  <strong>검토일:</strong> 2025-08-29<br/>
+                  <strong>종합결론:</strong> 적합(조건부)<br/>
+                  <strong>종합의견:</strong><br/>
+                  - 모든 부서 심사 결과 적절<br/>
+                  - 품질·안유과 보완사항 이행 시 허가<br/>
+                  - 추가 모니터링 계획 수립 필요
+                </div>
+              </div>
+            </div>
+            
+            <div class="actions" style="margin-top:16px">
+              <button class="btn ok" onclick="goToNotification('APP', '승인')">승인</button>
+              <button class="btn warn" onclick="goToNotification('REQ', '보완요청')">보완요청</button>
+              <button class="btn" onclick="goToNotification('REJ', '반려')">반려</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 각 부서 결재자 화면 -->
+      <div id="deptApprover" class="approver-view hidden">
+        <h4>각 부서 결재자 - 소속 부서 심사자들의 결과 결재</h4>
+        
+        <!-- 민원 목록 -->
+        <div class="card">
+          <h3>결재 대기 민원 목록</h3>
+          <div class="toolbar">
+            <select><option>심사자(전체)</option><option>김심사</option><option>박품질</option><option>이유효</option></select>
+            <select><option>심사유형(전체)</option><option>품질·안유</option><option>RMP</option><option>GMP</option></select>
+            <select><option>상태(전체)</option><option>결재대기</option><option>결재중</option><option>결재완료</option></select>
+            <input type="date" placeholder="시작일"/>
+            <input type="date" placeholder="종료일"/>
+            <button class="btn">조회</button>
+          </div>
+          
+          <table id="deptApprovalTable">
+            <thead>
+              <tr>
+                <th style="width:36px"></th>
+                <th>민원번호</th>
+                <th>품목명</th>
+                <th>심사자</th>
+                <th>심사유형</th>
+                <th>심사완료일</th>
+                <th>검토상태</th>
+                <th>결재상태</th>
+                <th>액션</th>
+              </tr>
+            </thead>
+            <tbody id="deptApprovalTableBody">
+              <tr data-case-id="1">
+                <td><input type="radio" name="deptApproval" value="1"/></td>
+                <td>A25-00123</td>
+                <td>신약A 주사제</td>
+                <td>김심사</td>
+                <td>품질·안유</td>
+                <td>2025-08-25</td>
+                <td><span class="status ok">검토완료</span></td>
+                <td><span class="status wait">결재대기</span></td>
+                <td><button class="btn btn-sm" onclick="startDeptApproval(1)">결재 시작</button></td>
+              </tr>
+              <tr data-case-id="2">
+                <td><input type="radio" name="deptApproval" value="2"/></td>
+                <td>A25-00131</td>
+                <td>바이오B</td>
+                <td>박품질</td>
+                <td>RMP</td>
+                <td>2025-08-26</td>
+                <td><span class="status ok">검토완료</span></td>
+                <td><span class="status wait">결재대기</span></td>
+                <td><button class="btn btn-sm" onclick="startDeptApproval(2)">결재 시작</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- 선택된 민원 상세 -->
+        <div id="deptApprovalDetail" class="hidden">
+          <div class="card">
+            <h3>민원 상세 - 소속 부서 심사자 결과</h3>
+            <div class="row two">
+              <div>
+                <h4>기본 정보</h4>
+                <div class="mono">
+                  민원번호: A25-00123<br/>
+                  품목명: 신약A 주사제<br/>
+                  신청인: 한빛제약<br/>
+                  민원 신청일: 2025-08-20
+                </div>
+              </div>
+              <div>
+                <h4>진행 상황</h4>
+                <div class="mono">
+                  심사: 완료 (2025-08-25)<br/>
+                  검토: 완료 (2025-08-26)<br/>
+                  결재: 대기
+                </div>
+              </div>
+            </div>
+            
+            <h4>심사 결과 문서</h4>
+            <div class="mono">
+              <strong>심사자:</strong> 김심사<br/>
+              <strong>심사일:</strong> 2025-08-25<br/>
+              <strong>결론:</strong> 적합(조건부)<br/>
+              <strong>주요 검토사항:</strong><br/>
+              - 임상시험 결과 적절<br/>
+              - 안전성 데이터 충분<br/>
+              - 보완사항: 추가 안전성 모니터링 필요<br/>
+              <strong>검토자:</strong> 박품질<br/>
+              <strong>검토일:</strong> 2025-08-26<br/>
+              <strong>검토의견:</strong> 심사 결과 적절, 승인 권고
+            </div>
+            
+            <div class="actions" style="margin-top:16px">
+              <button class="btn ok" onclick="goToNotification('APP', '승인')">승인</button>
+              <button class="btn warn" onclick="goToNotification('REQ', '보완요청')">보완요청</button>
+              <button class="btn" onclick="goToNotification('REJ', '반려')">반려</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NTFY-01 -->
+    <section id="NTFY-01" class="card hidden">
+      <h3>NTFY-01 · 결과통보 작성</h3>
+      <div class="toolbar">
+        <select id="tpl" onchange="applyTemplate()">
+          <option value="REQ">보완요청 (품질·안유 + RMP 통합)</option>
+          <option value="GMP">보완요청 (GMP/GCP 별도 공문)</option>
+          <option value="APP">적합(허가) 통보</option>
+          <option value="REJ">반려 통보</option>
+        </select>
+        <button class="btn" id="applyTpl" onclick="applyTemplate()">템플릿 적용</button>
+        <div style="flex:1"></div>
+        <span class="pill">머지필드: {{민원번호}} {{품목명}} {{민원인명}}</span>
+      </div>
+      <textarea id="editor" style="width:100%;height:320px"></textarea>
+      <div class="actions" style="margin-top:8px">
+        <button class="btn">미리보기</button>
+        <button class="btn primary">통보 발송</button>
+      </div>
+    </section>
+
+    <!-- CASE-02 -->
+    <section id="CASE-02" class="card hidden">
+      <h3>CASE-02 · 민원 상세(탭형)</h3>
+      <div class="row two">
+        <div>
+          <div class="status ok">민원 통보 완료</div>
+        </div>
+        <div class="right muted">민원번호 A25-00123</div>
+      </div>
+      <div style="margin:8px 0">
+        <ul class="timeline">
+          <li><time>2025-08-20 09:12</time> <div>민원 접수</div></li>
+          <li><time>2025-08-20 14:30</time> <div>품질·안유/RMP/GMP 협의 의뢰</div></li>
+          <li><time>2025-08-22 10:10</time> <div>GMP 결과 등록</div></li>
+        </ul>
+      </div>
+      <div class="tabbar" id="caseTabs">
+        <button data-tab="basic" class="active">기본정보</button>
+        <button data-tab="docs">제출자료</button>
+        <button data-tab="qa">품질·안유</button>
+        <button data-tab="rmp">RMP</button>
+        <button data-tab="gmp">GMP</button>
+        <button data-tab="cons">협의</button>
+        <button data-tab="appr">결재</button>
+        <button data-tab="ntfy">통보</button>
+        <button data-tab="dept1" class="dept-tab ">사전상담과</button>
+        <button data-tab="dept2" class="dept-tab ">임상정책과</button>
+        <button data-tab="dept3" class="dept-tab ">백신검정과/혈액제제검정과</button>
+        <button data-tab="dept4" class="dept-tab ">바이오의약품연구과</button>
+        <button data-tab="dept5" class="dept-tab ">첨단바이오융복합연구과</button>
+        <button data-tab="dept6" class="dept-tab ">구강소화기기과</button>
+        <button data-tab="dept7" class="dept-tab ">화장품심사과</button>
+      </div>
+      <div id="caseTabBodies">
+        <div data-body="basic">
+          <div class="card">
+            <h3>민원 기본 정보</h3>
+            <div class="row two">
+              <div>
+                <h4>신청 정보</h4>
+                <table class="info-table">
+                  <tr><td><strong>민원번호</strong></td><td>A25-00123</td></tr>
+                  <tr><td><strong>품목명</strong></td><td>신약A 주사제</td></tr>
+                  <tr><td><strong>신청인</strong></td><td>한빛제약(주)</td></tr>
+                  <tr><td><strong>신청일</strong></td><td>2025-08-20</td></tr>
+                  <tr><td><strong>신청유형</strong></td><td>신약 허가</td></tr>
+                  <tr><td><strong>접수일자</strong></td><td>2025-08-20</td></tr>
+                </table>
+              </div>
+              <div>
+                <h4>제품 정보</h4>
+                <table class="info-table">
+                  <tr><td><strong>성분명</strong></td><td>신약성분A</td></tr>
+                  <tr><td><strong>제형</strong></td><td>주사제</td></tr>
+                  <tr><td><strong>함량</strong></td><td>100mg/2mL</td></tr>
+                  <tr><td><strong>적응증</strong></td><td>암 치료</td></tr>
+                  <tr><td><strong>복용법</td><td>정맥주사</td></tr>
+                  <tr><td><strong>보관법</strong></td><td>냉장보관</td></tr>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div data-body="docs" class="hidden">
+          <div class="card">
+            <h3>제출자료 목록</h3>
+            <div class="toolbar">
+              <button class="btn">전체 다운로드</button>
+              <button class="btn">선택 다운로드</button>
+              <div style="flex:1"></div>
+              <input type="text" placeholder="파일명 검색"/>
+              <button class="btn">검색</button>
+            </div>
+            <table class="file-table">
+              <thead>
+                <tr>
+                  <th style="width:36px"><input type="checkbox"/></th>
+                  <th>구분</th>
+                  <th>파일명</th>
+                  <th>파일크기</th>
+                  <th>제출일</th>
+                  <th>상태</th>
+                  <th>액션</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><input type="checkbox"/></td>
+                  <td>신청서</td>
+                  <td>신약A_신청서.pdf</td>
+                  <td>2.3MB</td>
+                  <td>2025-08-20</td>
+                  <td><span class="status ok">제출완료</span></td>
+                  <td><button class="btn btn-sm">보기</button></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox"/></td>
+                  <td>임상시험</td>
+                  <td>신약A_임상시험결과.pdf</td>
+                  <td>15.7MB</td>
+                  <td>2025-08-20</td>
+                  <td><span class="status ok">제출완료</span></td>
+                  <td><button class="btn btn-sm">보기</button></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox"/></td>
+                  <td>안전성</td>
+                  <td>신약A_안전성데이터.pdf</td>
+                  <td>8.9MB</td>
+                  <td>2025-08-20</td>
+                  <td><span class="status ok">제출완료</span></td>
+                  <td><button class="btn btn-sm">보기</button></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox"/></td>
+                  <td>제조품질</td>
+                  <td>신약A_제조품질보고서.pdf</td>
+                  <td>12.1MB</td>
+                  <td>2025-08-20</td>
+                  <td><span class="status ok">제출완료</span></td>
+                  <td><button class="btn btn-sm">보기</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div data-body="qa" class="hidden">
+          <div class="card">
+            <h3>품질·안유 심사 내용</h3>
+            <div class="row two">
+              <div>
+                <h4>심사 결과</h4>
+                <div class="mono">
+                  <strong>심사자:</strong> 김심사<br/>
+                  <strong>심사일:</strong> 2025-08-25<br/>
+                  <strong>결론:</strong> <span class="status ok">적합(조건부)</span><br/>
+                  <strong>심사점수:</strong> 85/100
+                </div>
+              </div>
+              <div>
+                <h4>주요 검토사항</h4>
+                <div class="mono">
+                  ✅ 임상시험 결과 적절<br/>
+                  ✅ 안전성 데이터 충분<br/>
+                  ⚠️ 추가 안전성 모니터링 필요<br/>
+                  ✅ 제조공정 적절
+                </div>
+              </div>
+            </div>
+            <h4>상세 심사 의견</h4>
+            <div class="mono">
+              <strong>임상시험:</strong> 3상 임상시험에서 유효성과 안전성이 확인되었으며, 
+              대조약 대비 통계적으로 유의한 치료효과를 보임. 주요 부작용은 예상 범위 내에서 발생.<br/><br/>
+              
+              <strong>안전성:</strong> 장기 투여 시 안전성 데이터가 부족하므로, 
+              허가 후 추가 안전성 모니터링 계획 수립 및 이행이 필요함.<br/><br/>
+              
+              <strong>제조품질:</strong> 제조공정이 적절하게 확립되어 있으며, 
+              품질관리 기준이 충족됨.
+            </div>
+          </div>
+        </div>
+        
+        <div data-body="rmp" class="hidden">
+          <div class="card">
+            <h3>RMP 심사 내용</h3>
+            <div class="row two">
+              <div>
+                <h4>심사 결과</h4>
+                <div class="mono">
+                  <strong>심사자:</strong> 이유효<br/>
+                  <strong>심사일:</strong> 2025-08-26<br/>
+                  <strong>결론:</strong> <span class="status ok">적합</span><br/>
+                  <strong>심사점수:</strong> 92/100
+                </div>
+              </div>
+              <div>
+                <h4>주요 검토사항</h4>
+                <div class="mono">
+                  ✅ 위험관리계획 적절<br/>
+                  ✅ 추가 위험요소 없음<br/>
+                  ✅ 모니터링 계획 충분<br/>
+                  ✅ 교육자료 적절
+                </div>
+              </div>
+            </div>
+            <h4>상세 심사 의견</h4>
+            <div class="mono">
+              <strong>위험관리계획:</strong> 제품의 주요 위험요소에 대한 적절한 관리방안이 
+              수립되어 있으며, 의료진과 환자에 대한 교육자료가 충분히 제공됨.<br/><br/>
+              
+              <strong>모니터링:</strong> 허가 후 안전성 모니터링 계획이 체계적으로 수립되어 
+              잠재적 위험요소를 조기에 발견할 수 있음.<br/><br/>
+              
+              <strong>교육:</strong> 의료진과 환자를 대상으로 한 교육 프로그램이 적절하게 
+              구성되어 있어 안전한 사용이 가능함.
+            </div>
+          </div>
+        </div>
+        
+        <div data-body="gmp" class="hidden">
+          <div class="card">
+            <h3>GMP 심사 내용</h3>
+            <div class="row two">
+              <div>
+                <h4>심사 결과</h4>
+                <div class="mono">
+                  <strong>심사자:</strong> 이제조<br/>
+                  <strong>심사일:</strong> 2025-08-27<br/>
+                  <strong>결론:</strong> <span class="status ok">적합</span><br/>
+                  <strong>심사점수:</strong> 88/100
+                </div>
+              </div>
+              <div>
+                <h4>주요 검토사항</h4>
+                <div class="mono">
+                  ✅ 제조시설 기준 충족<br/>
+                  ✅ 품질관리체계 적절<br/>
+                  ✅ 검증계획 적절<br/>
+                  ⚠️ 일부 보완사항 있음
+                </div>
+              </div>
+            </div>
+            <h4>상세 심사 의견</h4>
+            <div class="mono">
+              <strong>제조시설:</strong> 제조시설이 GMP 기준을 충족하고 있으며, 
+              환경관리체계가 적절하게 운영되고 있음.<br/><br/>
+              
+              <strong>품질관리:</strong> 품질관리체계가 체계적으로 구축되어 있으며, 
+              품질보증 활동이 적절하게 수행되고 있음.<br/><br/>
+              
+              <strong>검증:</strong> 제조공정 검증계획이 적절하게 수립되어 있으며, 
+              일부 보완사항에 대해서는 허가 후 이행계획을 제출할 것.
+            </div>
+          </div>
+        </div>
+        
+        <div data-body="cons" class="hidden">
+          <div class="card">
+            <h3>협의 이력</h3>
+            <div class="timeline">
+              <li><time>2025-08-22 14:30</time> <div><strong>품질·안유과 협의 의뢰</strong><br/>담당자: 김심사, 의뢰일: 2025-08-22</div></li>
+              <li><time>2025-08-23 09:15</time> <div><strong>RMP과 협의 의뢰</strong><br/>담당자: 이유효, 의뢰일: 2025-08-23</div></li>
+              <li><time>2025-08-24 10:30</time> <div><strong>GMP과 협의 의뢰</strong><br/>담당자: 이제조, 의뢰일: 2025-08-24</div></li>
+              <li><time>2025-08-25 16:45</time> <div><strong>품질·안유과 결과 수신</strong><br/>결론: 적합(조건부), 보완사항: 추가 안전성 모니터링</div></li>
+              <li><time>2025-08-26 11:20</time> <div><strong>RMP과 결과 수신</strong><br/>결론: 적합, 추가 위험요소 없음</div></li>
+              <li><time>2025-08-27 14:15</time> <div><strong>GMP과 결과 수신</strong><br/>결론: 적합, 일부 보완사항 있음</div></li>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 협의 요청한 부서별 탭 내용 -->
+        <div data-body="dept1" class="hidden">
+          <div class="card">
+            <h3>사전상담과 심사 내용</h3>
+            <div class="row two">
+              <div>
+                <h4>심사 결과</h4>
+                <div class="mono">
+                  <strong>심사자:</strong> 김상담<br/>
+                  <strong>심사일:</strong> 2025-08-26<br/>
+                  <strong>결론:</strong> <span class="status ok">적합</span><br/>
+                  <strong>심사점수:</strong> 92/100
+                </div>
+              </div>
+              <div>
+                <h4>주요 검토사항</h4>
+                <div class="mono">
+                  ✅ 사전상담 절차 적절<br/>
+                  ✅ 제출자료 완성도 우수<br/>
+                  ✅ 기술적 검토 완료<br/>
+                  ⚠️ 추가 자료 제출 필요
+                </div>
+              </div>
+            </div>
+            <h4>상세 심사 의견</h4>
+            <div class="mono">
+              <strong>사전상담 절차:</strong> 신약E 주사제의 사전상담 절차가 적절하게 진행되었으며, 
+              관련 규정을 준수하고 있음.<br/><br/>
+              
+              <strong>제출자료:</strong> 제출된 자료의 완성도가 우수하며, 
+              기술적 검토가 체계적으로 수행되었음.<br/><br/>
+              
+              <strong>보완사항:</strong> 일부 추가 자료 제출이 필요하나, 
+              전반적으로 허가 신청이 가능한 수준임.
+            </div>
+          </div>
+        </div>
+        
+        <div data-body="dept2" class="hidden">
+          <div class="card">
+            <h3>임상정책과 심사 내용</h3>
+            <div class="row two">
+              <div>
+                <h4>심사 결과</h4>
+                <div class="mono">
+                  <strong>심사자:</strong> 이유효<br/>
+                  <strong>심사일:</strong> 2025-08-27<br/>
+                  <strong>결론:</strong> <span class="status ok">적합</span><br/>
+                  <strong>심사점수:</strong> 95/100
+                </div>
+              </div>
+              <div>
+                <h4>주요 검토사항</h4>
+                <div class="mono">
+                  ✅ 임상시험 정책 준수<br/>
+                  ✅ GCP 기준 충족<br/>
+                  ✅ 윤리위원회 승인 완료<br/>
+                  ✅ 안전성 모니터링 계획 적절
+                </div>
+              </div>
+            </div>
+            <h4>상세 심사 의견</h4>
+            <div class="mono">
+              <strong>임상시험 정책:</strong> 신약E 주사제의 임상시험 계획이 
+              관련 정책을 준수하고 있으며, 절차가 적절함.<br/><br/>
+              
+              <strong>GCP 기준:</strong> Good Clinical Practice 기준을 충족하고 있으며, 
+              윤리위원회 승인도 완료되었음.<br/><br/>
+              
+              <strong>안전성 관리:</strong> 안전성 모니터링 계획이 체계적으로 수립되어 있으며, 
+              위험관리 방안도 적절함.
+            </div>
+          </div>
+        </div>
+        
+        <div data-body="dept3" class="hidden">
+          <div class="card">
+            <h3>백신검정과/혈액제제검정과 심사 내용</h3>
+            <div class="row two">
+              <div>
+                <h4>심사 결과</h4>
+                <div class="mono">
+                  <strong>심사자:</strong> 정검정<br/>
+                  <strong>심사일:</strong> 2025-08-28<br/>
+                  <strong>결론:</strong> <span class="status ok">적합</span><br/>
+                  <strong>심사점수:</strong> 88/100
+                </div>
+              </div>
+              <div>
+                <h4>주요 검토사항</h4>
+                <div class="mono">
+                  ✅ 시험법 적절성<br/>
+                  ✅ 검증 절차 완료<br/>
+                  ✅ 품질 기준 충족<br/>
+                  ⚠️ 일부 보완사항 있음
+                </div>
+              </div>
+            </div>
+            <h4>상세 심사 의견</h4>
+            <div class="mono">
+              <strong>시험법:</strong> 신약E 주사제의 시험법이 적절하게 수립되어 있으며, 
+              검증 절차도 체계적으로 수행되었음.<br/><br/>
+              
+              <strong>품질 기준:</strong> 백신검정 및 혈액제제 관련 품질 기준을 충족하고 있으며, 
+              안전성 검증도 완료되었음.<br/><br/>
+              
+              <strong>보완사항:</strong> 일부 시험법 세부사항에 대한 보완이 필요하나, 
+              전반적으로 허가 기준을 충족함.
+            </div>
+          </div>
+        </div>
+        
+        <div data-body="dept4" class="hidden">
+          <div class="card">
+            <h3>바이오의약품연구과 심사 내용</h3>
+            <div class="row two">
+              <div>
+                <h4>심사 결과</h4>
+                <div class="mono">
+                  <strong>심사자:</strong> 박바이오<br/>
+                  <strong>심사일:</strong> 2025-08-29<br/>
+                  <strong>결론:</strong> <span class="status ok">적합</span><br/>
+                  <strong>심사점수:</strong> 90/100
+                </div>
+              </div>
+              <div>
+                <h4>주요 검토사항</h4>
+                <div class="mono">
+                  ✅ 바이오의약품 특성 분석<br/>
+                  ✅ 안전성 평가 완료<br/>
+                  ✅ 효능 검증 적절<br/>
+                  ✅ 품질 관리 체계 우수
+                </div>
+              </div>
+            </div>
+            <h4>상세 심사 의견</h4>
+            <div class="mono">
+              <strong>바이오의약품 특성:</strong> 신약E 주사제의 바이오의약품 특성이 
+              적절하게 분석되었으며, 관련 연구가 체계적으로 수행되었음.<br/><br/>
+              
+              <strong>안전성 평가:</strong> 안전성 평가가 체계적으로 진행되었으며, 
+              위험요소 분석도 적절함.<br/><br/>
+              
+              <strong>품질 관리:</strong> 품질 관리 체계가 우수하게 구축되어 있으며, 
+              일관성 있는 제품 생산이 가능함.
+            </div>
+          </div>
+        </div>
+        
+        <div data-body="dept5" class="hidden">
+          <div class="card">
+            <h3>첨단바이오융복합연구과 심사 내용</h3>
+            <div class="row two">
+              <div>
+                <h4>심사 결과</h4>
+                <div class="mono">
+                  <strong>심사자:</strong> 이첨단<br/>
+                  <strong>심사일:</strong> 2025-08-30<br/>
+                  <strong>결론:</strong> <span class="status ok">적합</span><br/>
+                  <strong>심사점수:</strong> 87/100
+                </div>
+              </div>
+              <div>
+                <h4>주요 검토사항</h4>
+                <div class="mono">
+                  ✅ 첨단기술 적용 적절<br/>
+                  ✅ 융복합 기술 검증<br/>
+                  ✅ 혁신성 평가 완료<br/>
+                  ⚠️ 일부 보완사항 있음
+                </div>
+              </div>
+            </div>
+            <h4>상세 심사 의견</h4>
+            <div class="mono">
+              <strong>첨단기술:</strong> 신약E 주사제에 적용된 첨단기술이 
+              적절하며, 관련 연구가 체계적으로 수행되었음.<br/><br/>
+              
+              <strong>융복합 기술:</strong> 여러 기술의 융복합이 적절하게 
+              이루어졌으며, 혁신성이 인정됨.<br/><br/>
+              
+              <strong>보완사항:</strong> 일부 기술적 세부사항에 대한 보완이 필요하나, 
+              전반적으로 허가 기준을 충족함.
+            </div>
+          </div>
+        </div>
+        
+        <div data-body="dept6" class="hidden">
+          <div class="card">
+            <h3>구강소화기기과 심사 내용</h3>
+            <div class="row two">
+              <div>
+                <h4>심사 결과</h4>
+                <div class="mono">
+                  <strong>심사자:</strong> 김구강<br/>
+                  <strong>심사일:</strong> 2025-08-31<br/>
+                  <strong>결론:</strong> <span class="status ok">적합</span><br/>
+                  <strong>심사점수:</strong> 85/100
+                </div>
+              </div>
+              <div>
+                <h4>주요 검토사항</h4>
+                <div class="mono">
+                  ✅ 구강소화기기 특성 분석<br/>
+                  ✅ 안전성 평가 완료<br/>
+                  ✅ 효능 검증 적절<br/>
+                  ⚠️ 일부 보완사항 있음
+                </div>
+              </div>
+            </div>
+            <h4>상세 심사 의견</h4>
+            <div class="mono">
+              <strong>구강소화기기 특성:</strong> 신약E 주사제의 구강소화기기 관련 특성이 
+              적절하게 분석되었으며, 관련 연구가 체계적으로 수행되었음.<br/><br/>
+              
+              <strong>안전성 평가:</strong> 안전성 평가가 체계적으로 진행되었으며, 
+              위험요소 분석도 적절함.<br/><br/>
+              
+              <strong>보완사항:</strong> 일부 세부사항에 대한 보완이 필요하나, 
+              전반적으로 허가 기준을 충족함.
+            </div>
+          </div>
+        </div>
+        
+        <div data-body="dept7" class="hidden">
+          <div class="card">
+            <h3>화장품심사과 심사 내용</h3>
+            <div class="row two">
+              <div>
+                <h4>심사 결과</h4>
+                <div class="mono">
+                  <strong>심사자:</strong> 이화장<br/>
+                  <strong>심사일:</strong> 2025-09-01<br/>
+                  <strong>결론:</strong> <span class="status ok">적합</span><br/>
+                  <strong>심사점수:</strong> 89/100
+                </div>
+              </div>
+              <div>
+                <h4>주요 검토사항</h4>
+                <div class="mono">
+                  ✅ 화장품 관련 특성 분석<br/>
+                  ✅ 안전성 평가 완료<br/>
+                  ✅ 효능 검증 적절<br/>
+                  ✅ 품질 관리 체계 우수
+                </div>
+              </div>
+            </div>
+            <h4>상세 심사 의견</h4>
+            <div class="mono">
+              <strong>화장품 특성:</strong> 신약E 주사제의 화장품 관련 특성이 
+              적절하게 분석되었으며, 관련 연구가 체계적으로 수행되었음.<br/><br/>
+              
+              <strong>안전성 평가:</strong> 안전성 평가가 체계적으로 진행되었으며, 
+              위험요소 분석도 적절함.<br/><br/>
+              
+              <strong>품질 관리:</strong> 품질 관리 체계가 우수하게 구축되어 있으며, 
+              일관성 있는 제품 생산이 가능함.
+            </div>
+          </div>
+        </div>
+        
+        <div data-body="appr" class="hidden">
+          <div class="card">
+            <h3>결재 이력</h3>
+            <div class="timeline">
+              <li><time>2025-08-28 09:00</time> <div><strong>품질·안유과 결재</strong><br/>결재자: 박품질, 결재: 승인, 의견: 심사 결과 적절</div></li>
+              <li><time>2025-08-29 10:30</time> <div><strong>RMP과 결재</strong><br/>결재자: 최안전, 결재: 승인, 의견: 위험관리계획 적절</div></li>
+              <li><time>2025-08-30 11:45</time> <div><strong>GMP과 결재</strong><br/>결재자: 정품질, 결재: 승인, 의견: 제조시설 기준 충족</div></li>
+              <li><time>2025-08-31 14:20</time> <div><strong>허가부서 종합검토</strong><br/>검토자: 허가부서 김종합, 결론: 적합(조건부)</div></li>
+              <li><time>2025-09-01 16:00</time> <div><strong>허가부서 결재</strong><br/>결재자: 허가부서장, 결재: 승인, 의견: 종합검토 결과 적절</div></li>
+            </div>
+          </div>
+        </div>
+        
+        <div data-body="ntfy" class="hidden">
+          <div class="card">
+            <h3>통보 이력</h3>
+            <div class="timeline">
+              <li><time>2025-09-02 09:30</time> <div><strong>허가 통보 발송</strong><br/>통보유형: 허가, 발송자: 허가부서, 상태: 발송완료</div></li>
+              <li><time>2025-09-02 10:15</time> <div><strong>신청인 수신 확인</strong><br/>수신자: 한빛제약, 확인시간: 2025-09-02 10:15</div></li>
+              <li><time>2025-09-02 14:00</time> <div><strong>보완사항 안내서 발송</strong><br/>통보유형: 보완사항 안내, 발송자: 허가부서, 상태: 발송완료</div></li>
+            </div>
+            <div class="card" style="margin-top:16px">
+              <h4>최종 통보 내용</h4>
+              <div class="mono">
+                <strong>허가 번호:</strong> 2025-허가-00123<br/>
+                <strong>허가 일자:</strong> 2025-09-01<br/>
+                <strong>허가 내용:</strong> 신약A 주사제 허가<br/>
+                <strong>보완사항:</strong> 추가 안전성 모니터링 계획 수립 및 이행<br/>
+                <strong>유효기간:</strong> 5년<br/>
+                <strong>비고:</strong> 조건부 허가로 보완사항 이행 시 무조건 허가
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- 검토 관련 팝업 모달 -->
+  <div id="reviewModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="reviewModalTitle">검토 내용</h3>
+        <button class="close" onclick="closeReviewModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="reviewModalContent">
+          <!-- 검토 내용이 여기에 동적으로 표시됩니다 -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // View switcher
+    const select = document.getElementById('viewSelect');
+    const sections = Array.from(document.querySelectorAll('section'));
+    const show = (id)=>{
+      sections.forEach(s => s.classList.toggle('hidden', s.id !== id));
+      history.replaceState(null,'','#'+id);
+      select.value = id;
+    };
+    select.addEventListener('change', e => show(e.target.value));
+    if(location.hash){ show(location.hash.replace('#','')); }
+
+    // INTK-01 상세 정보 패널 관리
+    
+    // 협의 의뢰 데이터 저장소
+    let requestData = {};
+    
+    document.querySelectorAll('#intkTable tbody tr').forEach(tr => {
+      tr.addEventListener('click', ()=>{
+        // 이전 선택된 행의 선택 상태 제거
+        document.querySelectorAll('#intkTable tbody tr').forEach(row => {
+          row.classList.remove('selected');
+        });
+        
+        // 현재 선택된 행에 선택 상태 추가
+        tr.classList.add('selected');
+        
+        const detail = JSON.parse(tr.getAttribute('data-detail')||'{}');
+        
+        // 오른쪽 상세 정보 패널에 정보 표시
+        updateIntkDetail(detail);
+        
+        // 협의 요청 상태에 따라 버튼 스타일 변경
+        if (detail.협의요청) {
+          updateRequestButtonStatus('qaRequestBtn', !!detail.협의요청.품질안유, '품질·안유');
+          updateRequestButtonStatus('rmpRequestBtn', !!detail.협의요청.RMP, 'RMP');
+          updateRequestButtonStatus('gmpRequestBtn', !!detail.협의요청.GMP, 'GMP');
+        } else {
+          // 협의 요청이 없는 경우 기본 상태로 설정
+          updateRequestButtonStatus('qaRequestBtn', false, '품질·안유');
+          updateRequestButtonStatus('rmpRequestBtn', false, 'RMP');
+          updateRequestButtonStatus('gmpRequestBtn', false, 'GMP');
+        }
+        
+        // CASE-02 민원 상세 화면으로 이동
+        show('CASE-02');
+        
+        // CASE-02에 민원 정보 전달
+        updateCase02Info(detail);
+        
+        // 선택된 민원 정보를 전역 변수에 저장 (CASE-02에서 참조용)
+        window.selectedCaseDetail = detail;
+      });
+    });
+    
+    // 각 부서별 협의 요청 버튼 이벤트
+    document.getElementById('qaRequestBtn')?.addEventListener('click', () => {
+      createRequestForDept('품질·안유', '품질·안유');
+    });
+    
+    document.getElementById('rmpRequestBtn')?.addEventListener('click', () => {
+      createRequestForDept('RMP', 'RMP');
+    });
+    
+    document.getElementById('gmpRequestBtn')?.addEventListener('click', () => {
+      createRequestForDept('GMP', 'GMP');
+    });
+    
+    // 배정완료 버튼 이벤트
+    document.getElementById('completeAssignmentBtn')?.addEventListener('click', () => {
+      completeAssignment();
+    });
+    
+    // 특정 부서에 대한 협의 요청 생성
+    function createRequestForDept(deptKey, deptName) {
+      // 현재 선택된 민원 찾기 (selected 클래스 사용)
+      const selectedRow = document.querySelector('#intkTable tbody tr.selected') || 
+                         document.querySelector('#intkTable tbody tr:first-child');
+      
+      if (!selectedRow) {
+        alert('민원을 선택해주세요.');
+        return;
+      }
+      
+      // 선택된 민원의 상태 확인
+      const requestData = selectedRow.getAttribute('data-detail');
+      const detail = JSON.parse(requestData || '{}');
+      
+      // 디버깅을 위한 로그
+      console.log('Selected petition detail:', detail);
+      console.log('Petition status:', detail.상태);
+      console.log('Selected row:', selectedRow);
+      console.log('Selected row classes:', selectedRow.className);
+      
+      // 미배정 상태가 아닌 경우 협의 요청 불가
+      if (detail.상태 !== '미배정') {
+        alert(`현재 선택된 민원의 상태는 '${detail.상태}'입니다. 미배정 상태인 민원에만 협의 의뢰를 생성할 수 있습니다.`);
+        return;
+      }
+      
+      const 민원번호 = detail.민원번호;
+      const 품목명 = detail.품목명;
+      
+      // 오늘 날짜를 협의 요청 날짜로 설정
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
+      
+      // 협의 요청 데이터만 생성 (민원 기본 정보는 변경하지 않음)
+      const 협의요청 = {};
+      협의요청[deptKey] = today;
+      
+      // 디버깅: 협의 요청 전 민원 정보 확인
+      console.log('협의 요청 전 민원 정보:', detail);
+      console.log('추가할 협의 요청:', 협의요청);
+      
+      // 테이블 업데이트 (협의요청만)
+      updateRequestTable(selectedRow, 협의요청);
+      
+      // 디버깅: 협의 요청 후 민원 정보 확인
+      const updatedData = JSON.parse(selectedRow.getAttribute('data-detail'));
+      console.log('협의 요청 후 민원 정보:', updatedData);
+      console.log('민원종료일 변경 확인:', detail.민원종료일 === updatedData.민원종료일);
+      
+      // 버튼 상태 업데이트
+      updateRequestButtonStatus(deptKey.replace(/[·\s]/g, '') + 'RequestBtn', true, deptName);
+      
+      // 결과 메시지
+      document.getElementById('requestResult').textContent = 
+        `${품목명}에 대한 ${deptName} 협의 의뢰가 생성되었습니다. (${today})`;
+      
+      // 3초 후 메시지 제거
+      setTimeout(() => {
+        document.getElementById('requestResult').textContent = '';
+      }, 3000);
+    }
+    
+    // 배정완료 처리
+    function completeAssignment() {
+      // 현재 선택된 민원 찾기
+      const selectedRow = document.querySelector('#intkTable tbody tr.selected');
+      
+      if (!selectedRow) {
+        alert('배정완료할 민원을 선택해주세요.');
+        return;
+      }
+      
+      // 선택된 민원의 상태 확인
+      const requestData = selectedRow.getAttribute('data-detail');
+      const detail = JSON.parse(requestData || '{}');
+      
+      // 미배정 상태가 아닌 경우 배정완료 불가
+      if (detail.상태 !== '미배정') {
+        alert(`현재 선택된 민원의 상태는 '${detail.상태}'입니다. 미배정 상태인 민원만 배정완료할 수 있습니다.`);
+        return;
+      }
+      
+      // 상태를 배정완료로 변경
+      detail.상태 = '배정완료';
+      
+      // 업데이트된 데이터를 다시 저장
+      selectedRow.setAttribute('data-detail', JSON.stringify(detail));
+      
+      // 테이블 상태 컬럼 업데이트
+      const statusCell = selectedRow.cells[7]; // 상태 컬럼
+      statusCell.innerHTML = '<span class="status ok">배정완료</span>';
+      
+      // 협의 의뢰 생성 버튼들 비활성화
+      const qaRequestBtn = document.getElementById('qaRequestBtn');
+      const rmpRequestBtn = document.getElementById('rmpRequestBtn');
+      const gmpRequestBtn = document.getElementById('gmpRequestBtn');
+      
+      if (qaRequestBtn) {
+        qaRequestBtn.disabled = true;
+        qaRequestBtn.textContent = '품질·안유 협의완료';
+      }
+      
+      if (rmpRequestBtn) {
+        rmpRequestBtn.disabled = true;
+        rmpRequestBtn.textContent = 'RMP 협의완료';
+      }
+      
+      if (gmpRequestBtn) {
+        gmpRequestBtn.disabled = true;
+        gmpRequestBtn.textContent = 'GMP 협의완료';
+      }
+      
+      // 배정완료 버튼 비활성화
+      const completeAssignmentBtn = document.getElementById('completeAssignmentBtn');
+      if (completeAssignmentBtn) {
+        completeAssignmentBtn.disabled = true;
+        completeAssignmentBtn.textContent = '배정완료됨';
+        completeAssignmentBtn.classList.remove('primary');
+        completeAssignmentBtn.classList.add('ok');
+      }
+      
+
+      
+      // 결과 메시지
+      document.getElementById('requestResult').textContent = 
+        `${detail.품목명}이(가) 배정완료되었습니다.`;
+      
+      // 3초 후 메시지 제거
+      setTimeout(() => {
+        document.getElementById('requestResult').textContent = '';
+      }, 3000);
+      
+      // 상세 정보 업데이트
+      updateIntkDetail(detail);
+      
+      // 디버깅 로그
+      console.log('배정완료 처리 완료:', detail);
+    }
+    
+    // INTK-01 상세 정보 업데이트
+    function updateIntkDetail(detail) {
+      const detailElement = document.getElementById('intkDetail');
+      if (!detailElement) return;
+      
+      let html = '';
+      html += `<strong>민원번호:</strong> ${detail.민원번호 || '-'}<br/>`;
+      html += `<strong>품목명:</strong> ${detail.품목명 || '-'}<br/>`;
+      html += `<strong>신청인:</strong> ${detail.신청인 || '-'}<br/>`;
+      html += `<strong>민원 신청일:</strong> ${detail['민원 신청일'] || '-'}<br/><br/>`;
+      
+      if (detail.협의요청) {
+        html += `<strong>협의 요청 현황:</strong><br/>`;
+        if (detail.협의요청['품질·안유']) {
+          html += `✅ 품질·안유: ${detail.협의요청['품질·안유']}<br/>`;
+        } else {
+          html += `⏳ 품질·안유: 미요청<br/>`;
+        }
+        if (detail.협의요청.RMP) {
+          html += `✅ RMP: ${detail.협의요청.RMP}<br/>`;
+        } else {
+          html += `⏳ RMP: 미요청<br/>`;
+        }
+        if (detail.협의요청.GMP) {
+          html += `✅ GMP: ${detail.협의요청.GMP}<br/>`;
+        } else {
+          html += `⏳ GMP: 미요청<br/>`;
+        }
+      } else {
+        html += `<strong>협의 요청 현황:</strong><br/>`;
+        html += `⏳ 모든 부서: 미요청<br/>`;
+      }
+      
+      detailElement.innerHTML = html;
+    }
+    
+    // CASE-02 민원 상세 정보 업데이트 (초기 로드 시)
+    function updateCase02Info(detail) {
+      // CASE-02 헤더의 민원번호 업데이트
+      const caseHeader = document.querySelector('#CASE-02 .right.muted');
+      if (caseHeader) {
+        caseHeader.textContent = `민원번호 ${detail.민원번호}`;
+      }
+      
+      // 기본정보 탭과 협의 탭 업데이트
+      updateBasicTab(detail);
+      updateConsTab(detail);
+    }
+    
+    // 협의 요청 테이블 업데이트
+    function updateRequestTable(row, 협의요청) {
+      const requestCell = row.cells[6]; // 부서별 협의요청 셀 (액션 컬럼 추가로 인덱스는 그대로)
+      const requestData = row.getAttribute('data-detail');
+      const detail = JSON.parse(requestData || '{}');
+      
+      // 원본 민원 정보를 완전히 복사하여 보존
+      const originalDetail = JSON.parse(JSON.stringify(detail));
+      
+      // 협의요청 객체가 없으면 새로 생성
+      if (!originalDetail.협의요청) {
+        originalDetail.협의요청 = {};
+      }
+      
+      // 기존 협의요청 데이터를 보존하면서 새로운 데이터 병합
+      const updatedRequests = { ...originalDetail.협의요청, ...협의요청 };
+      originalDetail.협의요청 = updatedRequests;
+      
+      // 디버깅: 협의요청 데이터 병합 과정 확인
+      console.log('기존 협의요청:', originalDetail.협의요청);
+      console.log('새로운 협의요청:', 협의요청);
+      console.log('병합된 협의요청:', updatedRequests);
+      console.log('민원종료일 보호 확인:', detail.민원종료일 === originalDetail.민원종료일);
+      
+      // 업데이트된 데이터를 다시 저장
+      row.setAttribute('data-detail', JSON.stringify(originalDetail));
+      
+      // 테이블 셀 내용 업데이트 (부서별 협의요청 날짜)
+      let html = '';
+      if (originalDetail.협의요청['품질·안유']) {
+        html += `<span class="status ok">품질·안유: ${formatDate(originalDetail.협의요청['품질·안유'])}</span><br/>`;
+      } else {
+        html += `<span class="status wait">품질·안유: 미요청</span><br/>`;
+      }
+      if (originalDetail.협의요청.RMP) {
+        html += `<span class="status ok">RMP: ${formatDate(originalDetail.협의요청.RMP)}</span><br/>`;
+      } else {
+        html += `<span class="status wait">RMP: 미요청</span><br/>`;
+      }
+      if (originalDetail.협의요청.GMP) {
+        html += `<span class="status ok">GMP: ${formatDate(originalDetail.협의요청.GMP)}</span><br/>`;
+      } else {
+        html += `<span class="status wait">GMP: 미요청</span><br/>`;
+      }
+      
+      requestCell.innerHTML = html;
+      
+      // 디버깅: 최종 결과 확인
+      console.log('부서별 협의요청 날짜 업데이트 완료:', originalDetail.협의요청);
+      console.log('최종 저장된 데이터:', JSON.parse(row.getAttribute('data-detail')));
+    }
+    
+    // 날짜 포맷팅 (MM-DD)
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      return `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    }
+    
+    // 협의 요청 버튼 상태 업데이트
+    function updateRequestButtonStatus(btnId, hasRequest, deptName) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      
+      if (hasRequest) {
+        btn.classList.add('ok');
+        btn.textContent = `${deptName} 협의완료`;
+        btn.disabled = true;
+      } else {
+        btn.classList.remove('ok');
+        btn.textContent = `${deptName} 협의 요청`;
+        btn.disabled = false;
+      }
+    }
+
+    // ASGN check all
+    const chkAll = document.getElementById('chkAll');
+    chkAll?.addEventListener('change', e => {
+      document.querySelectorAll('.task').forEach(c => c.checked = e.target.checked);
+    });
+    
+    // 배정 이력 저장소
+    let assignHistory = [];
+    
+    // ASGN-01 부서별 데이터
+    const deptAssignmentData = {
+      qa: {
+        name: '품질·안유과',
+        tasks: [
+          { 민원번호: 'A25-00123', 품목명: '신약A 주사제', 신청인: '한빛제약', 민원신청일: '2025-08-20', 배정상태: '미배정' },
+          { 민원번호: 'A25-00150', 품목명: '신약D 정제', 신청인: '신약제약', 민원신청일: '2025-08-23', 배정상태: '미배정' },
+          { 민원번호: 'A25-00165', 품목명: '신약G 정제', 신청인: '효과제약', 민원신청일: '2025-08-26', 배정상태: '배정완료' }
+        ],
+        assignees: [
+          { 이름: '김품질', 소속부서: '품질·안유과', 전문분야: '품질관리' },
+          { 이름: '박안전', 소속부서: '품질·안유과', 전문분야: '안전성평가' },
+          { 이름: '이효과', 소속부서: '품질·안유과', 전문분야: '효과성평가' }
+        ]
+      },
+      rmp: {
+        name: 'RMP과',
+        tasks: [
+          { 민원번호: 'A25-00131', 품목명: '바이오B', 신청인: '유니바이오', 민원신청일: '2025-08-21', 배정상태: '미배정' },
+          { 민원번호: 'A25-00155', 품목명: '신약E 주사제', 신청인: '신약바이오', 민원신청일: '2025-08-24', 배정상태: '미배정' },
+          { 민원번호: 'A25-00170', 품목명: '신약H 캡슐', 신청인: '효과바이오', 민원신청일: '2025-08-27', 배정상태: '배정완료' }
+        ],
+        assignees: [
+          { 이름: '김RMP', 소속부서: 'RMP과', 전문분야: '위험관리' },
+          { 이름: '박계획', 소속부서: 'RMP과', 전문분야: '계획수립' },
+          { 이름: '이모니터', 소속부서: 'RMP과', 전문분야: '모니터링' }
+        ]
+      },
+      gmp: {
+        name: 'GMP과',
+        tasks: [
+          { 민원번호: 'A25-00145', 품목명: '신약C 캡슐', 신청인: '대한제약', 민원신청일: '2025-08-22', 배정상태: '미배정' },
+          { 민원번호: 'A25-00160', 품목명: '바이오F', 신청인: '바이오테크', 민원신청일: '2025-08-25', 배정상태: '미배정' },
+          { 민원번호: 'A25-00175', 품목명: '바이오I', 신청인: '효과테크', 민원신청일: '2025-08-28', 배정상태: '배정완료' }
+        ],
+        assignees: [
+          { 이름: '김GMP', 소속부서: 'GMP과', 전문분야: '제조관리' },
+          { 이름: '박품질', 소속부서: 'GMP과', 전문분야: '품질관리' },
+          { 이름: '이검사', 소속부서: 'GMP과', 전문분야: '품질검사' }
+        ]
+      },
+      stats: {
+        name: '사전상담과',
+        tasks: [
+          { 민원번호: 'A25-00180', 품목명: '통계분석A', 신청인: '통계제약', 민원신청일: '2025-08-29', 배정상태: '미배정' },
+          { 민원번호: 'A25-00185', 품목명: '통계분석B', 신청인: '통계바이오', 민원신청일: '2025-08-30', 배정상태: '미배정' }
+        ],
+        assignees: [
+          { 이름: '김통계', 소속부서: '사전상담과', 전문분야: '통계분석' },
+          { 이름: '박상담', 소속부서: '사전상담과', 전문분야: '사전상담' }
+        ]
+      },
+      gcp: {
+        name: '임상정책과',
+        tasks: [
+          { 민원번호: 'A25-00190', 품목명: 'GCP실태조사A', 신청인: '임상제약', 민원신청일: '2025-08-31', 배정상태: '미배정' },
+          { 민원번호: 'A25-00195', 품목명: 'GCP실태조사B', 신청인: '임상바이오', 민원신청일: '2025-09-01', 배정상태: '미배정' }
+        ],
+        assignees: [
+          { 이름: '김GCP', 소속부서: '임상정책과', 전문분야: 'GCP실태조사' },
+          { 이름: '박정책', 소속부서: '임상정책과', 전문분야: '임상정책' }
+        ]
+      }
+    };
+    
+    // 부서별 데이터 로드
+    function loadDeptData() {
+      const deptSelect = document.getElementById('deptSelect');
+      const selectedDept = deptSelect?.value || 'qa';
+      const deptData = deptAssignmentData[selectedDept];
+      
+      if (!deptData) return;
+      
+      // 심사대상 테이블 업데이트
+      renderTaskTable(deptData.tasks);
+      
+      // 심사자 목록 테이블 업데이트
+      renderAssigneeTable(deptData.assignees);
+      
+      // 부서명 표시 업데이트
+      const taskHeader = document.querySelector('#taskTable').previousElementSibling;
+      if (taskHeader) {
+        taskHeader.querySelector('h3').textContent = `${deptData.name} - 심사 대상`;
+      }
+      
+      const assigneeHeader = document.querySelector('#assigneeTable').previousElementSibling;
+      if (assigneeHeader) {
+        assigneeHeader.querySelector('h3').textContent = `${deptData.name} - 심사자 목록`;
+      }
+    }
+    
+    // 심사대상 테이블 렌더링
+    function renderTaskTable(tasks) {
+      const tbody = document.getElementById('taskTableBody');
+      if (!tbody) return;
+      
+      tbody.innerHTML = '';
+      
+      tasks.forEach((task, index) => {
+        const row = document.createElement('tr');
+        const statusClass = task.배정상태 === '배정완료' ? 'ok' : 'wait';
+        
+        row.innerHTML = `
+          <td><input type="checkbox" class="task"/></td>
+          <td>${task.민원번호}</td>
+          <td>${task.품목명}</td>
+          <td>${task.신청인}</td>
+          <td>${task.민원신청일}</td>
+          <td><span class="status ${statusClass}">${task.배정상태}</span></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+    
+    // 심사자 목록 테이블 렌더링
+    function renderAssigneeTable(assignees) {
+      const tbody = document.getElementById('assigneeTableBody');
+      if (!tbody) return;
+      
+      tbody.innerHTML = '';
+      
+              assignees.forEach((assignee, index) => {
+          const row = document.createElement('tr');
+          
+          row.innerHTML = `
+            <td><input type="radio" name="assignee"/></td>
+            <td>${assignee.이름}</td>
+            <td>${assignee.소속부서}</td>
+            <td>${assignee.전문분야}</td>
+          `;
+          tbody.appendChild(row);
+        });
+    }
+    
+    // 배정 검색 기능
+    function searchAssignments() {
+      const deptSelect = document.getElementById('deptSelect');
+      const reviewTypeFilter = document.getElementById('reviewTypeFilter');
+      const statusFilter = document.getElementById('statusFilter');
+      const startDate = document.getElementById('startDate');
+      const endDate = document.getElementById('endDate');
+      
+      const selectedDept = deptSelect?.value || 'qa';
+      const deptData = deptAssignmentData[selectedDept];
+      
+      if (!deptData) return;
+      
+      // 필터링된 작업 목록 생성
+      let filteredTasks = deptData.tasks.filter(task => {
+        if (reviewTypeFilter?.value && task.심사유형 !== reviewTypeFilter.value) return false;
+        if (statusFilter?.value && task.배정상태 !== statusFilter.value) return false;
+        if (startDate?.value && task.민원신청일 < startDate.value) return false;
+        if (endDate?.value && task.민원신청일 > endDate.value) return false;
+        return true;
+      });
+      
+      // 필터링된 데이터로 테이블 업데이트
+      renderTaskTable(filteredTasks);
+    }
+    
+    // 페이지 로드 시 초기 데이터 표시
+    document.addEventListener('DOMContentLoaded', () => {
+      // ASGN-01이 표시될 때 데이터 로드
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+            const asgn01Section = document.getElementById('ASGN-01');
+            if (asgn01Section && !asgn01Section.classList.contains('hidden')) {
+              loadDeptData();
+            }
+          }
+        });
+      });
+      
+      const asgn01Section = document.getElementById('ASGN-01');
+      if (asgn01Section) {
+        observer.observe(asgn01Section, { attributes: true });
+      }
+      
+
+    });
+    
+    // 배정 기능
+    document.getElementById('btnAssign')?.addEventListener('click', ()=>{
+      const checkedTasks = document.querySelectorAll('.task:checked');
+      const assigneeRow = document.querySelector('input[name=assignee]:checked')?.closest('tr');
+      
+      if (checkedTasks.length === 0) {
+        alert('배정할 민원을 선택해주세요.');
+        return;
+      }
+      
+      if (!assigneeRow) {
+        alert('심사자를 선택해주세요.');
+        return;
+      }
+      
+      const assigneeName = assigneeRow.children[1].textContent;
+      const assigneeDept = assigneeRow.children[2].textContent;
+      const now = new Date();
+      const timeStr = now.toLocaleString('ko-KR');
+      
+      // 선택된 민원들의 상태를 '배정완료'로 변경
+      checkedTasks.forEach(task => {
+        const row = task.closest('tr');
+        const statusCell = row.children[5]; // 배정상태 컬럼 (심사유형 제거로 인덱스 복원)
+        statusCell.textContent = '배정완료';
+        statusCell.innerHTML = '<span class="status ok">배정완료</span>';
+        
+        // 배정 이력에 추가
+        const 민원번호 = row.children[1].textContent;
+        const 품목명 = row.children[2].textContent;
+        const 신청인 = row.children[3].textContent;
+        
+        assignHistory.push({
+          배정일시: timeStr,
+          민원번호: 민원번호,
+          품목명: 품목명,
+          신청인: 신청인,
+          심사자: assigneeName,
+          소속부서: assigneeDept,
+          상태: '배정완료'
+        });
+      });
+      
+      // 체크박스 해제
+      checkedTasks.forEach(task => task.checked = false);
+      chkAll.checked = false;
+      
+      // 배정 결과 로그 업데이트
+      document.getElementById('assignResult').textContent = `선택된 민원 ${checkedTasks.length}건 → 심사자 [${assigneeName}] 배정 완료 (${timeStr})`;
+    });
+    
+    // 배정 이력 모달 열기
+    document.getElementById('btnAssignHistory')?.addEventListener('click', ()=>{
+      const modal = document.getElementById('assignHistoryModal');
+      const tbody = document.getElementById('assignHistoryBody');
+      
+      // 기존 내용 초기화
+      tbody.innerHTML = '';
+      
+      if (assignHistory.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted)">배정 이력이 없습니다.</td></tr>';
+      } else {
+        // 배정 이력 테이블에 데이터 추가
+        assignHistory.forEach(history => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${history.배정일시}</td>
+            <td>${history.민원번호}</td>
+            <td>${history.품목명}</td>
+            <td>${history.심사자}</td>
+            <td>${history.소속부서}</td>
+            <td><span class="status ok">${history.상태}</span></td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+      
+      modal.classList.remove('hidden');
+    });
+    
+    // 배정 이력 모달 닫기
+    document.getElementById('closeAssignHistory')?.addEventListener('click', ()=>{
+      document.getElementById('assignHistoryModal').classList.add('hidden');
+    });
+    
+    // 나의 심사 목록 데이터 (시뮬레이션)
+    let myReviewData = [
+      // 김심사 심사원
+      {
+        민원번호: 'A25-00123',
+        품목명: '신약A 주사제',
+        신청인: '한빛제약',
+        배정일: '2025-08-20',
+        심사유형: '품질·안유',
+        심사완료일: '',
+        상태: '배정완료',
+        심사자: '김심사'
+      },
+      {
+        민원번호: 'A25-00131',
+        품목명: '바이오B',
+        신청인: '유니바이오',
+        배정일: '2025-08-21',
+        심사유형: 'RMP',
+        심사완료일: '',
+        상태: '심사중',
+        심사자: '김심사'
+      },
+      {
+        민원번호: 'A25-00145',
+        품목명: '신약C 캡슐',
+        신청인: '대한제약',
+        배정일: '2025-08-22',
+        심사유형: 'GMP',
+        심사완료일: '2025-08-28',
+        상태: '민원 완료',
+        심사자: '김심사'
+      },
+      // 박품질 심사원
+      {
+        민원번호: 'A25-00150',
+        품목명: '신약D 정제',
+        신청인: '신약제약',
+        배정일: '2025-08-23',
+        심사유형: '품질·안유',
+        심사완료일: '2025-08-30',
+        상태: '민원 완료',
+        심사자: '박품질'
+      },
+      {
+        민원번호: 'A25-00155',
+        품목명: '신약E 주사제',
+        신청인: '신약바이오',
+        배정일: '2025-08-24',
+        심사유형: 'RMP',
+        심사완료일: '',
+        상태: '심사중',
+        심사자: '박품질'
+      },
+      {
+        민원번호: 'A25-00160',
+        품목명: '바이오F',
+        신청인: '바이오테크',
+        배정일: '2025-08-25',
+        심사유형: 'GMP',
+        심사완료일: '',
+        상태: '배정완료',
+        심사자: '박품질'
+      },
+      // 이유효 심사원
+      {
+        민원번호: 'A25-00165',
+        품목명: '신약G 정제',
+        신청인: '효과제약',
+        배정일: '2025-08-26',
+        심사유형: '품질·안유',
+        심사완료일: '2025-08-31',
+        상태: '민원 완료',
+        심사자: '이유효'
+      },
+      {
+        민원번호: 'A25-00170',
+        품목명: '신약H 캡슐',
+        신청인: '효과바이오',
+        배정일: '2025-08-27',
+        심사유형: 'RMP',
+        심사완료일: '',
+        상태: '심사중',
+        심사자: '이유효'
+      },
+      {
+        민원번호: 'A25-00175',
+        품목명: '바이오I',
+        신청인: '효과테크',
+        배정일: '2025-08-28',
+        심사유형: 'GMP',
+        심사완료일: '',
+        상태: '배정완료',
+        심사자: '이유효'
+      }
+    ];
+    
+    // 나의 심사 목록 렌더링
+    function renderMyReviewList() {
+      const tbody = document.getElementById('myReviewTableBody');
+      
+      if (!tbody) return;
+      
+      // 필터 값 가져오기
+      const statusFilter = document.getElementById('statusFilter')?.value || '';
+      const reviewTypeFilter = document.getElementById('reviewTypeFilter')?.value || '';
+      const searchInput = document.getElementById('searchInput')?.value || '';
+      const startDate = document.getElementById('startDate')?.value || '';
+      const endDate = document.getElementById('endDate')?.value || '';
+      
+      // 필터링된 데이터 생성
+      let filteredData = myReviewData.filter(item => {
+        // 상태 필터
+        if (statusFilter && item.상태 !== statusFilter) return false;
+        
+        // 심사유형 필터
+        if (reviewTypeFilter && item.심사유형 !== reviewTypeFilter) return false;
+        
+        // 검색어 필터 (심사자, 민원번호, 품목명, 신청인)
+        if (searchInput) {
+          const searchLower = searchInput.toLowerCase();
+          const matchesSearch = 
+            item.심사자?.toLowerCase().includes(searchLower) ||
+            item.민원번호?.toLowerCase().includes(searchLower) ||
+            item.품목명?.toLowerCase().includes(searchLower) ||
+            item.신청인?.toLowerCase().includes(searchLower);
+          if (!matchesSearch) return false;
+        }
+        
+        // 날짜 범위 필터
+        if (startDate && item.배정일 < startDate) return false;
+        if (endDate && item.배정일 > endDate) return false;
+        
+        return true;
+      });
+      
+      // 기존 내용 초기화
+      tbody.innerHTML = '';
+      
+      // 테이블 데이터 렌더링
+      filteredData.forEach((item, index) => {
+        const row = document.createElement('tr');
+        const statusClass = item.상태 === '민원 완료' ? 'ok' : item.상태 === '심사중' ? 'warn' : 'wait';
+        
+        row.innerHTML = `
+          <td><input type="radio" name="selectedReview" value="${index}"/></td>
+          <td>${item.민원번호}</td>
+          <td>${item.품목명}</td>
+          <td>${item.신청인}</td>
+          <td>${item.배정일}</td>
+          <td>${item.심사유형}</td>
+          <td>${item.심사완료일 || '-'}</td>
+          <td><span class="status ${statusClass}">${item.상태}</span></td>
+          <td>
+            ${item.상태 === '배정완료' ? '<button class="btn btn-sm" onclick="startReview(' + index + ')">심사 시작</button>' : 
+              item.상태 === '심사중' ? '<button class="btn btn-sm primary" onclick="continueReview(' + index + ')">심사 페이지 이동</button>' : 
+              '<button class="btn btn-sm ok" onclick="viewReview(' + index + ')">결과 보기</button>'}
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+      
+      // 결과가 없을 때 메시지 표시
+      if (filteredData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--muted)">검색 결과가 없습니다.</td></tr>';
+      }
+    }
+    
+
+    
+    // 심사 시작
+    function startReview(index) {
+      const item = myReviewData[index];
+      item.상태 = '심사중';
+      renderMyReviewList();
+      alert(`${item.품목명} 심사를 시작합니다.`);
+    }
+    
+    // 심사 완료
+    function completeReview(index) {
+      const item = myReviewData[index];
+              item.상태 = '민원 완료';
+      item.심사완료일 = new Date().toISOString().split('T')[0]; // 오늘 날짜
+      renderMyReviewList();
+      alert(`${item.품목명} 심사가 완료되었습니다.`);
+    }
+    
+    // 검토 상신 처리
+    function submitReview() {
+      // 현재 REVIEW-01에서 작업 중인 민원 정보 가져오기
+      const 민원번호 = document.querySelector('#REVIEW-01 .kpi:nth-child(1) .n')?.textContent;
+      const 품목명 = document.querySelector('#REVIEW-01 .kpi:nth-child(2) .n')?.textContent;
+      const 부서 = document.querySelector('#REVIEW-01 .kpi:nth-child(3) .n')?.textContent;
+      
+      if (!민원번호 || !품목명) {
+        alert('민원 정보를 찾을 수 없습니다.');
+        return;
+      }
+      
+      // REVIEW-00의 심사 목록에서 해당 민원 찾기
+      const reviewItem = myReviewData.find(item => 
+        item.민원번호 === 민원번호 && item.품목명 === 품목명
+      );
+      
+      if (reviewItem) {
+        // 심사 상태를 완료로 변경
+        reviewItem.상태 = '민원 완료';
+        reviewItem.심사완료일 = new Date().toISOString().split('T')[0]; // 오늘 날짜
+        
+        // REVIEW-00 화면으로 이동
+        show('REVIEW-00');
+        
+        // 심사 목록 다시 렌더링
+        renderMyReviewList();
+        
+        alert(`${품목명} 심사가 검토 상신되어 완료 처리되었습니다.`);
+      } else {
+        alert('해당 민원을 심사 목록에서 찾을 수 없습니다.');
+      }
+    }
+    
+    // 심사 계속
+    function continueReview(index) {
+      const item = myReviewData[index];
+      // REVIEW-01 화면으로 이동
+      show('REVIEW-01');
+      // 선택된 민원 정보를 REVIEW-01에 전달
+      updateReview01Info(item);
+      console.log('심사 계속:', item);
+    }
+    
+    // REVIEW-01 정보 업데이트
+    function updateReview01Info(item) {
+      const 민원번호El = document.querySelector('#REVIEW-01 .kpi:nth-child(1) .n');
+      const 품목명El = document.querySelector('#REVIEW-01 .kpi:nth-child(2) .n');
+      const 부서El = document.querySelector('#REVIEW-01 .kpi:nth-child(3) .n');
+      const 배정받은날짜El = document.querySelector('#REVIEW-01 .kpi:nth-child(4) .n');
+      const 완료한날짜El = document.querySelector('#REVIEW-01 .kpi:nth-child(5) .n');
+      const 상태El = document.querySelector('#REVIEW-01 .kpi:nth-child(6) .n');
+      
+      if (민원번호El) 민원번호El.textContent = item.민원번호;
+      if (품목명El) 품목명El.textContent = item.품목명;
+      if (부서El) 부서El.textContent = item.부서 || getDeptName(item.심사유형) || '-';
+      if (배정받은날짜El) 배정받은날짜El.textContent = item.배정일;
+      if (완료한날짜El) 완료한날짜El.textContent = item.심사완료일 || '-';
+      if (상태El) 상태El.textContent = item.상태;
+      
+      // 협의요청 진행상황 업데이트
+      updateConsultationProgress();
+    }
+    
+    // 심사유형에 따른 부서명 반환
+    function getDeptName(심사유형) {
+      const deptMap = {
+        '품질·안유': '품질·안유과',
+        'RMP': 'RMP과',
+        'GMP': 'GMP과',
+        '통계': '사전상담과',
+        'GCP': '임상정책과',
+        '시험법': '백신검정과/혈액제제검정과',
+        '바이오': '바이오의약품연구과',
+        '첨단': '첨단바이오융복합연구과',
+        '주사침': '구강소화기기과',
+        '의약외품': '화장품심사과'
+      };
+      return deptMap[심사유형] || 심사유형;
+    }
+    
+    // 협의요청 데이터 저장소
+    let consultationRequests = [];
+    
+    // 협의요청 추가
+    function addConsultationRequest() {
+      const selectedDept = document.getElementById('consultationDept')?.value;
+      if (!selectedDept) {
+        alert('협의요청할 부서를 선택해주세요.');
+        return;
+      }
+      
+      const current민원번호 = document.querySelector('#REVIEW-01 .kpi:nth-child(1) .n')?.textContent;
+      const current품목명 = document.querySelector('#REVIEW-01 .kpi:nth-child(2) .n')?.textContent;
+      
+      if (!current민원번호 || current민원번호 === '-') {
+        alert('민원을 선택해주세요.');
+        return;
+      }
+      
+      // 협의 요청 문구 가져오기
+      const consultationMessage = document.getElementById('consultationMessage')?.value || '';
+      
+      const now = new Date();
+      const requestDate = now.toISOString().split('T')[0];
+      
+      const requestId = `REQ_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      const request = {
+        id: requestId,
+        민원번호: current민원번호,
+        품목명: current품목명,
+        요청부서: selectedDept,
+        요청일: requestDate,
+        상태: '요청중',
+        요청내용: consultationMessage,
+        결과내용: '',
+        완료일: null
+      };
+      
+      consultationRequests.push(request);
+      
+      // 드롭다운 초기화
+      if (document.getElementById('consultationDept')) {
+        document.getElementById('consultationDept').value = '';
+      }
+      
+      // 협의 요청 문구 초기화
+      if (document.getElementById('consultationMessage')) {
+        document.getElementById('consultationMessage').value = '';
+      }
+      
+      // 협의요청 진행상황 업데이트
+      updateConsultationProgress();
+      
+      alert(`${selectedDept} 부서에 협의요청이 전송되었습니다.`);
+    }
+    
+    // 협의요청 진행상황 업데이트
+    function updateConsultationProgress() {
+      const progressDiv = document.getElementById('consultationProgress');
+      
+      if (!progressDiv) return;
+      
+      const current민원번호 = document.querySelector('#REVIEW-01 .kpi:nth-child(1) .n')?.textContent;
+      const currentRequests = consultationRequests.filter(req => req.민원번호 === current민원번호);
+      
+      if (currentRequests.length === 0) {
+        progressDiv.innerHTML = '<div class="mono" style="color:var(--muted)">협의요청이 없습니다.</div>';
+        return;
+      }
+      
+      // 진행상황 표시 (요청중, 진행중, 완료 모두 포함)
+      let progressHtml = '';
+      currentRequests.forEach((request, index) => {
+        const statusClass = request.상태 === '완료' ? 'ok' : request.상태 === '진행중' ? 'warn' : 'wait';
+        const isClickable = request.상태 === '완료';
+        const cursorStyle = isClickable ? 'cursor:pointer' : 'cursor:default';
+        const clickHandler = isClickable ? `onclick="viewCompletedConsultation(${index})"` : '';
+        
+        progressHtml += `
+          <div class="card" style="margin-bottom:8px;padding:8px;${cursorStyle};" ${clickHandler}>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <strong>${request.요청부서}</strong>
+              <span class="status ${statusClass}">${request.상태 === '완료' ? '협의 요청 결과 완료' : request.상태}</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px;">
+              요청일: ${request.요청일}
+              ${request.완료일 ? ` | 완료일: ${request.완료일}` : ''}
+            </div>
+            ${request.요청내용 ? `<div style="margin-top:4px;font-size:12px;">요청내용: ${request.요청내용}</div>` : ''}
+            ${request.결과내용 ? `<div style="margin-top:4px;font-size:12px;color:var(--primary);">결과내용: ${request.결과내용}</div>` : ''}
+            <div style="margin-top:8px;text-align:right;">
+              <button class="btn btn-sm" onclick="testCompleteSingleConsultation(${index})" style="margin-left:8px;">테스트 완료</button>
+            </div>
+          </div>
+        `;
+      });
+      progressDiv.innerHTML = progressHtml;
+    }
+    
+    // 협의 요청 상태 변경 (테스트용)
+    function updateConsultationStatus(requestId, newStatus, resultContent) {
+      const request = consultationRequests.find(req => req.id === requestId);
+      if (request) {
+        request.상태 = newStatus;
+        if (newStatus === '완료') {
+          request.결과내용 = resultContent || '협의가 완료되었습니다.';
+          request.완료일 = new Date().toISOString().split('T')[0];
+        }
+        updateConsultationProgress();
+      }
+    }
+    
+    // 심사 결과 보기
+    function viewReview(index) {
+      const item = myReviewData[index];
+      // REVIEW-01 화면으로 이동
+      show('REVIEW-01');
+      // 선택된 민원 정보를 REVIEW-01에 전달
+      updateReview01Info(item);
+      console.log('심사 결과 보기:', item);
+    }
+    
+    // CASE-02 탭 전환 기능
+    function setupCaseTabs() {
+      const tabButtons = document.querySelectorAll('#caseTabs button');
+      const tabBodies = document.querySelectorAll('#caseTabBodies > div');
+      
+      tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const targetTab = button.getAttribute('data-tab');
+          
+          // 모든 탭 버튼에서 active 클래스 제거
+          tabButtons.forEach(btn => btn.classList.remove('active'));
+          // 클릭된 버튼에 active 클래스 추가
+          button.classList.add('active');
+          
+          // 모든 탭 내용 숨기기
+          tabBodies.forEach(body => body.classList.add('hidden'));
+          // 선택된 탭 내용만 보이기
+          const targetBody = document.querySelector(`[data-body="${targetTab}"]`);
+          if (targetBody) {
+            targetBody.classList.remove('hidden');
+          }
+          
+          // 선택된 민원 정보가 있으면 해당 탭의 내용도 업데이트
+          if (window.selectedCaseDetail) {
+            updateCase02TabContent(targetTab, window.selectedCaseDetail);
+          }
+        });
+      });
+    }
+    
+    // CASE-02 탭별 내용 업데이트
+    function updateCase02TabContent(tabName, detail) {
+      switch(tabName) {
+        case 'basic':
+          updateBasicTab(detail);
+          break;
+        case 'cons':
+          updateConsTab(detail);
+          break;
+        case 'qa':
+          updateQaTab(detail);
+          break;
+        case 'rmp':
+          updateRmpTab(detail);
+          break;
+        case 'gmp':
+          updateGmpTab(detail);
+          break;
+      }
+    }
+    
+    // 기본정보 탭 업데이트
+    function updateBasicTab(detail) {
+      const basicTab = document.querySelector('#caseTabBodies [data-body="basic"]');
+      if (basicTab) {
+        const infoTable = basicTab.querySelector('.info-table');
+        if (infoTable) {
+          // 민원번호 업데이트
+          const 민원번호Row = infoTable.querySelector('tr:nth-child(1) td:last-child');
+          if (민원번호Row) 민원번호Row.textContent = detail.민원번호 || '-';
+          
+          // 품목명 업데이트
+          const 품목명Row = infoTable.querySelector('tr:nth-child(2) td:last-child');
+          if (품목명Row) 품목명Row.textContent = detail.품목명 || '-';
+          
+          // 신청인 업데이트
+          const 신청인Row = infoTable.querySelector('tr:nth-child(3) td:last-child');
+          if (신청인Row) 신청인Row.textContent = detail.신청인 || '-';
+          
+          // 신청일 업데이트
+          const 신청일Row = infoTable.querySelector('tr:nth-child(4) td:last-child');
+          if (신청일Row) 신청일Row.textContent = detail['민원 신청일'] || '-';
+        }
+      }
+    }
+    
+    // 협의 탭 업데이트
+    function updateConsTab(detail) {
+      const consTab = document.querySelector('#caseTabBodies [data-body="cons"]');
+      if (consTab) {
+        const timeline = consTab.querySelector('.timeline');
+        if (timeline) {
+          let timelineHtml = '';
+          
+          if (detail.협의요청) {
+            if (detail.협의요청.품질안유) {
+              timelineHtml += `<li><time>${detail.협의요청.품질안유} 14:30</time> <div><strong>품질·안유과 협의 의뢰</strong><br/>담당자: 김심사, 의뢰일: ${detail.협의요청.품질안유}</div></li>`;
+            }
+            if (detail.협의요청.RMP) {
+              timelineHtml += `<li><time>${detail.협의요청.RMP} 09:15</time> <div><strong>RMP과 협의 의뢰</strong><br/>담당자: 이유효, 의뢰일: ${detail.협의요청.RMP}</div></li>`;
+            }
+            if (detail.협의요청.GMP) {
+              timelineHtml += `<li><time>${detail.협의요청.GMP} 10:30</time> <div><strong>GMP과 협의 의뢰</strong><br/>담당자: 이제조, 의뢰일: ${detail.협의요청.GMP}</div></li>`;
+            }
+          }
+          
+          if (timelineHtml) {
+            timeline.innerHTML = timelineHtml;
+          }
+        }
+      }
+    }
+    
+    // 품질·안유 탭 업데이트
+    function updateQaTab(detail) {
+      // 품질·안유 관련 정보 업데이트 로직
+    }
+    
+    // RMP 탭 업데이트
+    function updateRmpTab(detail) {
+      // RMP 관련 정보 업데이트 로직
+    }
+    
+    // GMP 탭 업데이트
+    function updateGmpTab(detail) {
+      // GMP 관련 정보 업데이트 로직
+    }
+    
+    // 부서별 관리자 기능 설정
+    function setupDeptManager() {
+      const deptSelect = document.getElementById('deptSelect');
+      const periodSelect = document.getElementById('periodSelect');
+      const refreshBtn = document.getElementById('refreshDeptStats');
+      const exportBtn = document.getElementById('exportDeptReport');
+      
+      if (deptSelect) {
+        deptSelect.addEventListener('change', () => {
+          loadDeptStatistics();
+        });
+      }
+      
+      if (periodSelect) {
+        periodSelect.addEventListener('change', () => {
+          loadDeptStatistics();
+        });
+      }
+      
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', loadDeptStatistics);
+      }
+      
+      if (exportBtn) {
+        exportBtn.addEventListener('click', exportDeptReport);
+      }
+      
+      // 초기 데이터 로드
+      loadDeptStatistics();
+    }
+    
+    // 부서별 통계 데이터 로드
+    function loadDeptStatistics() {
+      const selectedDept = document.getElementById('deptSelect')?.value || 'qa';
+      const selectedPeriod = document.getElementById('periodSelect')?.value || 'current';
+      
+      // 부서별 샘플 데이터
+      const deptData = getDeptSampleData(selectedDept, selectedPeriod);
+      
+      // KPI 업데이트
+      updateDeptKPIs(deptData);
+      
+      // 심사원별 테이블 업데이트
+      updateDeptReviewerTable(deptData.reviewers);
+      
+      // 차트 업데이트
+      updateMonthlyCharts(deptData.monthlyData);
+    }
+    
+          // 부서별 샘플 데이터 생성
+      function getDeptSampleData(dept, period) {
+        const deptNames = {
+          'qa': '품질·안유과',
+          'rmp': 'RMP과',
+          'gmp': 'GMP과',
+          'stats': '사전상담과',
+          'gcp': '임상정책과',
+          'test': '백신검정과/혈액제제검정과',
+          'bio': '바이오의약품연구과',
+          'advanced': '첨단바이오융복합연구과',
+          'needle': '구강소화기기과',
+          'cosmetic': '화장품심사과'
+        };
+        
+        const deptName = deptNames[dept];
+        
+        // 이번달 데이터
+        const currentMonthData = {
+          'qa': {
+            totalReviewers: 8,
+            activeReviewers: 7,
+            ongoingCases: 6,
+            completedCases: 18,
+            totalHours: 168,
+            avgProcessingTime: 5.6,
+            reviewers: [
+              { name: '김심사', rank: '과장', specialty: '임상시험', completed: 4, ongoing: 1, hours: 28, avgHours: 7.0 },
+              { name: '박품질', rank: '대리', specialty: '안전성', completed: 3, ongoing: 0, hours: 21, avgHours: 7.0 },
+              { name: '이유효', rank: '사원', specialty: '유효성', completed: 5, ongoing: 1, hours: 35, avgHours: 7.0 },
+              { name: '최안전', rank: '과장', specialty: '약물안전', completed: 4, ongoing: 1, hours: 28, avgHours: 7.0 },
+              { name: '정품질', rank: '대리', specialty: '제조품질', completed: 3, ongoing: 0, hours: 21, avgHours: 7.0 },
+              { name: '한검토', rank: '사원', specialty: '검토', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '윤심사', rank: '대리', specialty: '심사', completed: 2, ongoing: 1, hours: 14, avgHours: 7.0 },
+              { name: '강검토', rank: '사원', specialty: '검토', completed: 0, ongoing: 0, hours: 0, avgHours: 0 }
+            ]
+          },
+          'rmp': {
+            totalReviewers: 6,
+            activeReviewers: 6,
+            ongoingCases: 4,
+            completedCases: 14,
+            totalHours: 126,
+            avgProcessingTime: 5.2,
+            reviewers: [
+              { name: '이위험', rank: '과장', specialty: '위험관리', completed: 4, ongoing: 0, hours: 28, avgHours: 7.0 },
+              { name: '박모니터', rank: '대리', specialty: '안전성모니터링', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '김교육', rank: '사원', specialty: '교육프로그램', completed: 3, ongoing: 0, hours: 21, avgHours: 7.0 },
+              { name: '최평가', rank: '과장', specialty: '위험평가', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '정계획', rank: '대리', specialty: '위험관리계획', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '한분석', rank: '사원', specialty: '위험분석', completed: 2, ongoing: 1, hours: 14, avgHours: 7.0 }
+            ]
+          },
+          'gmp': {
+            totalReviewers: 7,
+            activeReviewers: 6,
+            ongoingCases: 5,
+            completedCases: 16,
+            totalHours: 147,
+            avgProcessingTime: 5.8,
+            reviewers: [
+              { name: '이제조', rank: '과장', specialty: '제조시설', completed: 4, ongoing: 0, hours: 28, avgHours: 7.0 },
+              { name: '박품질', rank: '대리', specialty: '품질관리', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '김검증', rank: '사원', specialty: '공정검증', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '최환경', rank: '과장', specialty: '환경관리', completed: 3, ongoing: 0, hours: 21, avgHours: 7.0 },
+              { name: '정보증', rank: '대리', specialty: '품질보증', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '한검사', rank: '사원', specialty: '품질검사', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '윤관리', rank: '대리', specialty: '시설관리', completed: 2, ongoing: 1, hours: 14, avgHours: 7.0 }
+            ]
+          },
+          'stats': {
+            totalReviewers: 5,
+            activeReviewers: 5,
+            ongoingCases: 3,
+            completedCases: 12,
+            totalHours: 84,
+            avgProcessingTime: 4.8,
+            reviewers: [
+              { name: '김상담', rank: '과장', specialty: '통계분석', completed: 3, ongoing: 0, hours: 21, avgHours: 7.0 },
+              { name: '박자료', rank: '대리', specialty: '자료검토', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '이분석', rank: '사원', specialty: '데이터분석', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '최검토', rank: '과장', specialty: '사전검토', completed: 2, ongoing: 0, hours: 14, avgHours: 7.0 },
+              { name: '정자문', rank: '대리', specialty: '전문자문', completed: 1, ongoing: 1, hours: 7, avgHours: 7.0 }
+            ]
+          },
+          'gcp': {
+            totalReviewers: 6,
+            activeReviewers: 6,
+            ongoingCases: 4,
+            completedCases: 15,
+            totalHours: 105,
+            avgProcessingTime: 5.4,
+            reviewers: [
+              { name: '김임상', rank: '과장', specialty: '임상시험', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '박정책', rank: '대리', specialty: '정책수립', completed: 3, ongoing: 0, hours: 21, avgHours: 7.0 },
+              { name: '이실태', rank: '사원', specialty: '실태조사', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '최검토', rank: '과장', specialty: '정책검토', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '정분석', rank: '대리', specialty: '정책분석', completed: 2, ongoing: 0, hours: 14, avgHours: 7.0 },
+              { name: '한자문', rank: '사원', specialty: '정책자문', completed: 1, ongoing: 1, hours: 7, avgHours: 7.0 }
+            ]
+          },
+          'test': {
+            totalReviewers: 7,
+            activeReviewers: 7,
+            ongoingCases: 5,
+            completedCases: 18,
+            totalHours: 126,
+            avgProcessingTime: 5.6,
+            reviewers: [
+              { name: '김백신', rank: '과장', specialty: '백신검정', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '박혈액', rank: '대리', specialty: '혈액제제검정', completed: 3, ongoing: 0, hours: 21, avgHours: 7.0 },
+              { name: '이시험', rank: '사원', specialty: '시험법개발', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '최검정', rank: '과장', specialty: '검정방법', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '정분석', rank: '대리', specialty: '시험분석', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '한검증', rank: '사원', specialty: '시험검증', completed: 2, ongoing: 0, hours: 14, avgHours: 7.0 },
+              { name: '윤개발', rank: '대리', specialty: '방법개발', completed: 1, ongoing: 1, hours: 7, avgHours: 7.0 }
+            ]
+          },
+          'bio': {
+            totalReviewers: 6,
+            activeReviewers: 6,
+            ongoingCases: 4,
+            completedCases: 16,
+            totalHours: 112,
+            avgProcessingTime: 5.3,
+            reviewers: [
+              { name: '김바이오', rank: '과장', specialty: '바이오의약품', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '박연구', rank: '대리', specialty: '연구개발', completed: 3, ongoing: 0, hours: 21, avgHours: 7.0 },
+              { name: '이분석', rank: '사원', specialty: '성분분석', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '최검토', rank: '과장', specialty: '연구검토', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '정개발', rank: '대리', specialty: '제품개발', completed: 2, ongoing: 0, hours: 14, avgHours: 7.0 },
+              { name: '한평가', rank: '사원', specialty: '효과평가', completed: 2, ongoing: 1, hours: 14, avgHours: 7.0 }
+            ]
+          },
+          'advanced': {
+            totalReviewers: 5,
+            activeReviewers: 5,
+            ongoingCases: 3,
+            completedCases: 14,
+            totalHours: 98,
+            avgProcessingTime: 5.1,
+            reviewers: [
+              { name: '김첨단', rank: '과장', specialty: '첨단기술', completed: 3, ongoing: 0, hours: 21, avgHours: 7.0 },
+              { name: '박융합', rank: '대리', specialty: '융합기술', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '이복합', rank: '사원', specialty: '복합기술', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '최연구', rank: '과장', specialty: '기술연구', completed: 3, ongoing: 0, hours: 21, avgHours: 7.0 },
+              { name: '정개발', rank: '대리', specialty: '기술개발', completed: 2, ongoing: 1, hours: 14, avgHours: 7.0 }
+            ]
+          },
+          'needle': {
+            totalReviewers: 4,
+            activeReviewers: 4,
+            ongoingCases: 2,
+            completedCases: 10,
+            totalHours: 70,
+            avgProcessingTime: 4.7,
+            reviewers: [
+              { name: '김구강', rank: '과장', specialty: '구강기기', completed: 3, ongoing: 0, hours: 21, avgHours: 7.0 },
+              { name: '박소화', rank: '대리', specialty: '소화기기', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '이검토', rank: '사원', specialty: '기기검토', completed: 2, ongoing: 0, hours: 14, avgHours: 7.0 },
+              { name: '최심사', rank: '과장', specialty: '기기심사', completed: 2, ongoing: 1, hours: 14, avgHours: 7.0 }
+            ]
+          },
+          'cosmetic': {
+            totalReviewers: 5,
+            activeReviewers: 5,
+            ongoingCases: 3,
+            completedCases: 13,
+            totalHours: 91,
+            avgProcessingTime: 5.2,
+            reviewers: [
+              { name: '김화장품', rank: '과장', specialty: '화장품심사', completed: 3, ongoing: 0, hours: 21, avgHours: 7.0 },
+              { name: '박성분', rank: '대리', specialty: '성분검토', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '이안전', rank: '사원', specialty: '안전성평가', completed: 3, ongoing: 1, hours: 21, avgHours: 7.0 },
+              { name: '최품질', rank: '과장', specialty: '품질관리', completed: 2, ongoing: 0, hours: 14, avgHours: 7.0 },
+              { name: '정검토', rank: '대리', specialty: '화장품검토', completed: 2, ongoing: 1, hours: 14, avgHours: 7.0 }
+            ]
+          }
+        };
+      
+      // 월별 추이 데이터
+      const monthlyData = {
+        'qa': [
+          { month: '1월', cases: 22, hours: 154 },
+          { month: '2월', cases: 19, hours: 133 },
+          { month: '3월', cases: 25, hours: 175 },
+          { month: '4월', cases: 23, hours: 161 },
+          { month: '5월', cases: 21, hours: 147 },
+          { month: '6월', cases: 24, hours: 168 }
+        ],
+        'rmp': [
+          { month: '1월', cases: 16, hours: 112 },
+          { month: '2월', cases: 18, hours: 126 },
+          { month: '3월', cases: 20, hours: 140 },
+          { month: '4월', cases: 17, hours: 119 },
+          { month: '5월', cases: 19, hours: 133 },
+          { month: '6월', cases: 18, hours: 126 }
+        ],
+        'gmp': [
+          { month: '1월', cases: 19, hours: 133 },
+          { month: '2월', cases: 21, hours: 147 },
+          { month: '3월', cases: 23, hours: 161 },
+          { month: '4월', cases: 20, hours: 140 },
+          { month: '5월', cases: 22, hours: 154 },
+          { month: '6월', cases: 21, hours: 147 }
+        ],
+        'stats': [
+          { month: '1월', cases: 15, hours: 105 },
+          { month: '2월', cases: 13, hours: 91 },
+          { month: '3월', cases: 17, hours: 119 },
+          { month: '4월', cases: 14, hours: 98 },
+          { month: '5월', cases: 16, hours: 112 },
+          { month: '6월', cases: 12, hours: 84 }
+        ],
+        'gcp': [
+          { month: '1월', cases: 18, hours: 126 },
+          { month: '2월', cases: 16, hours: 112 },
+          { month: '3월', cases: 20, hours: 140 },
+          { month: '4월', cases: 17, hours: 119 },
+          { month: '5월', cases: 19, hours: 133 },
+          { month: '6월', cases: 15, hours: 105 }
+        ],
+        'test': [
+          { month: '1월', cases: 20, hours: 140 },
+          { month: '2월', cases: 18, hours: 126 },
+          { month: '3월', cases: 22, hours: 154 },
+          { month: '4월', cases: 19, hours: 133 },
+          { month: '5월', cases: 21, hours: 147 },
+          { month: '6월', cases: 18, hours: 126 }
+        ],
+        'bio': [
+          { month: '1월', cases: 19, hours: 133 },
+          { month: '2월', cases: 17, hours: 119 },
+          { month: '3월', cases: 21, hours: 147 },
+          { month: '4월', cases: 18, hours: 126 },
+          { month: '5월', cases: 20, hours: 140 },
+          { month: '6월', cases: 16, hours: 112 }
+        ],
+        'advanced': [
+          { month: '1월', cases: 16, hours: 112 },
+          { month: '2월', cases: 14, hours: 98 },
+          { month: '3월', cases: 18, hours: 126 },
+          { month: '4월', cases: 15, hours: 105 },
+          { month: '5월', cases: 17, hours: 119 },
+          { month: '6월', cases: 14, hours: 98 }
+        ],
+        'needle': [
+          { month: '1월', cases: 12, hours: 84 },
+          { month: '2월', cases: 10, hours: 70 },
+          { month: '3월', cases: 14, hours: 98 },
+          { month: '4월', cases: 11, hours: 77 },
+          { month: '5월', cases: 13, hours: 91 },
+          { month: '6월', cases: 10, hours: 70 }
+        ],
+        'cosmetic': [
+          { month: '1월', cases: 17, hours: 119 },
+          { month: '2월', cases: 15, hours: 105 },
+          { month: '3월', cases: 19, hours: 133 },
+          { month: '4월', cases: 16, hours: 112 },
+          { month: '5월', cases: 18, hours: 126 },
+          { month: '6월', cases: 13, hours: 91 }
+        ]
+      };
+      
+      return {
+        deptName: deptName,
+        ...currentMonthData[dept],
+        monthlyData: monthlyData[dept]
+      };
+    }
+    
+    // 부서별 KPI 업데이트
+    function updateDeptKPIs(data) {
+      document.getElementById('totalReviewers').textContent = data.totalReviewers;
+      document.getElementById('activeReviewers').textContent = data.activeReviewers;
+      document.getElementById('ongoingCases').textContent = data.ongoingCases;
+      document.getElementById('completedCases').textContent = data.completedCases;
+      document.getElementById('totalHours').textContent = data.totalHours + 'h';
+      document.getElementById('avgProcessingTime').textContent = data.avgProcessingTime + 'h';
+    }
+    
+    // 심사원별 테이블 업데이트
+    function updateDeptReviewerTable(reviewers) {
+      const tbody = document.getElementById('deptReviewerTableBody');
+      if (!tbody) return;
+      
+      tbody.innerHTML = '';
+      
+             reviewers.forEach((reviewer, index) => {
+         const row = document.createElement('tr');
+         row.innerHTML = `
+           <td>${reviewer.name}</td>
+           <td>${reviewer.rank}</td>
+           <td>${reviewer.specialty}</td>
+           <td>${reviewer.completed}</td>
+           <td>${reviewer.ongoing}</td>
+           <td>${reviewer.hours}h</td>
+           <td>${reviewer.avgHours}h</td>
+           <td><button class="btn btn-sm" onclick="viewReviewerDetail(${index})">상세보기</button></td>
+         `;
+         tbody.appendChild(row);
+       });
+    }
+    
+    // 월별 차트 업데이트
+    function updateMonthlyCharts(monthlyData) {
+      // 실제 차트 라이브러리를 사용한다면 여기서 차트를 그립니다
+      // 현재는 플레이스홀더만 표시
+      const caseChart = document.getElementById('monthlyCaseChart');
+      const hoursChart = document.getElementById('monthlyHoursChart');
+      
+      if (caseChart) {
+        caseChart.innerHTML = `
+          <div style="padding:20px;text-align:center">
+            <h4>월별 심사 건수</h4>
+            <div style="margin-top:20px">
+              ${monthlyData.map(item => `
+                <div style="display:inline-block;margin:0 10px;text-align:center">
+                  <div style="font-size:18px;font-weight:bold;color:var(--primary)">${item.cases}</div>
+                  <div style="font-size:12px;color:var(--muted)">${item.month}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+      
+      if (hoursChart) {
+        hoursChart.innerHTML = `
+          <div style="padding:20px;text-align:center">
+            <h4>월별 소요시간</h4>
+            <div style="margin-top:20px">
+              ${monthlyData.map(item => `
+                <div style="display:inline-block;margin:0 10px;text-align:center">
+                  <div style="font-size:18px;font-weight:bold;color:var(--ok)">${item.hours}h</div>
+                  <div style="font-size:12px;color:var(--muted)">${item.month}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+    }
+    
+    // 심사원 상세 정보 모달 표시
+    function viewReviewerDetail(index) {
+      const selectedDept = document.getElementById('deptSelect')?.value || 'qa';
+      const data = getDeptSampleData(selectedDept, 'current');
+      const reviewer = data.reviewers[index];
+      
+      if (!reviewer) return;
+      
+      document.getElementById('reviewerDetailTitle').textContent = `${reviewer.name} 심사원 상세 현황`;
+      
+      const content = document.getElementById('reviewerDetailContent');
+      content.innerHTML = `
+        <div class="card" style="margin-bottom:16px">
+          <h4>기본 정보</h4>
+          <table class="info-table">
+            <tr><td><strong>이름</strong></td><td>${reviewer.name}</td></tr>
+            <tr><td><strong>직급</strong></td><td>${reviewer.rank}</td></tr>
+            <tr><td><strong>전문분야</strong></td><td>${reviewer.specialty}</td></tr>
+            <tr><td><strong>소속부서</strong></td><td>${data.deptName || '품질·안유과'}</td></tr>
+          </table>
+        </div>
+        
+                 <div class="card" style="margin-bottom:16px">
+           <h4>이번달 심사 현황</h4>
+           <table class="info-table">
+             <tr>
+               <td><strong>완료된 심사</strong></td>
+               <td>
+                 <a href="#" onclick="viewCompletedCases('${reviewer.name}', ${reviewer.completed})" class="link">
+                   ${reviewer.completed}건
+                 </a>
+               </td>
+             </tr>
+             <tr>
+               <td><strong>진행중인 심사</strong></td>
+               <td>
+                 <a href="#" onclick="viewOngoingCases('${reviewer.name}', ${reviewer.ongoing})" class="link">
+                   ${reviewer.ongoing}건
+                 </a>
+               </td>
+             </tr>
+             <tr><td><strong>총 소요시간</strong></td><td>${reviewer.hours}시간</td></tr>
+             <tr><td><strong>평균 소요시간</strong></td><td>${reviewer.avgHours}시간/건</td></tr>
+           </table>
+         </div>
+        
+        <div class="card">
+          <h4>심사 이력 (최근 3개월)</h4>
+          <div class="timeline">
+            <li><time>6월</time> <div>${reviewer.completed || 0}건 심사 완료 (${reviewer.hours || 0}시간)</div></li>
+            <li><time>5월</time> <div>${Math.max(0, (reviewer.completed || 0) - 1)}건 심사 완료 (${Math.max(0, (reviewer.hours || 0) - 7)}시간)</div></li>
+            <li><time>4월</time> <div>${Math.max(0, (reviewer.completed || 0) + 1)}건 심사 완료 (${Math.max(0, (reviewer.hours || 0) + 7)}시간)</div></li>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('reviewerDetailModal').classList.remove('hidden');
+    }
+    
+    // 심사원 상세 모달 닫기
+    function closeReviewerDetailModal() {
+      document.getElementById('reviewerDetailModal').classList.add('hidden');
+    }
+    
+    // 완료된 심사 목록 보기
+    function viewCompletedCases(reviewerName, count) {
+      if (count === 0) {
+        alert(`${reviewerName} 심사원의 완료된 심사가 없습니다.`);
+        return;
+      }
+      
+      // REVIEW-00으로 이동
+      show('REVIEW-00');
+      
+      // 심사원별 완료된 심사 데이터 필터링
+      const completedCases = myReviewData.filter(item => 
+        item.심사자 === reviewerName && item.상태 === '민원 완료'
+      );
+      
+      // 필터링된 데이터로 테이블 업데이트
+      const tbody = document.getElementById('myReviewTableBody');
+      if (tbody) {
+        tbody.innerHTML = '';
+        
+        completedCases.forEach((item, index) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td><input type="radio" name="selectedReview" value="${index}"/></td>
+            <td>${item.민원번호}</td>
+            <td>${item.품목명}</td>
+            <td>${item.신청인}</td>
+            <td>${item.배정일}</td>
+            <td>${item.심사유형}</td>
+            <td>${item.심사완료일 || '-'}</td>
+            <td><span class="status ok">${item.상태}</span></td>
+            <td>
+              <button class="btn btn-sm ok" onclick="viewReview(${index})">결과 보기</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+      
+      // 필터 상태 표시
+      const statusFilter = document.getElementById('statusFilter');
+      if (statusFilter) {
+        statusFilter.value = '민원 완료';
+      }
+      
+      // 검색어에 심사원 이름 설정
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) {
+        searchInput.value = reviewerName;
+      }
+      
+      alert(`${reviewerName} 심사원의 완료된 심사 ${count}건을 표시합니다.`);
+    }
+    
+    // 전체 심사 목록 보기
+    function showAllReviews() {
+      // 모든 필터 초기화
+      const statusFilter = document.getElementById('statusFilter');
+      const reviewTypeFilter = document.getElementById('reviewTypeFilter');
+      const searchInput = document.getElementById('searchInput');
+      const startDate = document.getElementById('startDate');
+      const endDate = document.getElementById('endDate');
+      
+      if (statusFilter) statusFilter.value = '';
+      if (reviewTypeFilter) reviewTypeFilter.value = '';
+      if (searchInput) searchInput.value = '';
+      if (startDate) startDate.value = '';
+      if (endDate) endDate.value = '';
+      
+      // 전체 데이터로 테이블 다시 렌더링
+      renderMyReviewList();
+      
+      alert('전체 심사 목록을 표시합니다.');
+    }
+    
+    // 진행중인 심사 목록 보기
+    function viewOngoingCases(reviewerName, count) {
+      if (count === 0) {
+        alert(`${reviewerName} 심사원의 진행중인 심사가 없습니다.`);
+        return;
+      }
+      
+      // REVIEW-00으로 이동
+      show('REVIEW-00');
+      
+      // 심사원별 진행중인 심사 데이터 필터링
+      const ongoingCases = myReviewData.filter(item => 
+        item.심사자 === reviewerName && item.상태 === '심사중'
+      );
+      
+      // 필터링된 데이터로 테이블 업데이트
+      const tbody = document.getElementById('myReviewTableBody');
+      if (tbody) {
+        tbody.innerHTML = '';
+        
+        ongoingCases.forEach((item, index) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td><input type="radio" name="selectedReview" value="${index}"/></td>
+            <td>${item.민원번호}</td>
+            <td>${item.품목명}</td>
+            <td>${item.신청인}</td>
+            <td>${item.배정일}</td>
+            <td>${item.심사유형}</td>
+            <td>${item.심사완료일 || '-'}</td>
+            <td><span class="status warn">${item.상태}</span></td>
+            <td>
+              <button class="btn btn-sm primary" onclick="continueReview(${index})">심사 페이지 이동</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+      
+      // 필터 상태 표시
+      const statusFilter = document.getElementById('statusFilter');
+      if (statusFilter) {
+        statusFilter.value = '심사중';
+      }
+      
+      // 검색어에 심사원 이름 설정
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) {
+        searchInput.value = reviewerName;
+      }
+      
+      alert(`${reviewerName} 심사원의 진행중인 심사 ${count}건을 표시합니다.`);
+    }
+    
+    // REVIEW-00 필터 및 검색 이벤트 설정
+    function setupReview00Filters() {
+      // 상태 필터 변경 이벤트
+      const statusFilter = document.getElementById('statusFilter');
+      if (statusFilter) {
+        statusFilter.addEventListener('change', renderMyReviewList);
+      }
+      
+      // 심사유형 필터 변경 이벤트
+      const reviewTypeFilter = document.getElementById('reviewTypeFilter');
+      if (reviewTypeFilter) {
+        reviewTypeFilter.addEventListener('change', renderMyReviewList);
+      }
+      
+      // 검색 버튼 클릭 이벤트
+      const searchBtn = document.getElementById('searchBtn');
+      if (searchBtn) {
+        searchBtn.addEventListener('click', renderMyReviewList);
+      }
+      
+      // 검색 입력창 엔터키 이벤트
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            renderMyReviewList();
+          }
+        });
+      }
+      
+      // 날짜 필터 변경 이벤트
+      const startDate = document.getElementById('startDate');
+      const endDate = document.getElementById('endDate');
+      if (startDate) {
+        startDate.addEventListener('change', renderMyReviewList);
+      }
+      if (endDate) {
+        endDate.addEventListener('change', renderMyReviewList);
+      }
+    }
+    
+    // 부서별 보고서 내보내기
+    function exportDeptReport() {
+      const selectedDept = document.getElementById('deptSelect')?.value || 'qa';
+      const selectedPeriod = document.getElementById('periodSelect')?.value || 'current';
+      
+      alert(`${selectedDept} 부서의 ${selectedPeriod} 보고서가 내보내기 준비되었습니다.`);
+      // 실제로는 Excel 또는 PDF 파일을 생성하는 로직이 들어갑니다
+    }
+    
+    // INTK-01 초기 설정
+    function setupIntk01() {
+      // 부서별 민원 데이터 초기화
+      initializeIntkData();
+      
+      // 부서 선택 이벤트
+      const deptTypeSelect = document.getElementById('deptTypeSelect');
+      if (deptTypeSelect) {
+        deptTypeSelect.addEventListener('change', renderIntkList);
+      }
+      
+      // 필터 이벤트
+      const reviewTypeFilter = document.getElementById('reviewTypeFilter');
+      const statusFilter = document.getElementById('statusFilter');
+      const searchInput = document.getElementById('searchInput');
+      
+      if (reviewTypeFilter) reviewTypeFilter.addEventListener('change', renderIntkList);
+      if (statusFilter) statusFilter.addEventListener('change', renderIntkList);
+      if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') renderIntkList();
+        });
+      }
+      
+      // 초기 목록 렌더링
+      renderIntkList();
+    }
+    
+    // 부서별 민원 데이터 초기화
+    function initializeIntkData() {
+      // 바이오허가 TF 민원 데이터
+      window.bioPetitions = [
+        {
+          id: 'A25-00123',
+          민원번호: 'A25-00123',
+          품목명: '신약A 주사제',
+          신청인: '한빛제약',
+          민원신청일: '2025-08-20',
+          민원종료일: '2025-09-20',
+          보완요청횟수: 0,
+          최대보완요청: 3,
+          상태: '민원 완료',
+          부서: 'bio',
+          협의요청: {
+            '품질·안유': '2025-08-22',
+            'RMP': '2025-08-23',
+            'GMP': '2025-08-24'
+          },
+          보완요청이력: []
+        },
+        {
+          id: 'A25-00131',
+          민원번호: 'A25-00131',
+          품목명: '바이오B',
+          신청인: '유니바이오',
+          민원신청일: '2025-08-21',
+          민원종료일: '2025-09-21',
+          보완요청횟수: 1,
+          최대보완요청: 3,
+          상태: '보완요청',
+          부서: 'bio',
+          협의요청: {
+            '품질·안유': '2025-08-23',
+            'RMP': '2025-08-24'
+          },
+          보완요청이력: [
+            {
+              요청일: '2025-08-25',
+              사유: '임상시험 결과 보완 필요',
+              요청부서: ['품질·안유', 'RMP'],
+              완료기한: '2025-09-05'
+            }
+          ]
+        },
+        {
+          id: 'A25-00150',
+          민원번호: 'A25-00150',
+          품목명: '신약D 정제',
+          신청인: '신약제약',
+          민원신청일: '2025-08-25',
+          민원종료일: null,
+          보완요청횟수: 0,
+          최대보완요청: 3,
+          상태: '미배정',
+          부서: 'bio',
+          협의요청: {},
+          보완요청이력: []
+        }
+      ];
+      
+      // 합성의약품팀 민원 데이터
+      window.syntheticPetitions = [
+        {
+          id: 'A25-00145',
+          민원번호: 'A25-00145',
+          품목명: '신약C 캡슐',
+          신청인: '대한제약',
+          민원신청일: '2025-08-22',
+          민원종료일: '2025-09-22',
+          보완요청횟수: 0,
+          최대보완요청: 3,
+          상태: '민원 완료',
+          부서: 'synthetic',
+          협의요청: {
+            '품질·안유': '2025-08-25'
+          },
+          보완요청이력: []
+        },
+        {
+          id: 'A25-00155',
+          민원번호: 'A25-00155',
+          품목명: '신약E 주사제',
+          신청인: '신약바이오',
+          민원신청일: '2025-08-26',
+          민원종료일: null,
+          보완요청횟수: 0,
+          최대보완요청: 3,
+          상태: '미배정',
+          부서: 'synthetic',
+          협의요청: {},
+          보완요청이력: []
+        }
+      ];
+    }
+    
+    // INTK-01 목록 렌더링
+    function renderIntkList() {
+      const deptType = document.getElementById('deptTypeSelect')?.value || 'bio';
+      const reviewType = document.getElementById('reviewTypeFilter')?.value || '';
+      const status = document.getElementById('statusFilter')?.value || '';
+      const searchText = document.getElementById('searchInput')?.value || '';
+      
+      // 부서별 데이터 선택
+      const petitions = deptType === 'bio' ? window.bioPetitions : window.syntheticPetitions;
+      
+      // 필터링
+      let filteredPetitions = petitions.filter(petition => {
+        if (reviewType && !petition.협의요청[reviewType]) return false;
+        if (status && petition.상태 !== status) return false;
+        if (searchText) {
+          const searchLower = searchText.toLowerCase();
+          return !petition.민원번호.toLowerCase().includes(searchLower) &&
+                 !petition.품목명.toLowerCase().includes(searchLower) &&
+                 !petition.신청인.toLowerCase().includes(searchLower);
+        }
+        return true;
+      });
+      
+      const tbody = document.getElementById('intkTableBody');
+      if (!tbody) return;
+      
+      tbody.innerHTML = '';
+      
+      filteredPetitions.forEach(petition => {
+        const row = document.createElement('tr');
+        row.setAttribute('data-detail', JSON.stringify(petition));
+        
+        const statusClass = petition.상태 === '민원 완료' ? 'ok' : 
+                           petition.상태 === '보완요청' ? 'warn' : 
+                           petition.상태 === '배정완료' ? 'ok' : 'wait';
+        
+        const revisionCountClass = petition.보완요청횟수 >= petition.최대보완요청 ? 'error' : 'ok';
+        
+        row.innerHTML = `
+          <td>${petition.민원번호}</td>
+          <td>${petition.품목명}</td>
+          <td>${petition.신청인}</td>
+          <td>${petition.민원신청일}</td>
+          <td>${petition.민원종료일 || '-'}</td>
+          <td><span class="status ${revisionCountClass}">${petition.보완요청횟수}/${petition.최대보완요청}</span></td>
+          <td>
+            <div class="dept-request">
+              ${Object.entries(petition.협의요청).map(([dept, date]) => 
+                `<span class="status ok">${dept}: ${formatDate(date)}</span><br/>`
+              ).join('')}
+              ${['품질·안유', 'RMP', 'GMP'].filter(dept => !petition.협의요청[dept]).map(dept =>
+                `<span class="status wait">${dept}: 미요청</span><br/>`
+              ).join('')}
+            </div>
+          </td>
+          <td><span class="status ${statusClass}">${petition.상태}</span></td>
+          <td><button class="btn btn-sm" onclick="viewCaseDetail('${petition.민원번호}')">자세히 보기</button></td>
+        `;
+        
+        // 행 클릭 이벤트 (자세히 보기 버튼 제외)
+        row.addEventListener('click', (e) => {
+          // 자세히 보기 버튼 클릭 시에는 이벤트 처리하지 않음
+          if (e.target.tagName === 'BUTTON') {
+            return;
+          }
+          
+          // 기존 선택 해제
+          document.querySelectorAll('#intkTable tbody tr').forEach(r => r.classList.remove('selected'));
+          row.classList.add('selected');
+          
+          // 상세 정보 업데이트
+          updateIntkDetail(petition);
+        });
+        
+        tbody.appendChild(row);
+      });
+      
+      // 첫 번째 행 자동 선택
+      if (filteredPetitions.length > 0) {
+        const firstRow = tbody.querySelector('tr');
+        if (firstRow) firstRow.click();
+      }
+    }
+    
+    // CASE-02 민원 상세 화면으로 이동
+    function viewCaseDetail(민원번호) {
+      // 해당 민원 데이터 찾기
+      const deptType = document.getElementById('deptTypeSelect')?.value || 'bio';
+      const petitions = deptType === 'bio' ? window.bioPetitions : window.syntheticPetitions;
+      const petition = petitions.find(p => p.민원번호 === 민원번호);
+      
+      if (!petition) {
+        alert('민원 정보를 찾을 수 없습니다.');
+        return;
+      }
+      
+      // CASE-02 페이지로 이동
+      show('CASE-02');
+      
+      // CASE-02에 민원 정보 전달
+      updateCase02Info(petition);
+      
+      // 선택된 민원 정보를 전역 변수에 저장
+      window.selectedCaseDetail = petition;
+      
+      // INTK-01에서 해당 행 선택 상태로 변경
+      document.querySelectorAll('#intkTable tbody tr').forEach(row => {
+        const rowData = JSON.parse(row.getAttribute('data-detail') || '{}');
+        if (rowData.민원번호 === 민원번호) {
+          row.classList.add('selected');
+        } else {
+          row.classList.remove('selected');
+        }
+      });
+    }
+    
+    // INTK-01 상세 정보 업데이트
+    function updateIntkDetail(petition) {
+      const detailElement = document.getElementById('intkDetail');
+      if (!detailElement) return;
+      
+      let html = '';
+      html += `<strong>민원번호:</strong> ${petition.민원번호}<br/>`;
+      html += `<strong>품목명:</strong> ${petition.품목명}<br/>`;
+      html += `<strong>신청인:</strong> ${petition.신청인}<br/>`;
+      html += `<strong>민원 신청일:</strong> ${petition.민원신청일}<br/>`;
+      if (petition.민원종료일) {
+        html += `<strong>민원 종료일:</strong> ${petition.민원종료일}<br/>`;
+      }
+      html += `<strong>보완요청 횟수:</strong> ${petition.보완요청횟수}/${petition.최대보완요청}<br/><br/>`;
+      
+      html += `<strong>협의 요청 현황:</strong><br/>`;
+      Object.entries(petition.협의요청).forEach(([dept, date]) => {
+        html += `- ${dept}: ${date}<br/>`;
+      });
+      
+      if (petition.보완요청이력.length > 0) {
+        html += `<br/><strong>보완요청 이력:</strong><br/>`;
+        petition.보완요청이력.forEach((revision, index) => {
+          html += `${index + 1}. ${revision.요청일} - ${revision.사유}<br/>`;
+        });
+      }
+      
+      detailElement.innerHTML = html;
+      
+      // 협의 의뢰 생성 버튼 상태 업데이트 (미배정 상태일 때만 활성화)
+      const qaRequestBtn = document.getElementById('qaRequestBtn');
+      const rmpRequestBtn = document.getElementById('rmpRequestBtn');
+      const gmpRequestBtn = document.getElementById('gmpRequestBtn');
+      
+      if (qaRequestBtn) {
+        const hasQaRequest = petition.협의요청 && petition.협의요청['품질·안유'];
+        qaRequestBtn.disabled = petition.상태 !== '미배정' || hasQaRequest;
+        qaRequestBtn.textContent = hasQaRequest ? '품질·안유 협의완료' : '품질·안유 협의 요청';
+      }
+      
+      if (rmpRequestBtn) {
+        const hasRmpRequest = petition.협의요청 && petition.협의요청['RMP'];
+        rmpRequestBtn.disabled = petition.상태 !== '미배정' || hasRmpRequest;
+        rmpRequestBtn.textContent = hasRmpRequest ? 'RMP 협의완료' : 'RMP 협의 요청';
+      }
+      
+      if (gmpRequestBtn) {
+        const hasGmpRequest = petition.협의요청 && petition.협의요청['GMP'];
+        gmpRequestBtn.disabled = petition.상태 !== '미배정' || hasGmpRequest;
+        gmpRequestBtn.textContent = hasGmpRequest ? 'GMP 협의완료' : 'GMP 협의 요청';
+      }
+      
+      // 보완요청 버튼 상태 업데이트
+      const requestRevisionBtn = document.getElementById('requestRevisionBtn');
+      if (requestRevisionBtn) {
+        requestRevisionBtn.disabled = petition.보완요청횟수 >= petition.최대보완요청;
+        requestRevisionBtn.textContent = petition.보완요청횟수 >= petition.최대보완요청 ? 
+          '최대 보완요청 도달' : '보완요청';
+      }
+      
+      // 배정완료 버튼 상태 업데이트
+      const completeAssignmentBtn = document.getElementById('completeAssignmentBtn');
+      if (completeAssignmentBtn) {
+        if (petition.상태 === '배정완료') {
+          completeAssignmentBtn.disabled = true;
+          completeAssignmentBtn.textContent = '배정완료됨';
+          completeAssignmentBtn.classList.remove('primary');
+          completeAssignmentBtn.classList.add('ok');
+        } else {
+          completeAssignmentBtn.disabled = false;
+          completeAssignmentBtn.textContent = '배정완료';
+          completeAssignmentBtn.classList.remove('ok');
+          completeAssignmentBtn.classList.add('primary');
+        }
+      }
+    }
+    
+    // 보완요청 이력 보기
+    function viewRevisionHistory() {
+      const selectedRow = document.querySelector('#intkTable tbody tr.selected');
+      if (!selectedRow) {
+        alert('이력을 확인할 민원을 선택해주세요.');
+        return;
+      }
+      
+      const petition = JSON.parse(selectedRow.getAttribute('data-detail'));
+      const historyContent = document.getElementById('revisionHistoryContent');
+      
+      if (petition.보완요청이력.length === 0) {
+        historyContent.innerHTML = '<p>보완요청 이력이 없습니다.</p>';
+      } else {
+        let html = '<div class="card">';
+        html += `<h4>${petition.품목명} - 보완요청 이력</h4>`;
+        html += '<table class="info-table">';
+        html += '<tr><th>요청일</th><th>사유</th><th>요청부서</th><th>완료기한</th></tr>';
+        
+        petition.보완요청이력.forEach((revision, index) => {
+          html += `<tr>`;
+          html += `<td>${revision.요청일}</td>`;
+          html += `<td>${revision.사유}</td>`;
+          html += `<td>${revision.요청부서.join(', ')}</td>`;
+          html += `<td>${revision.완료기한}</td>`;
+          html += `</tr>`;
+        });
+        
+        html += '</table></div>';
+        historyContent.innerHTML = html;
+      }
+      
+      document.getElementById('revisionHistoryModal').classList.remove('hidden');
+    }
+    
+    // 보완요청 이력 모달 닫기
+    function closeRevisionHistoryModal() {
+      document.getElementById('revisionHistoryModal').classList.add('hidden');
+    }
+    
+    // INTK-01 목록 새로고침
+    function refreshIntkList() {
+      renderIntkList();
+    }
+    
+    // INTK-01 목록 검색
+    function searchIntkList() {
+      renderIntkList();
+    }
+    
+    // INTK-01 목록 엑셀 내보내기
+    function exportIntkList() {
+      const deptType = document.getElementById('deptTypeSelect')?.value || 'bio';
+      const deptName = deptType === 'bio' ? '바이오허가 TF' : '합성의약품팀';
+      alert(`${deptName} 민원 목록이 엑셀로 내보내기 준비되었습니다.`);
+    }
+    
+    // NTFY-01 결과통보 작성으로 이동
+    function goToNotification(templateType, actionType) {
+      // NTFY-01 페이지로 이동
+      show('NTFY-01');
+      
+      // 템플릿 선택
+      const templateSelect = document.getElementById('tpl');
+      if (templateSelect) {
+        templateSelect.value = templateType;
+        // 템플릿 변경 이벤트 트리거
+        templateSelect.dispatchEvent(new Event('change'));
+      }
+      
+      // 현재 선택된 민원 정보 가져오기 (APPR-02에서)
+      let currentCaseInfo = {};
+      
+      // 허가부서 결재자 화면에서 선택된 민원 정보 확인
+      const mainApprovalTable = document.getElementById('mainApprovalTable');
+      if (mainApprovalTable) {
+        const selectedRow = mainApprovalTable.querySelector('input[type="radio"]:checked');
+        if (selectedRow) {
+          const row = selectedRow.closest('tr');
+          if (row) {
+            currentCaseInfo = {
+              민원번호: row.children[1]?.textContent || '',
+              품목명: row.children[2]?.textContent || '',
+              신청인: row.children[3]?.textContent || ''
+            };
+          }
+        }
+      }
+      
+      // 각 부서 결재자 화면에서 선택된 민원 정보 확인
+      const deptApprovalTable = document.getElementById('deptApprovalTable');
+      if (deptApprovalTable) {
+        const selectedRow = deptApprovalTable.querySelector('input[type="radio"]:checked');
+        if (selectedRow) {
+          const row = selectedRow.closest('tr');
+          if (row) {
+            currentCaseInfo = {
+              민원번호: row.children[1]?.textContent || '',
+              품목명: row.children[2]?.textContent || '',
+              신청인: row.children[3]?.textContent || ''
+            };
+          }
+        }
+      }
+      
+      // 에디터에 기본 내용 설정
+      const editor = document.getElementById('editor');
+      if (editor) {
+        let defaultContent = '';
+        
+        switch (templateType) {
+          case 'APP':
+            defaultContent = `적합(허가) 통보서
+
+민원번호: ${currentCaseInfo.민원번호}
+품목명: ${currentCaseInfo.품목명}
+신청인: ${currentCaseInfo.신청인}
+
+심사 결과: 적합(허가)
+심사 완료일: ${new Date().toISOString().split('T')[0]}
+
+위 민원에 대하여 심사 결과 적합으로 판정되어 허가를 승인합니다.
+
+식약처 허가부서장`;
+            break;
+            
+          case 'REQ':
+            defaultContent = `보완요청서
+
+민원번호: ${currentCaseInfo.민원번호}
+품목명: ${currentCaseInfo.품목명}
+신청인: ${currentCaseInfo.신청인}
+
+심사 결과: 보완요청
+요청일: ${new Date().toISOString().split('T')[0]}
+
+위 민원에 대하여 아래와 같은 보완사항을 요청합니다.
+
+[보완요청사항]
+1. 추가 안전성 데이터 제출
+2. 임상시험 결과 상세 분석 자료
+3. 제조시설 현황 보고서
+
+보완 완료 후 재심사를 요청합니다.
+
+식약처 허가부서장`;
+            break;
+            
+          case 'REJ':
+            defaultContent = `반려 통보서
+
+민원번호: ${currentCaseInfo.민원번호}
+품목명: ${currentCaseInfo.품목명}
+신청인: ${currentCaseInfo.신청인}
+
+심사 결과: 반려
+심사 완료일: ${new Date().toISOString().split('T')[0]}
+
+위 민원에 대하여 심사 결과 부적합으로 판정되어 반려합니다.
+
+[반려 사유]
+1. 임상시험 결과 부족
+2. 안전성 데이터 미흡
+3. 제조시설 기준 미달
+
+식약처 허가부서장`;
+            break;
+        }
+        
+        editor.value = defaultContent;
+      }
+      
+      // 머지필드 정보 업데이트
+      updateMergeFields(currentCaseInfo);
+      
+      alert(`${actionType} 처리를 위해 NTFY-01 결과통보 작성 페이지로 이동합니다.`);
+    }
+    
+    // 머지필드 정보 업데이트
+    function updateMergeFields(caseInfo) {
+      const mergeFieldSpan = document.querySelector('#NTFY-01 .pill');
+      if (mergeFieldSpan) {
+        mergeFieldSpan.innerHTML = `머지필드: <span class="merge-field" onclick="insertMergeField('${caseInfo.민원번호}')" title="클릭하여 삽입">${caseInfo.민원번호}</span> <span class="merge-field" onclick="insertMergeField('${caseInfo.품목명}')" title="클릭하여 삽입">${caseInfo.품목명}</span> <span class="merge-field" onclick="insertMergeField('${caseInfo.신청인}')" title="클릭하여 삽입">${caseInfo.신청인}</span>`;
+      }
+    }
+    
+    // 머지필드 삽입
+    function insertMergeField(value) {
+      const editor = document.getElementById('editor');
+      if (editor) {
+        const cursorPos = editor.selectionStart;
+        const textBefore = editor.value.substring(0, cursorPos);
+        const textAfter = editor.value.substring(cursorPos);
+        
+        editor.value = textBefore + value + textAfter;
+        editor.focus();
+        
+        // 커서 위치 조정
+        const newPos = cursorPos + value.length;
+        editor.setSelectionRange(newPos, newPos);
+      }
+    }
+    
+    // NTFY-01 템플릿 적용
+    function applyTemplate() {
+      const templateSelect = document.getElementById('tpl');
+      const editor = document.getElementById('editor');
+      
+      if (!templateSelect || !editor) return;
+      
+      const selectedTemplate = templateSelect.value;
+      let templateContent = '';
+      
+      // 현재 에디터에 있는 내용에서 민원 정보 추출
+      const currentContent = editor.value;
+      let 민원번호 = '';
+      let 품목명 = '';
+      let 신청인 = '';
+      
+      // 기존 내용에서 정보 추출
+      const 민원번호Match = currentContent.match(/민원번호:\s*([^\n]+)/);
+      const 품목명Match = currentContent.match(/품목명:\s*([^\n]+)/);
+      const 신청인Match = currentContent.match(/신청인:\s*([^\n]+)/);
+      
+      if (민원번호Match) 민원번호 = 민원번호Match[1].trim();
+      if (품목명Match) 품목명 = 품목명Match[1].trim();
+      if (신청인Match) 신청인 = 신청인Match[1].trim();
+      
+      // 민원 정보가 없으면 머지필드에서 가져오기
+      if (!민원번호 || !품목명 || !신청인) {
+        const mergeFields = document.querySelectorAll('#NTFY-01 .merge-field');
+        if (mergeFields.length >= 3) {
+          if (!민원번호) 민원번호 = mergeFields[0]?.textContent || '{{민원번호}}';
+          if (!품목명) 품목명 = mergeFields[1]?.textContent || '{{품목명}}';
+          if (!신청인) 신청인 = mergeFields[2]?.textContent || '{{신청인}}';
+        }
+      }
+      
+      // 템플릿별 내용 생성
+      switch (selectedTemplate) {
+        case 'REQ':
+          templateContent = `보완요청서 (품질·안유 + RMP 통합)
+
+민원번호: ${민원번호}
+품목명: ${품목명}
+신청인: ${신청인}
+
+심사 결과: 보완요청
+요청일: ${new Date().toISOString().split('T')[0]}
+
+위 민원에 대하여 아래와 같은 보완사항을 요청합니다.
+
+[품질·안유 관련 보완사항]
+1. 추가 임상시험 결과 데이터
+2. 안전성 프로파일 상세 분석
+3. 약물상호작용 연구 자료
+
+[RMP 관련 보완사항]
+1. 위험관리계획 상세 내용
+2. 안전성 모니터링 계획
+3. 교육프로그램 운영 방안
+
+보완 완료 후 재심사를 요청합니다.
+
+식약처 허가부서장`;
+          break;
+          
+        case 'GMP':
+          templateContent = `보완요청서 (GMP/GCP 별도 공문)
+
+민원번호: ${민원번호}
+품목명: ${품목명}
+신청인: ${신청인}
+
+심사 결과: 보완요청
+요청일: ${new Date().toISOString().split('T')[0]}
+
+위 민원에 대하여 아래와 같은 보완사항을 요청합니다.
+
+[GMP 관련 보완사항]
+1. 제조시설 현황 상세 보고서
+2. 품질관리시스템 운영 현황
+3. 공정검증 자료
+
+[GCP 관련 보완사항]
+1. 임상시험 관리 현황
+2. 모니터링 계획 및 실행 결과
+3. 데이터 무결성 확보 방안
+
+보완 완료 후 재심사를 요청합니다.
+
+식약처 허가부서장`;
+          break;
+          
+        case 'APP':
+          templateContent = `적합(허가) 통보서
+
+민원번호: ${민원번호}
+품목명: ${품목명}
+신청인: ${신청인}
+
+심사 결과: 적합(허가)
+심사 완료일: ${new Date().toISOString().split('T')[0]}
+
+위 민원에 대하여 심사 결과 적합으로 판정되어 허가를 승인합니다.
+
+[승인 조건]
+1. 약물안전성 모니터링 계획 수립
+2. 제조시설 정기 점검 실시
+3. 품질관리시스템 지속 운영
+
+식약처 허가부서장`;
+          break;
+          
+        case 'REJ':
+          templateContent = `반려 통보서
+
+민원번호: ${민원번호}
+품목명: ${품목명}
+신청인: ${신청인}
+
+심사 결과: 반려
+심사 완료일: ${new Date().toISOString().split('T')[0]}
+
+위 민원에 대하여 심사 결과 부적합으로 판정되어 반려합니다.
+
+[반려 사유]
+1. 임상시험 결과 부족
+2. 안전성 데이터 미흡
+3. 제조시설 기준 미달
+
+[재신청 시 준비사항]
+1. 임상시험 완료 후 재신청
+2. 안전성 데이터 보완
+3. 제조시설 기준 충족
+
+식약처 허가부서장`;
+          break;
+      }
+      
+      editor.value = templateContent;
+    }
+    
+    // 페이지 로드 시 나의 심사 목록 렌더링
+    document.addEventListener('DOMContentLoaded', () => {
+      renderMyReviewList();
+      setupReviewerRoleSwitch();
+      setupApproverRoleSwitch();
+      setupReviewSubmit();
+      setupCaseTabs();
+      setupDeptManager();
+      setupReview00Filters();
+      setupIntk01();
+      
+      // INTK-01 첫 번째 민원 자동 선택
+      const firstRow = document.querySelector('#intkTable tbody tr');
+      if (firstRow) {
+        firstRow.click();
+      }
+    });
+    
+    // 검토 상신 버튼 이벤트 설정
+    function setupReviewSubmit() {
+      document.getElementById('submitReviewBtn')?.addEventListener('click', submitReview);
+    }
+    
+    // 검토자 역할 전환 기능
+    function setupReviewerRoleSwitch() {
+      const roleSelect = document.getElementById('reviewerRole');
+      const deptView = document.getElementById('deptReviewer');
+      const mainView = document.getElementById('mainReviewer');
+      
+      if (roleSelect) {
+        roleSelect.addEventListener('change', (e) => {
+          if (e.target.value === 'dept') {
+            deptView.classList.remove('hidden');
+            mainView.classList.add('hidden');
+          } else {
+            deptView.classList.add('hidden');
+            mainView.classList.remove('hidden');
+          }
+        });
+      }
+    }
+    
+    // 각부서 검토자 기능
+    function startDeptReview(id) {
+      showReviewModal('검토 시작', getDeptReviewContent(id, 'start'));
+    }
+    
+    function continueDeptReview(id) {
+      showReviewModal('검토 계속', getDeptReviewContent(id, 'continue'));
+    }
+    
+    function viewDeptReview(id) {
+      showReviewModal('검토 결과 보기', getDeptReviewContent(id, 'view'));
+    }
+    
+    // 허가부서 검토자 기능
+    function startMainReview(id) {
+      showReviewModal('종합검토 시작', getMainReviewContent(id, 'start'));
+    }
+    
+    function continueMainReview(id) {
+      showReviewModal('종합검토 계속', getMainReviewContent(id, 'continue'));
+    }
+    
+    // 검토 모달 제어 함수들
+    function showReviewModal(title, content) {
+      document.getElementById('reviewModalTitle').textContent = title;
+      document.getElementById('reviewModalContent').innerHTML = content;
+      document.getElementById('reviewModal').classList.remove('hidden');
+    }
+    
+    function closeReviewModal() {
+      document.getElementById('reviewModal').classList.add('hidden');
+    }
+    
+    // 각부서 검토 내용 생성
+    function getDeptReviewContent(id, type) {
+      const reviewData = {
+        1: {
+          민원번호: 'A25-00123',
+          품목명: '신약A 주사제',
+          심사자: '김심사',
+          심사유형: '품질·안유',
+          심사완료일: '2025-08-25',
+          심사결론: '적합(조건부)',
+          심사점수: '85/100',
+          주요검토사항: '임상시험 결과 적절, 안전성 데이터 충분, 추가 안전성 모니터링 필요',
+          상세의견: '3상 임상시험에서 유효성과 안전성이 확인되었으며, 대조약 대비 통계적으로 유의한 치료효과를 보임. 주요 부작용은 예상 범위 내에서 발생. 장기 투여 시 안전성 데이터가 부족하므로, 허가 후 추가 안전성 모니터링 계획 수립 및 이행이 필요함.',
+          검토의견: type === 'view' ? '심사 결과 적절, 승인 권고' : '',
+          검토일: type === 'view' ? '2025-08-26' : ''
+        },
+        2: {
+          민원번호: 'A25-00131',
+          품목명: '바이오B',
+          심사자: '박품질',
+          심사유형: 'RMP',
+          심사완료일: '2025-08-26',
+          심사결론: '적합',
+          심사점수: '92/100',
+          주요검토사항: '위험관리계획 적절, 추가 위험요소 없음, 모니터링 계획 충분',
+          상세의견: '제품의 주요 위험요소에 대한 적절한 관리방안이 수립되어 있으며, 의료진과 환자에 대한 교육자료가 충분히 제공됨. 허가 후 안전성 모니터링 계획이 체계적으로 수립되어 있어 잠재적 위험요소를 조기에 발견할 수 있음.',
+          검토의견: type === 'view' ? '위험관리계획 적절, 승인 권고' : '',
+          검토일: type === 'view' ? '2025-08-27' : ''
+        },
+        3: {
+          민원번호: 'A25-00145',
+          품목명: '신약C 캡슐',
+          심사자: '이유효',
+          심사유형: 'GMP',
+          심사완료일: '2025-08-27',
+          심사결론: '적합',
+          심사점수: '88/100',
+          주요검토사항: '제조시설 기준 충족, 품질관리체계 적절, 검증계획 적절',
+          상세의견: '제조시설이 GMP 기준을 충족하고 있으며, 환경관리체계가 적절하게 운영되고 있음. 품질관리체계가 체계적으로 구축되어 있으며, 품질보증 활동이 적절하게 수행되고 있음.',
+          검토의견: type === 'view' ? '제조시설 기준 충족, 승인 권고' : '',
+          검토일: type === 'view' ? '2025-08-28' : ''
+        }
+      };
+      
+      const data = reviewData[id];
+      if (!data) return '<p>민원 정보를 찾을 수 없습니다.</p>';
+      
+      let html = '';
+      html += `<div class="card" style="margin-bottom:16px">`;
+      html += `<h4>기본 정보</h4>`;
+      html += `<table class="info-table">`;
+      html += `<tr><td><strong>민원번호</strong></td><td>${data.민원번호}</td></tr>`;
+      html += `<tr><td><strong>품목명</strong></td><td>${data.품목명}</td></tr>`;
+      html += `<tr><td><strong>심사자</strong></td><td>${data.심사자}</td></tr>`;
+      html += `<tr><td><strong>심사유형</strong></td><td>${data.심사유형}</td></tr>`;
+      html += `<tr><td><strong>심사완료일</strong></td><td>${data.심사완료일}</td></tr>`;
+      html += `<tr><td><strong>심사결론</strong></td><td><span class="status ok">${data.심사결론}</span></td></tr>`;
+      html += `<tr><td><strong>심사점수</strong></td><td>${data.심사점수}</td></tr>`;
+      html += `</table></div>`;
+      
+      html += `<div class="card" style="margin-bottom:16px">`;
+      html += `<h4>주요 검토사항</h4>`;
+      html += `<p>${data.주요검토사항}</p>`;
+      html += `</div>`;
+      
+      html += `<div class="card" style="margin-bottom:16px">`;
+      html += `<h4>상세 심사 의견</h4>`;
+      html += `<p>${data.상세의견}</p>`;
+      html += `</div>`;
+      
+      if (type === 'view' && data.검토의견) {
+        html += `<div class="card" style="margin-bottom:16px">`;
+        html += `<h4>검토 의견</h4>`;
+        html += `<p><strong>검토자:</strong> ${data.심사자}</p>`;
+        html += `<p><strong>검토일:</strong> ${data.검토일}</p>`;
+        html += `<p><strong>검토의견:</strong> ${data.검토의견}</p>`;
+        html += `</div>`;
+      }
+      
+      if (type === 'start' || type === 'continue') {
+        html += `<div class="card">`;
+        html += `<h4>검토 의견 작성</h4>`;
+        html += `<textarea id="reviewOpinion" style="width:100%;height:100px" placeholder="검토 의견을 입력하세요..."></textarea>`;
+        html += `<div class="actions" style="margin-top:12px">`;
+        html += `<button class="btn" onclick="saveReviewOpinion()">임시저장</button>`;
+        html += `<button class="btn primary" onclick="completeReview()">검토 완료</button>`;
+        html += `</div>`;
+        html += `</div>`;
+      }
+      
+      return html;
+    }
+    
+    // 허가부서 검토 내용 생성
+    function getMainReviewContent(id, type) {
+      const reviewData = {
+        1: {
+          민원번호: 'A25-00123',
+          품목명: '신약A 주사제',
+          신청인: '한빛제약',
+          부서별상태: {
+            '품질·안유': '완료',
+            'RMP': '완료',
+            'GMP': '대기'
+          },
+          종합검토상태: '검토대기',
+          부서별결과: {
+            '품질·안유': '적합(조건부) - 추가 안전성 모니터링 필요',
+            'RMP': '적합 - 위험관리계획 적절',
+            'GMP': '검토 대기 중'
+          }
+        },
+        2: {
+          민원번호: 'A25-00131',
+          품목명: '바이오B',
+          신청인: '유니바이오',
+          부서별상태: {
+            '품질·안유': '완료',
+            'RMP': '완료',
+            'GMP': '완료'
+          },
+          종합검토상태: '검토중',
+          부서별결과: {
+            '품질·안유': '적합 - 임상시험 결과 적절',
+            'RMP': '적합 - 위험관리계획 적절',
+            'GMP': '적합 - 제조시설 기준 충족'
+          }
+        }
+      };
+      
+      const data = reviewData[id];
+      if (!data) return '<p>민원 정보를 찾을 수 없습니다.</p>';
+      
+      let html = '';
+      html += `<div class="card" style="margin-bottom:16px">`;
+      html += `<h4>기본 정보</h4>`;
+      html += `<table class="info-table">`;
+      html += `<tr><td><strong>민원번호</strong></td><td>${data.민원번호}</td></tr>`;
+      html += `<tr><td><strong>품목명</strong></td><td>${data.품목명}</td></tr>`;
+      html += `<tr><td><strong>신청인</strong></td><td>${data.신청인}</td></tr>`;
+      html += `<tr><td><strong>종합검토상태</strong></td><td><span class="status ${data.종합검토상태 === '검토완료' ? 'ok' : data.종합검토상태 === '검토중' ? 'warn' : 'wait'}">${data.종합검토상태}</span></td></tr>`;
+      html += `</table></div>`;
+      
+      html += `<div class="card" style="margin-bottom:16px">`;
+      html += `<h4>부서별 심사 결과</h4>`;
+      Object.entries(data.부서별결과).forEach(([dept, result]) => {
+        const status = data.부서별상태[dept];
+        const statusClass = status === '완료' ? 'ok' : status === '검토중' ? 'warn' : 'wait';
+        html += `<div style="margin-bottom:8px">`;
+        html += `<strong>${dept}:</strong> <span class="status ${statusClass}">${status}</span>`;
+        html += `<p style="margin:4px 0 0 16px;color:var(--muted);font-size:13px">${result}</p>`;
+        html += `</div>`;
+      });
+      html += `</div>`;
+      
+      if (type === 'start' || type === 'continue') {
+        html += `<div class="card">`;
+        html += `<h4>종합 검토 의견 작성</h4>`;
+        html += `<textarea id="mainReviewOpinion" style="width:100%;height:100px" placeholder="종합 검토 의견을 입력하세요..."></textarea>`;
+        html += `<div class="actions" style="margin-top:12px">`;
+        html += `<button class="btn" onclick="saveMainReviewOpinion()">임시저장</button>`;
+        html += `<button class="btn primary" onclick="submitMainReview()">검토 상신</button>`;
+        html += `<button class="btn warn" onclick="requestRevision()">반려 요청</button>`;
+        html += `</div>`;
+        html += `</div>`;
+      }
+      
+      return html;
+    }
+    
+    // 검토 의견 저장 및 완료 함수들
+    function saveReviewOpinion() {
+      const opinion = document.getElementById('reviewOpinion')?.value;
+      if (opinion) {
+        alert('검토 의견이 임시저장되었습니다.');
+      }
+    }
+    
+    function completeReview() {
+      const opinion = document.getElementById('reviewOpinion')?.value;
+      if (!opinion) {
+        alert('검토 의견을 입력해주세요.');
+        return;
+      }
+      alert('검토가 완료되었습니다.');
+      closeReviewModal();
+    }
+    
+    function saveMainReviewOpinion() {
+      const opinion = document.getElementById('mainReviewOpinion')?.value;
+      if (opinion) {
+        alert('종합 검토 의견이 임시저장되었습니다.');
+      }
+    }
+    
+    function submitMainReview() {
+      const opinion = document.getElementById('mainReviewOpinion')?.value;
+      if (!opinion) {
+        alert('종합 검토 의견을 입력해주세요.');
+        return;
+      }
+      alert('검토가 상신되었습니다.');
+      closeReviewModal();
+    }
+    
+    function requestRevision() {
+      const opinion = document.getElementById('mainReviewOpinion')?.value;
+      if (!opinion) {
+        alert('반려 사유를 입력해주세요.');
+        return;
+      }
+      alert('반려 요청이 처리되었습니다.');
+      closeReviewModal();
+    }
+    
+    // 결재자 역할 전환 기능
+    function setupApproverRoleSwitch() {
+      const roleSelect = document.getElementById('approverRole');
+      const mainView = document.getElementById('mainApprover');
+      const deptView = document.getElementById('deptApprover');
+      
+      if (roleSelect) {
+        roleSelect.addEventListener('change', (e) => {
+          if (e.target.value === 'main') {
+            mainView.classList.remove('hidden');
+            deptView.classList.add('hidden');
+            // 상세 화면 숨기기
+            document.getElementById('mainApprovalDetail').classList.add('hidden');
+            document.getElementById('deptApprovalDetail').classList.add('hidden');
+          } else {
+            mainView.classList.add('hidden');
+            deptView.classList.remove('hidden');
+            // 상세 화면 숨기기
+            document.getElementById('mainApprovalDetail').classList.add('hidden');
+            document.getElementById('deptApprovalDetail').classList.add('hidden');
+          }
+        });
+      }
+    }
+    
+    // 허가부서 결재자 기능
+    function startMainApproval(id) {
+      const detailView = document.getElementById('mainApprovalDetail');
+      detailView.classList.remove('hidden');
+      
+      // 선택된 행 하이라이트
+      document.querySelectorAll('#mainApprovalTableBody tr').forEach(tr => {
+        tr.style.backgroundColor = '';
+      });
+      document.querySelector(`#mainApprovalTableBody tr[data-case-id="${id}"]`).style.backgroundColor = '#f0f9ff';
+      
+      // 탭 기능 설정
+      setupMainApprovalTabs();
+    }
+    
+    // 각 부서 결재자 기능
+    function startDeptApproval(id) {
+      const detailView = document.getElementById('deptApprovalDetail');
+      detailView.classList.remove('hidden');
+      
+      // 선택된 행 하이라이트
+      document.querySelectorAll('#deptApprovalTableBody tr').forEach(tr => {
+        tr.style.backgroundColor = '';
+      });
+      document.querySelector(`#deptApprovalTableBody tr[data-case-id="${id}"]`).style.backgroundColor = '#f0f9ff';
+    }
+    
+    // 허가부서 결재 탭 기능
+    function setupMainApprovalTabs() {
+      const tabbar = document.getElementById('mainApprovalTabs');
+      const tabBodies = document.getElementById('mainApprovalTabBodies');
+      
+      if (tabbar) {
+        tabbar.addEventListener('click', (e) => {
+          if (e.target.tagName !== 'BUTTON') return;
+          
+          const tab = e.target.getAttribute('data-tab');
+          
+          // 활성 탭 변경
+          tabbar.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === e.target));
+          
+          // 탭 내용 변경
+          tabBodies.querySelectorAll('[data-body]').forEach(b => {
+            b.classList.toggle('hidden', b.getAttribute('data-body') !== tab);
+          });
+        });
+      }
+    }
+
+    // CASE tabs
+    const tabbar = document.getElementById('caseTabs');
+    tabbar?.addEventListener('click', e => {
+      if(e.target.tagName !== 'BUTTON') return;
+      const tab = e.target.getAttribute('data-tab');
+      tabbar.querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===e.target));
+      document.querySelectorAll('#caseTabBodies [data-body]').forEach(b => {
+        b.classList.toggle('hidden', b.getAttribute('data-body') !== tab);
+      });
+    });
+
+    // Templates for NTFY-01
+    const templates = {
+      REQ: "[보완요청]\n민원번호: {{민원번호}}\n품목: {{품목명}}\n민원인: {{민원인명}}\n\n1) 품질·안유 보완사항 ...\n2) RMP 보완사항 ...\n\n※ 제출 바랍니다.",
+      GMP: "[보완요청 - GMP/GCP]\n민원번호 {{민원번호}} / 품목 {{품목명}}\n별도 공문 형식으로 통보합니다.\n- GMP 보완: ...\n- GCP 보완: ...",
+      APP: "[허가 통보]\n민원번호 {{민원번호}} ({{품목명}}) 적합으로 허가합니다.\n필요 시 시정사항: ...",
+      REJ: "[반려 통보]\n민원번호 {{민원번호}} ({{품목명}}) 반려합니다.\n사유: ..."
+    };
+    
+    // 완료된 협의 요청 보기
+    function viewCompletedConsultation(index) {
+      const current민원번호 = document.querySelector('#REVIEW-01 .kpi:nth-child(1) .n')?.textContent;
+      const currentRequests = consultationRequests.filter(req => req.민원번호 === current민원번호);
+      const completedRequest = currentRequests[index];
+      
+      if (!completedRequest || completedRequest.상태 !== '완료') {
+        alert('완료된 협의 요청이 아닙니다.');
+        return;
+      }
+      
+      // CASE-02로 이동하여 협의 요청 결과 표시
+      showCompletedConsultationInCase02(completedRequest);
+    }
+    
+    // REVIEW-01 완료 버전 표시
+    function showCompletedReview01(consultationRequest) {
+      // REVIEW-01 화면으로 이동
+      show('REVIEW-01');
+      
+      // 완료된 협의 요청 정보를 REVIEW-01에 표시
+      const 민원번호Element = document.querySelector('#REVIEW-01 .kpi:nth-child(1) .n');
+      const 품목명Element = document.querySelector('#REVIEW-01 .kpi:nth-child(2) .n');
+      const 부서Element = document.querySelector('#REVIEW-01 .kpi:nth-child(3) .n');
+      
+      if (민원번호Element) 민원번호Element.textContent = consultationRequest.민원번호;
+      if (품목명Element) 품목명Element.textContent = consultationRequest.품목명;
+      if (부서Element) 부서Element.textContent = consultationRequest.요청부서;
+      
+      // 검토 상신 버튼을 숨기고 완료 상태 표시
+      const submitBtn = document.getElementById('submitReviewBtn');
+      if (submitBtn) {
+        submitBtn.style.display = 'none';
+      }
+      
+      // 완료 상태 표시
+      const statusElement = document.querySelector('#REVIEW-01 .card:has(.mono) h3');
+    }
+    
+    // 협의 요청 상태 변경 (테스트용)
+    function updateConsultationStatus(requestId, newStatus, resultContent) {
+      const request = consultationRequests.find(req => req.id === requestId);
+      if (request) {
+        request.상태 = newStatus;
+        if (newStatus === '완료') {
+          request.결과내용 = resultContent || '협의가 완료되었습니다.';
+          request.완료일 = new Date().toISOString().split('T')[0];
+        }
+        updateConsultationProgress();
+      }
+    }
+    
+    // 개별 협의 요청 테스트 완료
+    function testCompleteSingleConsultation(index) {
+      const current민원번호 = document.querySelector('#REVIEW-01 .kpi:nth-child(1) .n')?.textContent;
+      if (!current민원번호 || current민원번호 === '-') {
+        alert('먼저 민원을 선택해주세요.');
+        return;
+      }
+      
+      const currentRequests = consultationRequests.filter(req => req.민원번호 === current민원번호);
+      if (currentRequests.length === 0) {
+        alert('협의 요청이 없습니다.');
+        return;
+      }
+      
+      if (index < 0 || index >= currentRequests.length) {
+        alert('잘못된 인덱스입니다.');
+        return;
+      }
+      
+      // 선택된 요청을 완료로 변경
+      const selectedRequest = currentRequests[index];
+      selectedRequest.상태 = '완료';
+      selectedRequest.결과내용 = '테스트용 협의 결과입니다. 모든 검토가 완료되었습니다.';
+      selectedRequest.완료일 = new Date().toISOString().split('T')[0];
+      
+      updateConsultationProgress();
+      alert(`${selectedRequest.요청부서} 협의 요청이 완료되었습니다.`);
+    }
+    
+    // REVIEW-01에서 민원번호 클릭 시 CASE-02로 이동하는 함수
+    function goToCase02FromReview01() {
+      // 현재 REVIEW-01에서 작업 중인 민원 정보 가져오기
+      const 민원번호 = document.querySelector('#REVIEW-01 .kpi:nth-child(1) .n')?.textContent;
+      const 품목명 = document.querySelector('#REVIEW-01 .kpi:nth-child(2) .n')?.textContent;
+      const 부서 = document.querySelector('#REVIEW-01 .kpi:nth-child(3) .n')?.textContent;
+      
+      if (!민원번호 || 민원번호 === '-') {
+        alert('심사 중인 민원이 없습니다.');
+        return;
+      }
+      
+      // CASE-02로 이동
+      show('CASE-02');
+      
+      // 민원 정보를 CASE-02에 전달
+      const 민원정보 = {
+        민원번호: 민원번호,
+        품목명: 품목명,
+        신청인: '신약바이오', // 기본값 설정
+        민원신청일: '2025-08-24', // 기본값 설정
+        상태: '심사중',
+        부서: 부서
+      };
+      
+      // CASE-02 정보 업데이트
+      updateCase02Info(민원정보);
+      
+      // 기본 탭 활성화
+      const basicTab = document.querySelector('#caseTabs [data-tab="basic"]');
+      if (basicTab) {
+        basicTab.click();
+      }
+    }
+    
+    // 협의 요청 완료 시 CASE-02로 이동하는 새로운 함수
+    function showCompletedConsultationInCase02(consultationRequest) {
+      // CASE-02로 이동하여 민원 상세 정보 표시
+      show('CASE-02');
+      
+      // 협의 요청 정보를 CASE-02에 전달
+      if (window.selectedCaseDetail) {
+        // 기존 민원 정보에 협의 요청 결과 추가
+        const enhancedDetail = {
+          ...window.selectedCaseDetail,
+          협의요청결과: {
+            요청부서: consultationRequest.요청부서,
+            요청일: consultationRequest.완료일,
+            완료일: consultationRequest.완료일,
+            요청내용: consultationRequest.요청내용,
+            결과내용: consultationRequest.결과내용
+          }
+        };
+        
+        // CASE-02 탭 내용 업데이트
+        updateCase02TabContent('basic', enhancedDetail);
+        updateCase02TabContent('cons', enhancedDetail);
+        
+        // 협의 요청한 부서별 탭 표시 및 내용 업데이트
+        console.log('updateDeptTab 호출 전:', { 요청부서: consultationRequest.요청부서, consultationRequest });
+        updateDeptTab(consultationRequest.요청부서, consultationRequest);
+        
+        // 협의 탭에 협의 요청 결과 표시
+        const consTab = document.querySelector('#caseTabBodies [data-body="cons"]');
+        if (consTab) {
+          const timeline = consTab.querySelector('.timeline');
+          if (timeline) {
+            let timelineHtml = '';
+            
+            // 기존 타임라인 내용
+            if (enhancedDetail.협의요청) {
+              if (enhancedDetail.협의요청.품질안유) {
+                timelineHtml += `<li><time>${enhancedDetail.협의요청.품질안유} 14:30</time> <div><strong>품질·안유과 협의 의뢰</strong><br/>담당자: 김심사, 의뢰일: ${enhancedDetail.협의요청.품질안유}</div></li>`;
+              }
+              if (enhancedDetail.협의요청.RMP) {
+                timelineHtml += `<li><time>${enhancedDetail.협의요청.RMP} 09:15</time> <div><strong>RMP과 협의 의뢰</strong><br/>담당자: 이유효, 의뢰일: ${enhancedDetail.협의요청.RMP}</div></li>`;
+              }
+              if (enhancedDetail.협의요청.GMP) {
+                timelineHtml += `<li><time>${enhancedDetail.협의요청.GMP} 10:30</time> <div><strong>GMP과 협의 의뢰</strong><br/>담당자: 이제조, 의뢰일: ${enhancedDetail.협의요청.GMP}</div></li>`;
+              }
+            }
+            
+            // 협의 요청 결과 추가
+            timelineHtml += `<li><time>${consultationRequest.완료일} 16:00</time> <div><strong>${consultationRequest.요청부서} 협의 완료</strong><br/>결과: ${consultationRequest.결과내용}</div></li>`;
+            
+            timeline.innerHTML = timelineHtml;
+          }
+        }
+      }
+    }
+    
+    // 협의 요청한 부서별 탭 표시 및 내용 업데이트
+    function updateDeptTab(deptName, consultationRequest) {
+      console.log('updateDeptTab 호출:', { deptName, consultationRequest });
+      
+      // 부서명에 따른 탭 ID 매핑
+      const deptTabMap = {
+        '사전상담과': 'dept1',
+        '임상정책과': 'dept2',
+        '백신검정과/혈액제제검정과': 'dept3',
+        '바이오의약품연구과': 'dept4',
+        '첨단바이오융복합연구과': 'dept5',
+        '구강소화기기과': 'dept6',
+        '화장품심사과': 'dept7'
+      };
+      
+      const tabId = deptTabMap[deptName];
+      console.log('매핑된 탭 ID:', tabId);
+      if (!tabId) return;
+      
+      // 해당 부서 탭 버튼 표시
+      const deptTabButton = document.querySelector(`[data-tab="${tabId}"]`);
+      if (deptTabButton) {
+        deptTabButton.classList.remove('hidden');
+      }
+      
+      // 해당 부서 탭 내용 업데이트
+      const deptTabContent = document.querySelector(`[data-body="${tabId}"]`);
+      console.log('탭 내용 요소 찾기:', { tabId, deptTabContent });
+      
+      if (deptTabContent) {
+        // 요청일 업데이트
+        const requestDateElement = deptTabContent.querySelector(`#${tabId}-date`);
+        console.log('요청일 요소:', { selector: `#${tabId}-date`, element: requestDateElement });
+        if (requestDateElement) {
+          requestDateElement.textContent = consultationRequest.요청일;
+          console.log('요청일 업데이트 완료:', consultationRequest.요청일);
+        }
+        
+        // 요청내용 업데이트
+        const requestContentElement = deptTabContent.querySelector(`#${tabId}-content`);
+        console.log('요청내용 요소:', { selector: `#${tabId}-content`, element: requestContentElement });
+        if (requestContentElement) {
+          requestContentElement.textContent = consultationRequest.요청내용 || '협의 요청';
+          console.log('요청내용 업데이트 완료:', consultationRequest.요청내용 || '협의 요청');
+        }
+        
+        // 완료일 업데이트
+        const resultDateElement = deptTabContent.querySelector(`#${tabId}-result-date`);
+        console.log('완료일 요소:', { selector: `#${tabId}-result-date`, element: resultDateElement });
+        if (resultDateElement) {
+          resultDateElement.textContent = consultationRequest.완료일;
+          console.log('완료일 업데이트 완료:', consultationRequest.완료일);
+        }
+        
+        // 결과내용 업데이트
+        const resultContentElement = deptTabContent.querySelector(`#${tabId}-result`);
+        console.log('결과내용 요소:', { selector: `#${tabId}-result`, element: resultContentElement });
+        if (resultContentElement) {
+          resultContentElement.textContent = consultationRequest.결과내용 || '협의 완료';
+          console.log('결과내용 업데이트 완료:', consultationRequest.결과내용 || '협의 완료');
+        }
+      } else {
+        console.error('탭 내용 요소를 찾을 수 없습니다:', tabId);
+      }
+    }
+    
+    const editor = document.getElementById('editor');
+    document.getElementById('applyTpl')?.addEventListener('click', ()=>{
+      const key = document.getElementById('tpl').value;
+      const filled = templates[key]
+        .replaceAll('{{민원번호}}','A25-00123')
+        .replaceAll('{{품목명}}','신약A 주사제')
+        .replaceAll('{{민원인명}}','한빛제약');
+      editor.value = filled;
+    });
+  </script>
+</body>
+</html>

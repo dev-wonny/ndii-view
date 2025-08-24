@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>종합 상황판 대시보드 (DASH-001)</title>
+  <style>
+    :root{
+      --bg:#0a0f1e; --panel:#111a2e; --panel2:#0d1530; --border:#253153; --text:#e7eefc;
+      --muted:#9fb0d6; --accent:#5b8cff; --ok:#2ad19b; --warn:#ffb020; --alert:#ff6b6b; --good:#3bc27a;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif}
+    .wrap{max-width:1400px;margin:0 auto;padding:20px 16px 60px}
+
+    h1{font-size:20px;margin:0 0 12px}
+    .sub{color:var(--muted);font-size:13px}
+    .panel{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.25)}
+    .hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px dashed var(--border)}
+    .hdr h2{font-size:16px;margin:0}
+    .row{display:grid;gap:16px}
+    .cols-2{grid-template-columns:1.2fr .9fr}
+    .cols-2b{grid-template-columns:1fr 1fr}
+
+    .filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+    .filters label{font-size:12px;color:var(--muted)}
+    .filters input,.filters select{background:#0b1429;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:8px 10px}
+    .searchbox{display:flex;gap:8px;align-items:center}
+    .searchbox input{min-width:280px}
+
+    .btn{cursor:pointer;border:1px solid var(--border);background:#14213b;color:var(--text);padding:8px 12px;border-radius:10px}
+    .btn:hover{background:#1b2a4b}
+    .btn.primary{background:var(--accent);border-color:#3b6bff;color:#fff;font-weight:600}
+    .btn.ghost{background:transparent}
+
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:12px 16px}
+    .kpi{background:#0d1730;border:1px solid var(--border);border-radius:12px;padding:12px;min-height:84px}
+    .kpi b{display:block;font-size:20px;margin-top:2px}
+
+    /* Region Risk Map (pseudo) */
+    #map{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px}
+    .cell{border:1px solid var(--border);border-radius:12px;padding:14px;min-height:76px;display:flex;flex-direction:column;gap:6px}
+    .badge{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--border);background:#0b152b;border-radius:999px;padding:2px 8px;color:#d9e5ff;font-size:12px}
+    .sev-ok{background:rgba(58,194,122,.12);border-color:#2a7854;color:#9ee6c1}
+    .sev-warn{background:rgba(255,176,32,.12);border-color:#8a6210;color:#ffd28c}
+    .sev-alert{background:rgba(255,107,107,.12);border-color:#8f2c2c;color:#ffb3b3}
+
+    /* Alerts */
+    #alerts{padding:12px 16px;max-height:360px;overflow:auto}
+    .alert{display:flex;gap:10px;align-items:flex-start;border-bottom:1px solid var(--border);padding:10px 0}
+    .alert:last-child{border-bottom:0}
+    .tag{font-size:12px}
+    .time{color:var(--muted);font-size:12px}
+
+    /* Tables */
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left}
+    th{color:#b8c7e6;font-weight:600}
+    tr:hover td{background:#0e1933}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+    .chip{display:inline-flex;align-items:center;gap:6px;background:#0c1630;border:1px solid var(--border);border-radius:999px;padding:3px 8px;color:#cfe2ff;font-size:12px}
+    .bar{height:8px;background:#243f75;border-radius:999px;overflow:hidden}
+    .bar>i{display:block;height:100%;background:var(--good)}
+
+    .tableWrap{padding:12px 16px;max-height:400px;overflow:auto}
+
+    @media (max-width:1100px){
+      .cols-2,.cols-2b{grid-template-columns:1fr}
+      .kpis{grid-template-columns:repeat(2,1fr)}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>위기대응 의료제품 모니터링 시스템 <span class="sub">종합 상황판 대시보드</span></h1>
+
+  <!-- Top bar -->
+  <div class="panel">
+    <div class="hdr">
+      <div class="filters">
+        <label>제품</label>
+        <select id="product"></select>
+        <label>기간</label>
+        <input type="date" id="from"/>
+        <span class="sub">~</span>
+        <input type="date" id="to"/>
+        <label>지역</label>
+        <select id="region">
+          <option value="">전국</option>
+        </select>
+      </div>
+      <div class="searchbox">
+        <input id="q" placeholder="🔍 제품/업체 검색..." />
+        <button class="btn" id="btnReset">초기화</button>
+        <button class="btn primary" id="btnSearch">조회</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px">
+      <div class="sub">최근 갱신: <span id="lastUpdated">-</span></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn ghost" id="btnExportProducts">주요 관리 품목 CSV</button>
+        <button class="btn ghost" id="btnExportOver">과다 재고 TOP5 CSV</button>
+      </div>
+    </div>
+    <div class="kpis" id="kpis">
+      <div class="kpi"><span class="sub">모니터링 품목</span><b id="kpiItems">-</b></div>
+      <div class="kpi"><span class="sub">관련 업체 수</span><b id="kpiCompanies">-</b></div>
+      <div class="kpi"><span class="sub">🚨 중요 경고</span><b id="kpiCritical">-</b></div>
+      <div class="kpi"><span class="sub">전국 평균 재고일수</span><b id="kpiAvgDsi">-</b></div>
+    </div>
+  </div>
+
+  <div class="row cols-2" style="margin-top:16px">
+    <div class="panel">
+      <div class="hdr">
+        <h2>전국 재고 위험도 현황</h2>
+        <div class="sub">색상: 양호/주의/위험</div>
+      </div>
+      <div id="map"></div>
+    </div>
+
+    <div class="panel">
+      <div class="hdr">
+        <h2>🚨 최신 경고 알림</h2>
+        <div class="sub">OPEN 상태 최신순</div>
+      </div>
+      <div id="alerts"></div>
+    </div>
+  </div>
+
+  <div class="row cols-2b" style="margin-top:16px">
+    <div class="panel">
+      <div class="hdr">
+        <h2>주요 관리 품목 현황</h2>
+        <div class="sub">공급량(주), 재고일수, 상태</div>
+      </div>
+      <div class="tableWrap">
+        <table id="tblProducts">
+          <thead>
+          <tr>
+            <th>제품명</th>
+            <th class="mono">공급량(주)</th>
+            <th>재고 수준</th>
+            <th>상태</th>
+          </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="hdr">
+        <h2>재고 과다 의심 업체 TOP 5</h2>
+        <div class="sub">High DSI & 대량 재고</div>
+      </div>
+      <div class="tableWrap">
+        <table id="tblOver">
+          <thead>
+          <tr>
+            <th>업체명</th>
+            <th>품목명</th>
+            <th class="mono">재고량</th>
+          </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub" style="margin-top:12px">※ 본 화면은 데모 목업입니다. 실제 연동 시 API 응답 형식에 맞춰 매핑하세요.</div>
+</div>
+
+<script>
+const USE_MOCK = true; // 실제 API 연동 시 false로 전환
+const API = '/api/v1';
+const $ = (s,el=document)=>el.querySelector(s);
+const $$ = (s,el=document)=>[...el.querySelectorAll(s)];
+const fmt = n => n==null?'-':Number(n).toLocaleString('ko-KR');
+const nowKR = ()=> new Intl.DateTimeFormat('ko-KR',{dateStyle:'medium', timeStyle:'short'}).format(new Date());
+function csvEscape(v){ if(v==null) return ''; const s=String(v); return (/,|"|\n/.test(s))? '"'+s.replace(/"/g,'""')+'"': s; }
+
+// ===== MOCK DATA =====
+const MOCK = {
+  products:[
+    {productId:'P001', productName:'A백신'},
+    {productId:'P002', productName:'B해열제 500mg'},
+    {productId:'P003', productName:'C주사제'}
+  ],
+  regions:['서울','경기','인천','강원','충북','충남','대전','세종','전북','전남','광주','경북','경남','대구','울산','부산','제주'],
+  summary:{ items:1234, companies:567, critical:8, avgDsi:45.6 },
+  risk:[
+    {region:'서울', level:'warn', dsi:28.5},
+    {region:'경기', level:'warn', dsi:26.2},
+    {region:'인천', level:'ok', dsi:18.3},
+    {region:'강원', level:'ok', dsi:15.2},
+    {region:'충북', level:'alert', dsi:52.1},
+    {region:'충남', level:'ok', dsi:20.4},
+    {region:'대전', level:'warn', dsi:29.9},
+    {region:'세종', level:'ok', dsi:21.2},
+    {region:'전북', level:'ok', dsi:23.1},
+    {region:'전남', level:'ok', dsi:22.0},
+    {region:'광주', level:'ok', dsi:19.8},
+    {region:'경북', level:'warn', dsi:31.5},
+    {region:'경남', level:'ok', dsi:24.4},
+    {region:'대구', level:'ok', dsi:22.7},
+    {region:'울산', level:'ok', dsi:21.7},
+    {region:'부산', level:'ok', dsi:19.9},
+    {region:'제주', level:'ok', dsi:17.5}
+  ],
+  alerts:[
+    {sev:'ALERT', title:'A백신, 서울 지역 재고 급감', at:'2025-08-21T13:50:00+09:00'},
+    {sev:'WARN', title:'B제약, 재고 비정상적 증가 의심', at:'2025-08-21T12:30:00+09:00'},
+    {sev:'WARN', title:'C해열제, 도매상 재고 소진 임박', at:'2025-08-21T11:00:00+09:00'}
+  ],
+  prodRows:[
+    {name:'A백신', weekly:100000, stockDays:20, status:'down'},
+    {name:'B해열제 500mg', weekly:50000, stockDays:15, status:'down'},
+    {name:'C주사제', weekly:80000, stockDays:60, status:'up'}
+  ],
+  over:[
+    {company:'가나다 유통', product:'A백신', qty:50000},
+    {company:'라마바 상사', product:'D주사제', qty:25000},
+    {company:'서울메디', product:'B해열제 500mg', qty:22000},
+    {company:'한빛의료', product:'C주사제', qty:18000},
+    {company:'백두상사', product:'E의약품', qty:15000}
+  ]
+};
+
+async function fetchJSON(url){
+  const r = await fetch(url); if(!r.ok) throw new Error('HTTP '+r.status); return r.json();
+}
+
+// API shims
+async function getProducts(){ if(USE_MOCK) return MOCK.products; const j=await fetchJSON(`${API}/meta/products`); return j.items||[]; }
+async function getSummary(params){ if(USE_MOCK) return MOCK.summary; const q=new URLSearchParams(params).toString(); return fetchJSON(`${API}/dashboard/summary?${q}`); }
+async function getRegionRisk(params){ if(USE_MOCK) return MOCK.risk; const q=new URLSearchParams(params).toString(); return fetchJSON(`${API}/inventory/region-risk?${q}`); }
+async function getAlerts(params){ if(USE_MOCK) return MOCK.alerts; const q=new URLSearchParams(params).toString(); const j=await fetchJSON(`${API}/events?status=OPEN&${q}`); return (j.items||[]).map(x=>({sev:x.severityAfter,title:x.title,at:x.detectedAt})); }
+async function getProductRows(params){ if(USE_MOCK) return MOCK.prodRows; /* 구현부: 서버 metrics 조합 */ return []; }
+async function getOverstockTop(params){ if(USE_MOCK) return MOCK.over; const q=new URLSearchParams(params).toString(); const j=await fetchJSON(`${API}/analysis/suspected-hoarding?${q}`); return (j.items||[]).map(x=>({company:x.companyName, product:x.productName, qty:x.stockQuantity})); }
+
+// INIT
+init();
+async function init(){
+  // 날짜 기본값: 최근 30일
+  const to = new Date(); const from = new Date(); from.setDate(to.getDate()-30);
+  $('#from').value = toISODate(from); $('#to').value = toISODate(to);
+
+  // 제품, 지역 채우기
+  const [products] = await Promise.all([getProducts()]);
+  const selP = $('#product'); selP.innerHTML='';
+  products.forEach(p=>{ const o=document.createElement('option'); o.value=p.productId; o.textContent=p.productName; selP.appendChild(o); });
+
+  const selR = $('#region'); selR.innerHTML='<option value="">전국</option>';
+  MOCK.regions.forEach(r=>{ const o=document.createElement('option'); o.value=r; o.textContent=r; selR.appendChild(o); });
+
+  $('#btnSearch').addEventListener('click', load);
+  $('#btnReset').addEventListener('click', ()=>{ $('#q').value=''; selR.value=''; if(selP.options.length) selP.selectedIndex=0; init(); });
+  $('#btnExportProducts').addEventListener('click', ()=> exportTableCSV('#tblProducts','main_products'));
+  $('#btnExportOver').addEventListener('click', ()=> exportTableCSV('#tblOver','overstock_top5'));
+
+  await load();
+}
+
+async function load(){
+  const params = {
+    from: $('#from').value,
+    to: $('#to').value,
+    productId: $('#product').value,
+    region: $('#region').value,
+    q: $('#q').value
+  };
+
+  const [summary, risk, alerts, prodRows, over] = await Promise.all([
+    getSummary(params), getRegionRisk(params), getAlerts(params), getProductRows(params), getOverstockTop(params)
+  ]);
+
+  // KPI
+  $('#kpiItems').textContent = fmt(summary.items);
+  $('#kpiCompanies').textContent = fmt(summary.companies);
+  $('#kpiCritical').textContent = fmt(summary.critical);
+  $('#kpiAvgDsi').textContent = (summary.avgDsi!=null? Number(summary.avgDsi).toFixed(1)+' 일' : '-');
+  $('#lastUpdated').textContent = nowKR();
+
+  // Map
+  renderMap('#map', risk);
+
+  // Alerts
+  renderAlerts('#alerts', alerts);
+
+  // Tables
+  renderProducts('#tblProducts tbody', prodRows);
+  renderOver('#tblOver tbody', over);
+}
+
+// RENDERERS
+function renderMap(sel, rows){
+  const el=$(sel); el.innerHTML='';
+  rows.forEach(r=>{
+    const cell=document.createElement('div'); cell.className='cell';
+    const badge=document.createElement('span'); badge.className='badge '+sevCls(r.level); badge.textContent=sevLabel(r.level);
+    cell.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+        <b>${r.region}</b> <span class="chip">DSI ${Number(r.dsi).toFixed(1)}일</span>
+      </div>`;
+    cell.prepend(badge);
+    el.appendChild(cell);
+  });
+}
+function sevCls(level){ return level==='alert'?'sev-alert': level==='warn'?'sev-warn':'sev-ok'; }
+function sevLabel(level){ return level==='alert'?'위험': level==='warn'?'주의':'양호'; }
+
+function renderAlerts(sel, items){
+  const el=$(sel); el.innerHTML='';
+  items.forEach(a=>{
+    const div=document.createElement('div'); div.className='alert';
+    const tag=document.createElement('span'); tag.className='badge '+(a.sev==='ALERT'?'sev-alert':'sev-warn'); tag.textContent=a.sev;
+    div.appendChild(tag);
+    const box=document.createElement('div');
+    const t=document.createElement('div'); t.textContent=a.title;
+    const time=document.createElement('div'); time.className='time'; time.textContent=new Date(a.at).toLocaleString('ko-KR');
+    box.appendChild(t); box.appendChild(time); div.appendChild(box);
+    el.appendChild(div);
+  });
+}
+
+function renderProducts(sel, rows){
+  const tb=$(sel); tb.innerHTML='';
+  rows.forEach(r=>{
+    const tr=document.createElement('tr');
+    const arrow = r.status==='up'?'🔼':'🔻';
+    tr.innerHTML = `
+      <td>${r.name}</td>
+      <td class="mono">${fmt(r.weekly)}</td>
+      <td>${r.stockDays}일</td>
+      <td>${arrow}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function renderOver(sel, rows){
+  const tb=$(sel); tb.innerHTML='';
+  rows.forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.company}</td>
+      <td>${r.product}</td>
+      <td class="mono">${fmt(r.qty)}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+// UTIL
+function exportTableCSV(sel, name){
+  const rows=[[...$(`${sel} thead tr`).children].map(th=>th.innerText.trim())];
+  $$("tbody tr", $(sel)).forEach(tr=>{
+    rows.push([...tr.children].map(td=>csvEscape(td.innerText.trim())));
+  });
+  const csv=rows.map(r=>r.join(',')).join('\n');
+  const blob=new Blob(["\ufeff"+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`${name}_${toISODate(new Date())}.csv`; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+function toISODate(d){ return (d instanceof Date? d : new Date(d)).toISOString().slice(0,10); }
+</script>
+</body>
+</html>

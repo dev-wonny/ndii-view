@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>의약품통합정보시스템 - 교육 실적 관리</title>
+    <style>
+        :root{
+            --bg:#f7f8fa; --card:#ffffff; --line:#e5e7eb; --text:#111827; --muted:#6b7280; --primary:#2563eb; --danger:#dc2626; --ok:#059669; --warn:#d97706;
+        }
+        *{box-sizing:border-box}
+        body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;color:var(--text);background:var(--bg)}
+        
+        header{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:12px;align-items:center}
+        header h1{font-size:18px;margin:0 12px 0 0}
+        
+        .container{padding:16px;max-width:1400px;margin:0 auto}
+        .hidden{display:none !important}
+        .row{display:grid;gap:12px}
+        .row.two{grid-template-columns:1fr 1fr}
+        .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:16px}
+        .card h3{margin:0 0 8px 0;font-size:16px}
+        
+        nav{background-color:var(--card);border-bottom:1px solid var(--line);padding:10px 16px;text-align:center}
+        nav a{text-decoration:none;color:var(--text);padding:8px 15px;border-radius:8px;margin:0 5px;font-weight:500;transition:all 0.2s}
+        nav a.active,nav a:hover{background-color:var(--primary);color:white}
+        
+        main > section { display: none; padding-top: 20px; }
+        main > section.active { display: block; }
+        
+        h2{font-size:20px;border-left:5px solid var(--primary);padding-left:10px;margin-bottom:20px;color:var(--text)}
+        
+        .search-area, .action-area, .info-box{border:1px solid var(--line);background-color:var(--card);padding:15px;margin-bottom:20px;border-radius:12px}
+        .search-area form, .search-area{display:flex;gap:15px;align-items:center;flex-wrap:wrap}
+        
+        .form-group{display:flex;align-items:center;gap:8px}
+        label{font-weight:600;color:var(--muted)}
+        
+        input[type="text"], input[type="date"], select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;height:35px;box-sizing:border-box;background:#fff}
+        input[type="text"]{width:200px}
+        
+        .btn{padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;font-weight:500;color:var(--text);font-family:inherit;transition:all 0.2s}
+        .btn:hover{background:var(--bg)}
+        .btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+        .btn-primary:hover{background:#1d4ed8}
+        .btn-secondary{background:var(--muted);color:#fff;border-color:var(--muted)}
+        .btn-search{background:var(--primary);color:#fff;border-color:var(--primary)}
+        .btn-danger{background:var(--danger);color:#fff;border-color:var(--danger)}
+        .btn-danger:hover{background:#b91c1c}
+        
+        .action-area{text-align:right}
+        
+        table{width:100%;border-collapse:separate;border-spacing:0;margin-top:20px}
+        th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}
+        thead th{color:var(--muted);font-weight:600;background:#fafafa;position:sticky;top:0}
+        thead th.sortable{cursor:pointer}
+        thead th.sortable:hover{background:#f3f4f6}
+        thead th .sort-arrow{opacity:0.3}
+        
+        tbody tr:hover td{background:#fafafa}
+        .required-missing{background-color:#fef2f2 !important;font-weight:700;color:var(--danger)}
+        .link{color:var(--primary);text-decoration:none;cursor:pointer}
+        .link:hover{text-decoration:underline}
+        
+        .manage-buttons{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+        
+        /* Modal Styles */
+        .modal-overlay{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;overflow:auto;background-color:rgba(0,0,0,0.5)}
+        .modal-content{background:var(--card);margin:10% auto;padding:20px;border:1px solid var(--line);width:80%;max-width:600px;border-radius:12px;position:relative}
+        .modal-header{padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:20px}
+        .modal-header h3{margin:0;font-size:18px}
+        .close-btn{color:var(--muted);position:absolute;top:10px;right:20px;font-size:28px;font-weight:bold;cursor:pointer}
+        .close-btn:hover{color:var(--text)}
+        .modal-body .form-group{margin-bottom:15px;flex-direction:column;align-items:flex-start}
+        .modal-body .form-group label{margin-bottom:5px}
+        .modal-body .form-group input,.modal-body .form-group select{width:100%}
+        .modal-footer{text-align:center;padding-top:20px;border-top:1px solid var(--line);margin-top:20px}
+        
+        /* Toast Notification Styles */
+        #toast-container{position:fixed;bottom:20px;right:20px;z-index:2000}
+        .toast{padding:15px 20px;background-color:var(--ok);color:white;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);opacity:0;transition:opacity 0.5s;margin-bottom:10px}
+        
+        /* Status styles */
+        .status{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;font-size:12px;border:1px solid var(--line);background:#fff}
+        .status.ok{border-color:#bbf7d0;background:#ecfdf5;color:#166534}
+        .status.wait{border-color:#fde68a;background:#fffbeb;color:#92400e}
+        .status.bad{border-color:#fecaca;background:#fef2f2;color:#7f1d1d}
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container{padding:8px}
+            .search-area form{flex-direction:column;align-items:stretch}
+            .form-group{flex-direction:column;align-items:stretch}
+            input[type="text"]{width:100%}
+            .row.two{grid-template-columns:1fr}
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>의약품통합정보시스템 - 교육 실적 관리</h1>
+    </header>
+
+    <nav>
+        <a href="#" class="nav-link active" data-target="EDU-003">교육과정 관리</a>
+        <a href="#" class="nav-link" data-target="EDU-004">심사자별 교육 이수 현황</a>
+        <a href="#" class="nav-link" data-target="EDU-005">교육 실적 현황 보고서</a>
+    </nav>
+
+    <main class="container">
+        <section id="EDU-003" class="active">
+            <div class="card">
+                <h2>교육과정 관리</h2>
+                <div class="search-area">
+                    <form id="courseSearchForm">
+                         <div class="form-group"><label for="courseNameInput">교육명</label><input type="text" id="courseNameInput"></div>
+                         <div class="form-group"><label for="courseTypeSelect">필수여부</label><select id="courseTypeSelect"><option value="전체">전체</option><option value="필수">필수</option><option value="선택">선택</option></select></div>
+                         <button type="submit" class="btn btn-search">조회</button><button type="reset" class="btn btn-secondary">초기화</button>
+                    </form>
+                </div>
+                <div class="action-area"><button id="add-course-btn" class="btn btn-primary">신규 등록</button></div>
+                <table id="courseTable">
+                    <thead><tr>
+                        <th class="sortable" data-sort="id">No <span class="sort-arrow">↕</span></th>
+                        <th class="sortable" data-sort="name">교육명 <span class="sort-arrow">↕</span></th>
+                        <th class="sortable" data-sort="startDate">교육기간 <span class="sort-arrow">↕</span></th>
+                        <th class="sortable" data-sort="type">필수여부 <span class="sort-arrow">↕</span></th>
+                        <th class="sortable" data-sort="hours">인정시간 <span class="sort-arrow">↕</span></th>
+                        <th class="sortable" data-sort="regDate">등록일 <span class="sort-arrow">↕</span></th>
+                        <th>관리</th>
+                    </tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="EDU-004">
+            <div class="card">
+                <h2>심사자별 교육 이수 현황</h2>
+                <div class="search-area">
+                     <form id="auditorSearchForm">
+                        <div class="form-group"><label for="deptSelect">부서 선택</label><select id="deptSelect"><option value="전체">전체 부서</option><option value="신약심사부">신약심사부</option><option value="허가총괄부">허가총괄부</option><option value="생물의약품부">생물의약품부</option><option value="품질안전부">품질안전부</option><option value="임상정책부">임상정책부</option></select></div>
+                        <div class="form-group"><label for="auditorNameInput">심사자 검색</label><input type="text" id="auditorNameInput" placeholder="예: 홍길동, 김철수, 이영희, 박선우, 최민준"></div>
+                        <button type="submit" class="btn btn-search">검색</button>
+                    </form>
+                </div>
+                <div id="auditorInfoBox" class="info-box">부서와 심사자를 선택해 주세요.</div>
+                <div class="action-area"><button class="btn btn-primary" id="add-record-btn">이수 기록 등록</button></div>
+                <table id="recordTable">
+                    <thead><tr>
+                        <th class="sortable" data-sort="id">No <span class="sort-arrow">↕</span></th>
+                        <th class="sortable" data-sort="name">교육명 <span class="sort-arrow">↕</span></th>
+                        <th class="sortable" data-sort="date">이수일 <span class="sort-arrow">↕</span></th>
+                        <th>필수여부</th><th>인정시간</th><th>증빙자료</th><th>관리</th>
+                    </tr></thead>
+                    <tbody><tr><td colspan="7">부서와 심사자를 선택해 주세요.</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="EDU-005">
+            <div class="card">
+                <h2>교육 실적 현황 보고서</h2>
+                 <div class="search-area">
+                     <form id="reportSearchForm">
+                        <div class="form-group"><label>조회기간</label><input type="date" id="reportStartDate"> ~ <input type="date" id="reportEndDate"></div>
+                        <div class="form-group"><label for="reportDeptInput">부서</label><input type="text" id="reportDeptInput"></div>
+                        <div class="form-group"><label for="reportAuditorNameInput">심사자</label><input type="text" id="reportAuditorNameInput"></div>
+                        <button type="submit" class="btn btn-search">조회</button><button type="reset" class="btn btn-secondary">초기화</button>
+                     </form>
+                </div>
+                <div class="action-area" style="display: flex; justify-content: space-between; align-items: center;">
+                     <span id="reportSummary"></span>
+                     <div><button class="btn btn-secondary">엑셀 다운로드</button><button class="btn btn-secondary">인쇄</button></div>
+                </div>
+                <table id="reportTable">
+                    <thead><tr>
+                        <th class="sortable" data-sort="dept">부서 <span class="sort-arrow">↕</span></th>
+                        <th class="sortable" data-sort="auditor">성명 <span class="sort-arrow">↕</span></th>
+                        <th>직급</th>
+                        <th class="sortable" data-sort="course">교육명 <span class="sort-arrow">↕</span></th>
+                        <th class="sortable" data-sort="date">이수일 <span class="sort-arrow">↕</span></th>
+                        <th>필수여부</th><th>인정시간</th>
+                    </tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    
+    <div id="modal-popup" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header"><h3 id="modal-title"></h3><span class="close-btn">&times;</span></div>
+            <form id="modal-form">
+                <input type="hidden" id="modal-edit-id">
+                <div class="modal-body" id="modal-body-content">
+                    </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">저장</button>
+                    <button type="button" class="btn btn-secondary close-btn-bottom">취소</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- 데이터베이스 및 상태 관리 ---
+        let db = {};
+        let currentAuditor = null;
+        let sortState = {};
+
+        // localStorage에서 데이터 로드 또는 초기화
+        const initData = () => {
+            const savedDb = localStorage.getItem('eduDb');
+            if (savedDb) {
+                db = JSON.parse(savedDb);
+            } else {
+                db = {
+                    courses: [
+                        { id: 1, name: "개인정보보호 및 정보보안 교육", startDate: "2025-02-01", endDate: "2025-02-28", type: "필수", hours: 2, regDate: "2025-01-10" },
+                        { id: 2, name: "의약품 GMP 기본 과정", startDate: "2025-04-01", endDate: "2025-04-30", type: "선택", hours: 8, regDate: "2025-03-10" },
+                        { id: 3, name: "2025년 신약 허가·심사 워크숍", startDate: "2025-07-15", endDate: "2025-07-16", type: "필수", hours: 16, regDate: "2025-06-01" },
+                        { id: 4, name: "바이오의약품 심사 가이드라인", startDate: "2025-08-01", endDate: "2025-08-10", type: "필수", hours: 8, regDate: "2025-07-15" },
+                        { id: 5, name: "의약품 통계 분석 심화", startDate: "2025-10-20", endDate: "2025-10-21", type: "선택", hours: 16, regDate: "2025-09-01" },
+                    ],
+                    // ===== 더미 데이터 추가된 부분 =====
+                    auditors: {
+                        '홍길동': { info: { name: '홍길동', dept: '신약심사부', rank: '심사원' }, records: [
+                            { id: 1, courseId: 2, date: '2025-04-20' },
+                            { id: 2, courseId: 1, date: '2025-02-15' },
+                        ]},
+                        '김철수': { info: { name: '김철수', dept: '허가총괄부', rank: '주무관' }, records: [
+                            { id: 1, courseId: 4, date: '2025-08-10' },
+                            { id: 2, courseId: 1, date: '2025-02-18' },
+                        ]},
+                        '이영희': { info: { name: '이영희', dept: '신약심사부', rank: '연구관' }, records: [
+                             { id: 1, courseId: 5, date: '2025-10-21' },
+                             { id: 2, courseId: 3, date: '2025-07-16' },
+                             { id: 3, courseId: 1, date: '2025-02-20' },
+                        ]},
+                        '박선우': { info: { name: '박선우', dept: '생물의약품부', rank: '선임연구관' }, records: [
+                             { id: 1, courseId: 1, date: '2025-02-11' },
+                             { id: 2, courseId: 4, date: '2025-08-05' },
+                        ]},
+                        '최민준': { info: { name: '최민준', dept: '신약심사부', rank: '심사원' }, records: [
+                             { id: 1, courseId: 1, date: '2025-09-05' },
+                        ]},
+                        '정수진': { info: { name: '정수진', dept: '품질안전부', rank: '주무관' }, records: [
+                            { id: 1, courseId: 1, date: '2025-02-25' },
+                            { id: 2, courseId: 3, date: '2025-07-20' },
+                        ]},
+                        '한지민': { info: { name: '한지민', dept: '품질안전부', rank: '심사원' }, records: [
+                            { id: 1, courseId: 2, date: '2025-04-15' },
+                        ]},
+                        '송민호': { info: { name: '송민호', dept: '임상정책부', rank: '연구관' }, records: [
+                            { id: 1, courseId: 1, date: '2025-02-28' },
+                            { id: 2, courseId: 5, date: '2025-10-25' },
+                        ]},
+                        '윤서연': { info: { name: '윤서연', dept: '허가총괄부', rank: '심사원' }, records: [
+                            { id: 1, courseId: 4, date: '2025-08-15' },
+                        ]},
+                        '임동현': { info: { name: '임동현', dept: '생물의약품부', rank: '주무관' }, records: [
+                            { id: 1, courseId: 1, date: '2025-03-01' },
+                            { id: 2, courseId: 2, date: '2025-04-10' },
+                        ]}
+                    }
+                    // ===================================
+                };
+            }
+            renderAll();
+        };
+
+        const saveData = () => {
+            localStorage.setItem('eduDb', JSON.stringify(db));
+            showToast('변경사항이 저장되었습니다.');
+        };
+        
+        // --- UI 렌더링 함수 ---
+        const renderAll = () => {
+            renderCourseTable();
+            renderRecordTable();
+            renderReportTable();
+        };
+
+        const renderCourseTable = (filterFn = () => true) => {
+            const tbody = document.querySelector('#courseTable tbody');
+            tbody.innerHTML = '';
+            db.courses.filter(filterFn).forEach(c => {
+                const row = tbody.insertRow();
+                row.dataset.id = c.id;
+                row.innerHTML = `
+                    <td>${c.id}</td><td>${c.name}</td><td>${c.startDate} ~ ${c.endDate}</td>
+                    <td><span class="status ${c.type === '필수' ? 'ok' : 'wait'}">${c.type}</span></td><td>${c.hours}</td><td>${c.regDate}</td>
+                    <td><div class="manage-buttons">
+                        <button class="btn btn-secondary btn-edit-course" style="height:30px;padding:0 10px;">수정</button>
+                        <button class="btn btn-danger btn-delete-course" style="height:30px;padding:0 10px;">삭제</button>
+                    </div></td>`;
+            });
+        };
+
+        const renderRecordTable = () => {
+            const dept = document.getElementById('deptSelect')?.value || '전체';
+            const nameFilter = document.getElementById('auditorNameInput')?.value || '';
+            const infoBox = document.getElementById('auditorInfoBox');
+            const tbody = document.querySelector('#recordTable tbody');
+            tbody.innerHTML = '';
+
+            // 부서별로 심사자 필터링
+            let filteredAuditors = Object.entries(db.auditors);
+            
+            if (dept !== '전체') {
+                filteredAuditors = filteredAuditors.filter(([name, auditor]) => 
+                    auditor.info.dept === dept
+                );
+            }
+            
+            if (nameFilter) {
+                filteredAuditors = filteredAuditors.filter(([name, auditor]) => 
+                    name.toLowerCase().includes(nameFilter.toLowerCase())
+                );
+            }
+
+            if (filteredAuditors.length === 0) {
+                infoBox.innerHTML = `검색 결과가 없습니다. (부서: ${dept}, 검색어: ${nameFilter || '전체'})`;
+                tbody.innerHTML = '<tr><td colspan="7">검색 결과가 없습니다.</td></tr>';
+                return;
+            }
+
+            // 첫 번째 심사자를 기본 선택
+            const firstAuditor = filteredAuditors[0];
+            currentAuditor = firstAuditor[0];
+            
+            // 부서별 요약 정보 표시
+            const deptSummary = filteredAuditors.map(([name, auditor]) => 
+                `${auditor.info.name}(${auditor.info.dept})`
+            ).join(', ');
+            
+            infoBox.innerHTML = `<strong>선택된 부서:</strong> ${dept} &nbsp;|&nbsp; <strong>검색된 심사자:</strong> ${deptSummary} &nbsp;|&nbsp; <strong>현재 선택:</strong> ${firstAuditor[1].info.name} (${firstAuditor[1].info.dept}, ${firstAuditor[1].info.rank})`;
+            
+            // 선택된 심사자의 교육 이수 현황 표시
+            const auditor = firstAuditor[1];
+            const completedCourseIds = new Set(auditor.records.map(r => r.courseId));
+            let recordsToDisplay = auditor.records.map(r => {
+                const course = db.courses.find(c => c.id === r.courseId);
+                return { ...r, ...course, status: 'completed' };
+            });
+
+            // 필수 미이수 과목 추가
+            db.courses.filter(c => c.type === '필수' && !completedCourseIds.has(c.id))
+                .forEach(c => recordsToDisplay.push({ ...c, id: `m${c.id}`, date: '-', status: 'missing' }));
+            
+            recordsToDisplay.forEach(rec => {
+                const row = tbody.insertRow();
+                row.dataset.id = rec.id;
+                row.dataset.courseId = rec.courseId; // 수정 시 원본 courseId 추적용
+                if (rec.status === 'missing') row.classList.add('required-missing');
+                row.innerHTML = `
+                    <td>${rec.status === 'completed' ? rec.id : '-'}</td><td>${rec.name}</td><td>${rec.date}</td>
+                    <td><span class="status ${rec.type === '필수' ? 'ok' : 'wait'}">${rec.type}</span></td><td>${rec.hours}</td>
+                    <td>${rec.status === 'completed' ? '<span class="link">보기</span>' : '-'}</td>
+                    <td>${rec.status === 'completed' ? `<div class="manage-buttons">
+                        <button class="btn btn-secondary btn-edit-record" style="height:30px;padding:0 10px;">수정</button>
+                        <button class="btn btn-danger btn-delete-record" style="height:30px;padding:0 10px;">삭제</button>
+                    </div>` : '-'}</td>`;
+            });
+        };
+
+        const renderReportTable = (filterFn = () => true) => {
+            const tbody = document.querySelector('#reportTable tbody');
+            tbody.innerHTML = '';
+            let count = 0;
+            Object.values(db.auditors).forEach(auditor => {
+                auditor.records.forEach(record => {
+                    const course = db.courses.find(c => c.id === record.courseId);
+                    if (!course) return; // 과정이 삭제된 경우 건너뜀
+                    const fullRecord = { ...auditor.info, ...course, ...record, auditor: auditor.info.name, course: course.name };
+                    if (filterFn(fullRecord)) {
+                        const row = tbody.insertRow();
+                        row.innerHTML = `<td>${fullRecord.dept}</td><td>${fullRecord.auditor}</td><td>${fullRecord.rank}</td>
+                                         <td>${fullRecord.course}</td><td>${fullRecord.date}</td><td><span class="status ${fullRecord.type === '필수' ? 'ok' : 'wait'}">${fullRecord.type}</span></td><td>${fullRecord.hours}</td>`;
+                        count++;
+                    }
+                });
+            });
+            document.getElementById('reportSummary').innerHTML = `<strong>검색 결과:</strong> 총 ${count}건`;
+        };
+
+        // --- 모달 관리 ---
+        const modal = document.getElementById('modal-popup');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body-content');
+        const modalForm = document.getElementById('modal-form');
+        const editIdInput = document.getElementById('modal-edit-id');
+        
+        const openModal = (title, formHtml, data = {}) => {
+            modalTitle.textContent = title;
+            modalBody.innerHTML = formHtml;
+            editIdInput.value = data.id || '';
+            for (const key in data) {
+                const input = modalBody.querySelector(`#modal-${key}`);
+                if (input) input.value = data[key];
+            }
+            modal.style.display = 'block';
+        };
+
+        const closeModal = () => {
+            modal.style.display = 'none';
+            modalForm.reset();
+            editIdInput.value = '';
+        };
+
+        [document.querySelector('.close-btn'), document.querySelector('.close-btn-bottom')].forEach(btn => btn.onclick = closeModal);
+        window.onclick = e => { if (e.target == modal) closeModal(); };
+
+        modalForm.addEventListener('submit', e => {
+            e.preventDefault();
+            const id = editIdInput.value;
+            const formType = modalTitle.textContent.includes('교육과정') ? 'course' : 'record';
+            const formData = new FormData(e.target);
+            
+            if (formType === 'course') {
+                const course = {
+                    name: formData.get('name'), startDate: formData.get('startDate'), endDate: formData.get('endDate'),
+                    type: formData.get('type'), hours: parseInt(formData.get('hours')), regDate: formData.get('regDate')
+                };
+                if (id) { // 수정
+                    const index = db.courses.findIndex(c => c.id == id);
+                    db.courses[index] = { ...db.courses[index], ...course };
+                } else { // 추가
+                    course.id = Math.max(0, ...db.courses.map(c => c.id)) + 1;
+                    db.courses.push(course);
+                }
+                renderAll();
+            } else if (formType === 'record' && currentAuditor) {
+                 const record = { courseId: parseInt(formData.get('courseId')), date: formData.get('date') };
+                 if (id) { // 수정
+                    const index = db.auditors[currentAuditor].records.findIndex(r => r.id == id);
+                    db.auditors[currentAuditor].records[index] = { ...db.auditors[currentAuditor].records[index], ...record };
+                 } else { // 추가
+                    record.id = Math.max(0, ...db.auditors[currentAuditor].records.map(r => r.id)) + 1;
+                    db.auditors[currentAuditor].records.push(record);
+                 }
+                 renderAll();
+            }
+            saveData();
+            closeModal();
+        });
+
+        // --- 이벤트 리스너 ---
+        document.querySelector('nav').addEventListener('click', e => {
+            if (e.target.classList.contains('nav-link')) {
+                e.preventDefault();
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                document.querySelectorAll('main > section').forEach(s => s.classList.remove('active'));
+                e.target.classList.add('active');
+                document.getElementById(e.target.dataset.target).classList.add('active');
+            }
+        });
+
+        // EDU-003 이벤트
+        document.getElementById('courseSearchForm').addEventListener('submit', e => {
+            e.preventDefault();
+            const nameFilter = document.getElementById('courseNameInput').value.toLowerCase();
+            const typeFilter = document.getElementById('courseTypeSelect').value;
+            renderCourseTable(c => 
+                c.name.toLowerCase().includes(nameFilter) && (typeFilter === '전체' || c.type === typeFilter)
+            );
+        });
+        document.getElementById('courseSearchForm').addEventListener('reset', () => setTimeout(renderCourseTable, 0));
+        
+        document.getElementById('add-course-btn').addEventListener('click', () => {
+            const formHtml = `
+                <div class="form-group"><label for="modal-name">교육명</label><input type="text" id="modal-name" name="name" required></div>
+                <div class="form-group"><label for="modal-startDate">시작일</label><input type="date" id="modal-startDate" name="startDate" required></div>
+                <div class="form-group"><label for="modal-endDate">종료일</label><input type="date" id="modal-endDate" name="endDate" required></div>
+                <div class="form-group"><label for="modal-type">필수여부</label><select id="modal-type" name="type"><option>필수</option><option>선택</option></select></div>
+                <div class="form-group"><label for="modal-hours">인정시간</label><input type="number" id="modal-hours" name="hours" required></div>
+                <div class="form-group"><label for="modal-regDate">등록일</label><input type="date" id="modal-regDate" name="regDate" value="${new Date().toISOString().slice(0,10)}" required></div>`;
+            openModal('신규 교육과정 등록', formHtml);
+        });
+
+        document.querySelector('#courseTable tbody').addEventListener('click', e => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            const row = btn.closest('tr');
+            const id = row.dataset.id;
+            
+            if (btn.classList.contains('btn-edit-course')) {
+                const course = db.courses.find(c => c.id == id);
+                const formHtml = `
+                    <div class="form-group"><label for="modal-name">교육명</label><input type="text" id="modal-name" name="name" required></div>
+                    <div class="form-group"><label for="modal-startDate">시작일</label><input type="date" id="modal-startDate" name="startDate" required></div>
+                    <div class="form-group"><label for="modal-endDate">종료일</label><input type="date" id="modal-endDate" name="endDate" required></div>
+                    <div class="form-group"><label for="modal-type">필수여부</label><select id="modal-type" name="type"><option>필수</option><option>선택</option></select></div>
+                    <div class="form-group"><label for="modal-hours">인정시간</label><input type="number" id="modal-hours" name="hours" required></div>
+                    <div class="form-group"><label for="modal-regDate">등록일</label><input type="date" id="modal-regDate" name="regDate" required></div>`;
+                openModal('교육과정 수정', formHtml, course);
+            } else if (btn.classList.contains('btn-delete-course')) {
+                if (confirm(`'${row.cells[1].textContent}' 과정을 삭제하시겠습니까?`)) {
+                    db.courses = db.courses.filter(c => c.id != id);
+                    saveData();
+                    renderAll();
+                }
+            }
+        });
+
+        // EDU-004 이벤트
+        document.getElementById('auditorSearchForm').addEventListener('submit', e => {
+            e.preventDefault();
+            const dept = document.getElementById('deptSelect').value;
+            const nameFilter = document.getElementById('auditorNameInput').value.toLowerCase();
+            currentAuditor = nameFilter; // 심사자 이름으로 설정
+            renderRecordTable();
+        });
+
+        // 부서 선택 변경 시 자동 업데이트
+        document.getElementById('deptSelect').addEventListener('change', () => {
+            renderRecordTable();
+        });
+
+        document.getElementById('add-record-btn').addEventListener('click', () => {
+            if (!currentAuditor) { alert('먼저 심사자를 검색해주세요.'); return; }
+            const options = db.courses.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            const formHtml = `
+                <div class="form-group"><label for="modal-courseId">교육과정</label><select id="modal-courseId" name="courseId" required>${options}</select></div>
+                <div class="form-group"><label for="modal-date">이수일자</label><input type="date" id="modal-date" name="date" value="${new Date().toISOString().slice(0,10)}" required></div>
+                <div class="form-group"><label for="modal-file">증빙자료</label><input type="file" id="modal-file" name="file"></div>`;
+            openModal('신규 이수 기록 등록', formHtml);
+        });
+
+        document.querySelector('#recordTable tbody').addEventListener('click', e => {
+            const btn = e.target.closest('button');
+            if (!btn || !currentAuditor) return;
+            const id = btn.closest('tr').dataset.id;
+            
+            if (btn.classList.contains('btn-edit-record')) {
+                const record = db.auditors[currentAuditor].records.find(r => r.id == id);
+                const options = db.courses.map(c => `<option value="${c.id}" ${c.id === record.courseId ? 'selected' : ''}>${c.name}</option>`).join('');
+                const formHtml = `
+                    <div class="form-group"><label for="modal-courseId">교육과정</label><select id="modal-courseId" name="courseId" required>${options}</select></div>
+                    <div class="form-group"><label for="modal-date">이수일자</label><input type="date" id="modal-date" name="date" required></div>
+                    <div class="form-group"><label for="modal-file">증빙자료</label><input type="file" id="modal-file" name="file"></div>`;
+                openModal('이수 기록 수정', formHtml, record);
+            } else if (btn.classList.contains('btn-delete-record')) {
+                const courseName = db.courses.find(c => c.id == btn.closest('tr').dataset.courseId).name;
+                if (confirm(`'${courseName}' 이수 기록을 삭제하시겠습니까?`)) {
+                    db.auditors[currentAuditor].records = db.auditors[currentAuditor].records.filter(r => r.id != id);
+                    saveData();
+                    renderAll();
+                }
+            }
+        });
+
+        // EDU-005 이벤트
+        const reportForm = document.getElementById('reportSearchForm');
+        reportForm.addEventListener('submit', e => {
+            e.preventDefault();
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
+            const deptFilter = document.getElementById('reportDeptInput').value.toLowerCase();
+            const nameFilter = document.getElementById('reportAuditorNameInput').value.toLowerCase();
+            renderReportTable(rec => 
+                (!startDate || rec.date >= startDate) && (!endDate || rec.date <= endDate) &&
+                rec.dept.toLowerCase().includes(deptFilter) && rec.auditor.toLowerCase().includes(nameFilter)
+            );
+        });
+        reportForm.addEventListener('reset', () => setTimeout(renderReportTable, 0));
+
+        // --- 공통 유틸리티 ---
+        const showToast = (message) => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '1'; }, 100);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => { container.removeChild(toast); }, 500);
+            }, 3000);
+        };
+        
+        // 정렬 이벤트 리스너
+        document.querySelectorAll('.sortable').forEach(header => {
+            header.addEventListener('click', () => {
+                const table = header.closest('table');
+                const tbody = table.querySelector('tbody');
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+                const sortBy = header.dataset.sort;
+                const currentDir = header.dataset.dir || 'desc';
+                const newDir = currentDir === 'asc' ? 'desc' : 'asc';
+                
+                // 모든 헤더의 정렬 방향 초기화
+                table.querySelectorAll('th').forEach(th => th.removeAttribute('data-dir'));
+                header.dataset.dir = newDir; // 현재 클릭된 헤더에만 방향 설정
+
+                rows.sort((a, b) => {
+                    // 셀 인덱스 찾기
+                    const colIndex = Array.from(header.parentElement.children).indexOf(header);
+                    let valA = a.cells[colIndex].textContent.trim();
+                    let valB = b.cells[colIndex].textContent.trim();
+                    
+                    // 숫자나 날짜 비교
+                    if (!isNaN(valA) && !isNaN(valB)) {
+                        return (valA - valB) * (newDir === 'asc' ? 1 : -1);
+                    }
+                    if (valA.match(/^\d{4}-\d{2}-\d{2}$/) && valB.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                        return (new Date(valA) - new Date(valB)) * (newDir === 'asc' ? 1 : -1);
+                    }
+
+                    // 문자열 비교
+                    return valA.localeCompare(valB) * (newDir === 'asc' ? 1 : -1);
+                });
+                
+                tbody.innerHTML = '';
+                rows.forEach(row => tbody.appendChild(row));
+            });
+        });
+
+        // --- 앱 시작 ---
+        initData();
+    });
+    </script>
+
+</body>
+</html>

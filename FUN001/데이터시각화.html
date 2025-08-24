@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FUN-001 Wireframe · 의료제품 수급 동향</title>
+<style>
+  :root {
+    --bg:#0b0c0f; --panel:#121318; --panel-2:#161823; --ink:#e9ecf1; --muted:#a6adbb;
+    --accent:#64b5f6; --accent-2:#7c4dff; --danger:#ff6b6b; --warn:#ffb020; --ok:#57d9a3;
+    --border:#26293a; --grid-gap:14px; --radius:14px; --radius-sm:10px;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: Inter, Pretendard, Apple SD Gothic Neo, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin:0; background: var(--bg); color: var(--ink); font-family: var(--sans); }
+
+  .app { display: grid; grid-template-columns: 240px 1fr 360px; grid-template-rows: 56px 1fr; gap: var(--grid-gap);
+         min-height: 100vh; }
+  header { grid-column: 1/4; display:flex; align-items:center; gap:10px; padding: 10px 16px; background: var(--panel);
+           border-bottom:1px solid var(--border); position: sticky; top:0; z-index:2; }
+  header .title { font-weight:700; letter-spacing:.3px; }
+  header .crumb { color: var(--muted); font-size: 13px; margin-left:auto; }
+
+  nav { background: var(--panel); border-right:1px solid var(--border); padding:12px; }
+  nav h3 { margin:8px 8px 12px; color: var(--muted); font-size:12px; text-transform: uppercase; letter-spacing:.8px; }
+  .menu a { display:block; padding:10px 12px; margin:6px 4px; border-radius: 10px; text-decoration:none; color: var(--ink);
+            background: var(--panel-2); border:1px solid var(--border); font-size:14px; }
+  .menu a.active { outline:2px solid var(--accent); background: linear-gradient(180deg, #182033, #141826); }
+
+  main { padding: 8px 8px 24px 8px; }
+  .screen { display:none; }
+  .screen.active { display:block; }
+  .grid { display:grid; gap: var(--grid-gap); }
+  .grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  .card { background: var(--panel); border:1px dashed var(--border); border-radius: var(--radius); padding:14px; }
+  .card h4 { margin:0 0 10px; font-size:14px; color: var(--muted); }
+  .kpi { display:grid; grid-template-columns: repeat(4, 1fr); gap: var(--grid-gap); }
+  .kpi .box { background: var(--panel-2); padding:14px; border-radius: var(--radius-sm); border:1px solid var(--border); }
+  .kpi .box .label { color: var(--muted); font-size:12px; letter-spacing:.3px; }
+  .kpi .box .val { font-size:22px; font-weight: 800; margin-top:6px; }
+  .kpi .box.warn .val { color: var(--warn); }
+
+  .filters { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  .filters .field { display:flex; flex-direction:column; gap:6px; font-size:12px; }
+  .filters input, .filters select, .filters button { height:36px; border-radius:10px; border:1px solid var(--border); background:var(--panel-2); color:var(--ink); padding:0 10px; }
+  .filters button.primary { background: var(--accent-2); border-color: #5c3dff; cursor:pointer; }
+
+  aside { background: var(--panel); border-left:1px solid var(--border); padding: 12px; overflow:auto; }
+  .meta h3 { margin:10px 0 8px; font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; }
+  .meta table { width:100%; border-collapse: collapse; }
+  .meta td { padding:6px 4px; border-bottom:1px solid var(--border); vertical-align: top; font-size:13px; }
+  .tag { display:inline-block; padding:4px 8px; border:1px solid var(--border); border-radius:999px; background:var(--panel-2); font-size:12px; margin:2px; }
+  .muted { color: var(--muted); }
+
+  .placeholder { height:300px; border-radius: 10px; border:1px dashed var(--border); display:flex; align-items:center; justify-content:center; color:var(--muted); background: var(--panel-2); }
+  canvas.chart { width:100%; height:300px; background: var(--panel-2); border:1px dashed var(--border); border-radius:10px; }
+
+  table.table { width:100%; border-collapse:collapse; font-size:13px; }
+  table.table th, table.table td { padding:8px 10px; border-bottom:1px solid var(--border); text-align:left; }
+  table.table th { color: var(--muted); font-weight:600; }
+  .btn { display:inline-flex; align-items:center; gap:8px; padding:8px 12px; background:var(--panel-2); border:1px solid var(--border); border-radius:10px; color:var(--ink); cursor:pointer; }
+  .btn.primary { background:var(--accent); border-color:#3f8cd4; color:#06121e; font-weight:700; }
+
+  .badge { border:1px solid var(--border); background:var(--panel-2); color:var(--muted); padding:2px 8px; border-radius:999px; font-size:12px; }
+
+  /* Small screen tweaks */
+  @media (max-width: 1200px){
+    .app { grid-template-columns: 1fr; grid-template-rows: 56px auto auto; }
+    nav { grid-column: 1/2; }
+    aside { grid-column: 1/2; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="title">위기대응 의료제품 · 수급 동향 (FUN-001)</div>
+    <div class="crumb" id="breadcrumb">[메인] → [위기대응 의료제품] → [종합 상황판]</div>
+  </header>
+
+  <nav>
+    <h3>메뉴</h3>
+    <div class="menu">
+      <a href="#CRSUP01F010" id="nav-CRSUP01F010" class="active">종합 상황판 대시보드</a>
+      <a href="#CRSUP01F020" id="nav-CRSUP01F020">상세 조회 및 분석</a>
+      <a href="#CRSUP01F030" id="nav-CRSUP01F030">보고서 생성 및 관리</a>
+    </div>
+  </nav>
+
+  <main>
+    <!-- 1) 종합 상황판 대시보드 -->
+    <section class="screen active" id="CRSUP01F010">
+      <div class="card">
+        <h4>필터</h4>
+        <div class="filters">
+          <div class="field"><label>기간</label>
+            <select id="flt-period">
+              <option value="30d">최근 30일</option>
+              <option value="6m">최근 6개월</option>
+              <option value="1y">최근 1년</option>
+            </select>
+          </div>
+          <div class="field"><label>제품 카테고리</label>
+            <select id="flt-cat">
+              <option value="all">전체</option>
+              <option value="vaccine">백신</option>
+              <option value="antipyretic">해열제</option>
+              <option value="antibiotic">항생제</option>
+            </select>
+          </div>
+          <div class="field"><label>지역</label>
+            <select id="flt-region">
+              <option value="all">전국</option>
+              <option value="seoul">서울특별시</option>
+              <option value="busan">부산광역시</option>
+            </select>
+          </div>
+          <button class="primary" id="btn-apply">적용</button>
+        </div>
+      </div>
+
+      <div class="kpi" style="margin-top: var(--grid-gap);">
+        <div class="box"><div class="label">총 품목 수</div><div class="val" id="kpi-items">1,230 개</div></div>
+        <div class="box"><div class="label">당일 생산/수입량</div><div class="val" id="kpi-supply">1,500,000</div></div>
+        <div class="box"><div class="label">당일 출고량</div><div class="val" id="kpi-demand">1,450,000</div></div>
+        <div class="box warn"><div class="label">주의/경고 품목 수</div><div class="val" id="kpi-alerts">15 개</div></div>
+      </div>
+
+      <div class="grid cols-2" style="margin-top: var(--grid-gap);">
+        <div class="card">
+          <h4>지역별 공급 안정성 맵</h4>
+          <div class="placeholder" id="heatmap">지도(샘플) — 지역에 마우스를 올리면 Top3 팝업</div>
+        </div>
+        <div class="card">
+          <h4>주요 공급·수요 추이 그래프</h4>
+          <canvas id="lineChart" class="chart" height="300"></canvas>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: var(--grid-gap);">
+        <h4>공급 불안정 경고 목록</h4>
+        <table class="table" id="tbl-alerts">
+          <thead><tr><th>우선순위</th><th>경고 내용</th><th>발생 시각</th><th>바로가기</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 2) 상세 조회 및 분석 -->
+    <section class="screen" id="CRSUP01F020">
+      <div class="card">
+        <h4>다차원 검색</h4>
+        <div class="filters">
+          <div class="field"><label>제품명/코드</label><input id="q-product" placeholder="예: A해열제 혹은 ATC코드"/></div>
+          <div class="field"><label>제조/수입사</label><input id="q-maker" placeholder="회사명"/></div>
+          <div class="field"><label>지역</label>
+            <select id="q-region"><option value="all">전국</option><option>서울</option><option>부산</option></select></div>
+          <div class="field"><label>기간</label>
+            <input id="q-start" type="date"/> ~ <input id="q-end" type="date"/>
+          </div>
+          <div class="field"><label>데이터 유형</label>
+            <select id="q-type"><option value="produced">생산</option><option value="imported">수입</option><option value="shipped">출고</option></select>
+          </div>
+          <button class="primary" id="btn-search">조회</button>
+          <button class="btn" id="btn-export">엑셀로 내보내기</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: var(--grid-gap);">
+        <h4>데이터 테이블</h4>
+        <table class="table" id="tbl-detail">
+          <thead><tr>
+            <th data-sort="date">일자</th>
+            <th data-sort="product">제품명</th>
+            <th data-sort="maker">제조사</th>
+            <th data-sort="produced">생산량</th>
+            <th data-sort="imported">수입량</th>
+            <th data-sort="shipped">출고량</th>
+            <th data-sort="region">출고지역</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card" style="margin-top: var(--grid-gap);">
+        <h4>동적 시각화</h4>
+        <canvas id="chart-detail" class="chart" height="300"></canvas>
+      </div>
+    </section>
+
+    <!-- 3) 보고서 생성 및 관리 -->
+    <section class="screen" id="CRSUP01F030">
+      <div class="grid cols-2">
+        <div class="card">
+          <h4>보고서 템플릿 & 조건</h4>
+          <div class="filters">
+            <div class="field"><label>템플릿</label>
+              <select id="rpt-template">
+                <option value="weekly">주간 수급 동향 보고서</option>
+                <option value="focus-item">특정 품목 집중관리 보고서</option>
+                <option value="region">지역별 공급 현황 보고서</option>
+              </select>
+            </div>
+            <div class="field"><label>기간</label>
+              <select id="rpt-period"><option value="7d">최근 7일</option><option value="30d">최근 30일</option><option value="6m">최근 6개월</option></select>
+            </div>
+            <div class="field"><label>제품군</label>
+              <select id="rpt-cat"><option value="all">전체</option><option>백신</option><option>해열제</option></select>
+            </div>
+            <div class="field"><label>지역</label>
+              <select id="rpt-region"><option value="all">전국</option><option>서울</option><option>부산</option></select>
+            </div>
+            <button class="primary" id="btn-preview">미리보기</button>
+            <button class="btn" id="btn-save">저장</button>
+            <button class="btn" id="btn-export-pdf">PDF 출력(브라우저 인쇄)</button>
+          </div>
+        </div>
+        <div class="card">
+          <h4>미리보기</h4>
+          <div id="preview" class="placeholder">템플릿과 조건을 선택하고 [미리보기]를 눌러주세요.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <aside>
+    <div class="meta" id="meta"></div>
+  </aside>
+</div>
+
+<script>
+// ------------------------
+// Matomo Stub (폐쇄망 테스트용)
+// ------------------------
+window._paq = window._paq || [];
+function trackPageView(name){ _paq.push(['trackPageView', name]); console.log('[Matomo] PageView:', name); }
+function trackEvt(cat, act, name, val){ _paq.push(['trackEvent', cat, act, name, val]); console.log('[Matomo] Event:', {cat, act, name, val}); }
+
+// ------------------------
+// Simple line chart renderer (Canvas)
+// ------------------------
+function drawLineChart(canvas, series){
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1; const W = canvas.clientWidth, H = canvas.clientHeight; canvas.width = W*dpr; canvas.height = H*dpr; ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,H); ctx.lineWidth = 2; ctx.lineJoin='round'; ctx.lineCap='round';
+  // axes
+  ctx.strokeStyle = '#2c3146'; ctx.beginPath(); ctx.moveTo(40,H-28); ctx.lineTo(W-12,H-28); ctx.moveTo(40,16); ctx.lineTo(40,H-28); ctx.stroke();
+  // scale
+  const allY = series.flatMap(s=>s.data);
+  const minY = Math.min(...allY); const maxY = Math.max(...allY);
+  const y = v => H-28 - ( (v - minY) / (maxY - minY || 1) ) * (H-48);
+  const x = (i, n) => 40 + (i/(n-1||1)) * (W-60);
+  // grid labels
+  ctx.fillStyle = '#8e96a8'; ctx.font = '12px var(--sans)';
+  ctx.fillText(maxY.toLocaleString(), 6, y(maxY)+4); ctx.fillText(minY.toLocaleString(), 6, y(minY)+4);
+  // lines
+  const colors = ['#64b5f6','#7c4dff','#57d9a3','#ffb020'];
+  series.forEach((s,si)=>{ ctx.strokeStyle = colors[si%colors.length]; ctx.beginPath(); s.data.forEach((v,i)=>{ const X=x(i,s.data.length), Y=y(v); i?ctx.lineTo(X,Y):ctx.moveTo(X,Y); }); ctx.stroke(); });
+}
+
+// ------------------------
+// Sample Data
+// ------------------------
+const sampleAlerts = [
+  {prio:'높음', msg:"[경고] 서울특별시 'A해열제' 출고량 대비 생산량 현저히 낮음", at:'10분 전', to:'#CRSUP01F020'},
+  {prio:'중간', msg:"[주의] 부산광역시 'B백신' 재고 수준 '주의' 단계 진입", at:'1시간 전', to:'#CRSUP01F020'}
+];
+
+const sampleDetail = [
+  {date:'2025-08-01', product:'A해열제', maker:'헬스팜', produced:12000, imported:0, shipped:13500, region:'서울'},
+  {date:'2025-08-02', product:'A해열제', maker:'헬스팜', produced:11000, imported:2000, shipped:14000, region:'부산'},
+  {date:'2025-08-03', product:'B백신',   maker:'바이오랩', produced:9000,  imported:0, shipped:8000,  region:'서울'}
+];
+
+// ------------------------
+// Right Sidebar Metadata per Screen
+// ------------------------
+const META = {
+  CRSUP01F010: {
+    header:{ 화면ID:'CRSUP01F010', 화면명:'종합 상황판 대시보드 (Main Dashboard)', 요구사항ID:'FUN-001', 화면유형:'HTML (반응형 대시보드)', 메뉴경로:'[메인] → [위기대응 의료제품] → [종합 상황판]' },
+    기능구분:['전체 현황 요약','위험 신호 시각화','상세 화면 연결(드릴다운)'],
+    화면설명:'의료제품 공급/수요 현황을 KPI·지도·추이·경고로 제공하고 즉시 대응을 유도합니다.',
+    검색조건목록:['기간(startDate, endDate, grain)','지역(시·도/시·군·구)','제품군/품목코드','공급자유형(제조/수입/도매)'],
+    이벤트목록:['OnLoad','FilterChange','Drilldown','Export','AlertOpen'],
+    테이블명:['TB_PROD_SUPPLY','TB_DIST_SUPPLY','TB_REGION_INDEX','TB_ALERT_LOG']
+  },
+  CRSUP01F020: {
+    header:{ 화면ID:'CRSUP01F020', 화면명:'상세 조회 및 분석 (Detailed Analysis View)', 요구사항ID:'FUN-001', 화면유형:'HTML (검색+시각화)', 메뉴경로:'[위기대응 의료제품] → [상세 분석]' },
+    기능구분:['다차원 검색','데이터 탐색','시각화 비교','데이터 다운로드'],
+    화면설명:'제품/지역/기간 기준으로 원천 데이터를 조회·정렬하고 차트로 비교합니다.',
+    검색조건목록:['제품명/코드','제조/수입사','지역','기간','데이터 유형(생산/수입/출고)'],
+    이벤트목록:['Search','Sort','FilterColumn','ChartGenerate','ExportExcel'],
+    테이블명:['TB_SUPPLY_RAW','TB_SUPPLY_DETAIL','TB_EXPORT_LOG']
+  },
+  CRSUP01F030: {
+    header:{ 화면ID:'CRSUP01F030', 화면명:'보고서 생성 및 관리 (Reporting Service)', 요구사항ID:'FUN-001', 화면유형:'HTML (보고서 작성기)', 메뉴경로:'[위기대응 의료제품] → [보고서 관리]' },
+    기능구분:['정형 보고서 생성','조건 기반 출력','문서 저장/출력'],
+    화면설명:'템플릿과 조건을 선택해 주간/월간 보고서를 미리보기·출력합니다.',
+    검색조건목록:['기간','제품군','지역','템플릿 선택'],
+    이벤트목록:['TemplateSelect','ReportGenerate','Preview','ExportPDF','Save'],
+    테이블명:['TB_REPORT_TEMPLATE','TB_REPORT_INSTANCE','TB_REPORT_EXPORT_LOG']
+  }
+};
+
+function renderMeta(id){
+  const m = META[id];
+  const h = m.header;
+  const el = document.getElementById('meta');
+  el.innerHTML = `
+    <h3>화면 메타</h3>
+    <table>
+      <tr><td class="muted">화면ID</td><td>${h.화면ID}</td></tr>
+      <tr><td class="muted">화면명</td><td>${h.화면명}</td></tr>
+      <tr><td class="muted">요구사항ID</td><td>${h.요구사항ID}</td></tr>
+      <tr><td class="muted">화면유형</td><td>${h.화면유형}</td></tr>
+      <tr><td class="muted">메뉴경로</td><td>${h.메뉴경로}</td></tr>
+    </table>
+    <h3>기능구분</h3>
+    <div>${m.기능구분.map(x=>`<span class="tag">${x}</span>`).join('')}</div>
+    <h3>화면설명</h3>
+    <div class="muted">${m.화면설명}</div>
+    <h3>검색조건</h3>
+    <ul>${m.검색조건목록.map(x=>`<li>${x}</li>`).join('')}</ul>
+    <h3>이벤트</h3>
+    <ul>${m.이벤트목록.map(x=>`<li>${x}</li>`).join('')}</ul>
+    <h3>테이블명</h3>
+    <div>${m.테이블명.map(x=>`<span class="tag">${x}</span>`).join('')}</div>
+  `;
+}
+
+// ------------------------
+// Router
+// ------------------------
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('nav .menu a').forEach(a=>a.classList.toggle('active', a.getAttribute('href')==='#'+id));
+  const bc = META[id]?.header?.메뉴경로 || ''; document.getElementById('breadcrumb').textContent = bc;
+  renderMeta(id);
+  trackPageView(`공급동향 > ${META[id]?.header?.화면명} (${id})`);
+}
+
+// ------------------------
+// Dashboard wiring
+// ------------------------
+function renderAlerts(){
+  const tbody = document.querySelector('#tbl-alerts tbody');
+  tbody.innerHTML = sampleAlerts.map(a=>`<tr>
+    <td><span class="badge">${a.prio}</span></td>
+    <td>${a.msg}</td>
+    <td class="muted">${a.at}</td>
+    <td><a class="btn" href="${a.to}">이동</a></td>
+  </tr>`).join('');
+  tbody.querySelectorAll('a').forEach(a=>{
+    a.addEventListener('click',(e)=>{ e.preventDefault(); location.hash = a.getAttribute('href'); });
+  });
+}
+
+function renderDashboardChart(){
+  const canvas = document.getElementById('lineChart');
+  const prod = Array.from({length:30}, (_,i)=> 110 + Math.sin(i/3)*12 + (Math.random()*6-3)).map(v=>Math.round(v));
+  const ship = Array.from({length:30}, (_,i)=> 105 + Math.cos(i/4)*10 + (Math.random()*6-3)).map(v=>Math.round(v));
+  drawLineChart(canvas,[{name:'공급', data:prod},{name:'수요', data:ship}]);
+}
+
+// ------------------------
+// Detail table & chart
+// ------------------------
+let currentDetail = [...sampleDetail];
+function renderDetailTable(){
+  const tbody = document.querySelector('#tbl-detail tbody');
+  tbody.innerHTML = currentDetail.map(r=>`<tr>
+    <td>${r.date}</td><td>${r.product}</td><td>${r.maker}</td>
+    <td>${r.produced.toLocaleString()}</td>
+    <td>${r.imported.toLocaleString()}</td>
+    <td>${r.shipped.toLocaleString()}</td>
+    <td>${r.region}</td>
+  </tr>`).join('');
+}
+function renderDetailChart(){
+  const canvas = document.getElementById('chart-detail');
+  const series = [
+    {name:'생산', data: currentDetail.map(r=>r.produced)},
+    {name:'출고', data: currentDetail.map(r=>r.shipped)}
+  ];
+  drawLineChart(canvas, series);
+}
+function exportDetailToCSV(){
+  const headers = ['date','product','maker','produced','imported','shipped','region'];
+  const rows = currentDetail.map(r=> headers.map(h=> r[h] ));
+  const csv = [headers.join(','), ...rows.map(r=> r.join(','))].join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'detail.csv'; a.click(); URL.revokeObjectURL(a.href);
+  trackEvt('공급동향','Export','detail.csv');
+}
+
+// sorting by header click
+Array.from(document.querySelectorAll('#tbl-detail thead th[data-sort]')).forEach(th=>{
+  th.style.cursor='pointer';
+  th.addEventListener('click', ()=>{
+    const key = th.getAttribute('data-sort');
+    currentDetail.sort((a,b)=> (a[key] > b[key] ? 1 : -1));
+    renderDetailTable(); renderDetailChart();
+    trackEvt('공급동향','Sort', key);
+  });
+});
+
+// Search click -> very simple filtering demo
+document.getElementById('btn-search').addEventListener('click', ()=>{
+  const q = document.getElementById('q-product').value.trim();
+  const region = document.getElementById('q-region').value;
+  currentDetail = sampleDetail.filter(r=> (q? r.product.includes(q) : true) && (region==='all' || r.region===region));
+  renderDetailTable(); renderDetailChart();
+  trackEvt('공급동향','Search','detail');
+});
+
+document.getElementById('btn-export').addEventListener('click', exportDetailToCSV);
+
+// ------------------------
+// Report preview
+// ------------------------
+document.getElementById('btn-preview').addEventListener('click', ()=>{
+  const t = document.getElementById('rpt-template').value;
+  const period = document.getElementById('rpt-period').value;
+  const cat = document.getElementById('rpt-cat').value;
+  const region = document.getElementById('rpt-region').value;
+  const html = `
+    <div style="text-align:center; margin-bottom:12px;">
+      <div class="badge">${t}</div>
+      <div class="muted" style="margin-top:6px;">기간:${period} · 제품군:${cat} · 지역:${region}</div>
+    </div>
+    <div class="card" style="background:var(--panel-2);">
+      <h4>요약</h4>
+      <ul><li>총 품목 수: 1,230</li><li>공급 대비 수요 편차: 3.4%</li><li>경고 품목 수: 15</li></ul>
+    </div>
+    <div class="card" style="margin-top:12px;background:var(--panel-2);">
+      <h4>주요 그래프 (샘플)</h4>
+      <div class="placeholder">그래프 자리</div>
+    </div>`;
+  const box = document.getElementById('preview'); box.classList.remove('placeholder'); box.innerHTML = html;
+  trackEvt('공급동향','Preview','report');
+});
+
+document.getElementById('btn-export-pdf').addEventListener('click', ()=>{ window.print(); trackEvt('공급동향','Export','print'); });
+
+document.getElementById('btn-save').addEventListener('click', ()=>{ alert('저장 예시: 템플릿/조건을 서버에 저장합니다.'); trackEvt('공급동향','Save','report'); });
+
+// Dashboard interactions
+renderAlerts();
+renderDashboardChart();
+renderDetailTable();
+renderDetailChart();
+renderMeta('CRSUP01F010');
+
+// heatmap placeholder interaction
+const heatmap = document.getElementById('heatmap');
+heatmap.addEventListener('mousemove', (e)=>{ heatmap.textContent = '서울특별시 · 부족 Top3: A, B, C'; });
+heatmap.addEventListener('mouseleave', ()=>{ heatmap.textContent = '지도(샘플) — 지역에 마우스를 올리면 Top3 팝업'; });
+
+// Apply Filter (dashboard)
+document.getElementById('btn-apply').addEventListener('click', ()=>{ renderDashboardChart(); trackEvt('공급동향','Filter','apply'); });
+
+// hash router
+window.addEventListener('hashchange', ()=>{ const id = location.hash.replace('#','') || 'CRSUP01F010'; showScreen(id); });
+if(location.hash){ showScreen(location.hash.replace('#','')); }
+</script>
+</body>
+</html>

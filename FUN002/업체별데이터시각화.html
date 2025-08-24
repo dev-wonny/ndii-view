@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>업체별 상세 분석</title>
+    <!-- Chart.js 라이브러리 로드 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --border-color: #e0e0e0;
+            --primary-color: #3498db;
+            --outbound-color: #e74c3c;
+            --stock-color: #2ecc71;
+            --shadow: 0 2px 5px rgba(0,0,0,0.08);
+        }
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 24px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+        h1 {
+            font-size: 24px;
+            margin-top: 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        /* --- 필터 영역 --- */
+        .filter-section {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 24px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .filter-group label {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .filter-group select, .filter-group input[type="date"] {
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .btn-primary {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* --- 컨텐츠 그리드 --- */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 24px;
+        }
+        .chart-container {
+            grid-column: 1 / -1;
+            position: relative;
+            height: 450px;
+        }
+        .card {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .card h2 {
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        /* --- 주요 거래처 카드 --- */
+        .partners-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .partners-list h3 {
+            font-size: 15px;
+            color: #555;
+            margin-top: 10px;
+            margin-bottom: 8px;
+        }
+        .partners-list li {
+            font-size: 14px;
+            padding: 5px 0;
+        }
+
+        /* --- 데이터 테이블 (보유 제품) --- */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th, .data-table td {
+            padding: 12px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .data-table th {
+            background-color: #f8f9fa;
+        }
+        .stock-bar-container {
+            width: 100%;
+            height: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .stock-bar {
+            height: 100%;
+            background-color: var(--stock-color);
+        }
+        .stock-bar.low {
+            background-color: var(--outbound-color);
+        }
+
+        /* --- 반응형 --- */
+        @media (max-width: 992px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>업체 상세 분석</h1>
+
+        <!-- 필터 섹션 -->
+        <div class="filter-section">
+            <div class="filter-group">
+                <label for="company-select">업체명:</label>
+                <select id="company-select">
+                    <option value="ganada">가나다 유통 (도매상)</option>
+                    <option value="ramaba">라마바 상사 (도매상)</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="start-date">기간:</label>
+                <input type="date" id="start-date" value="2025-07-01">
+                <span>~</span>
+                <input type="date" id="end-date" value="2025-08-20">
+            </div>
+            <button id="search-btn" class="btn-primary">조회</button>
+        </div>
+
+        <!-- 차트 컨테이너 -->
+        <div class="card chart-container">
+            <h2>종합 입출고 및 재고 추이</h2>
+            <canvas id="in-out-stock-chart"></canvas>
+        </div>
+
+        <!-- 하단 정보 그리드 -->
+        <div class="content-grid">
+            <div class="card" id="major-partners-card">
+                <h2>주요 거래처</h2>
+                <div id="partners-container">
+                    <!-- JavaScript로 내용이 채워집니다. -->
+                </div>
+            </div>
+            <div class="card" id="product-stock-card">
+                <h2>보유 제품별 재고 현황</h2>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>제품명</th>
+                            <th>현재 재고</th>
+                            <th>안전 재고</th>
+                        </tr>
+                    </thead>
+                    <tbody id="product-stock-body">
+                        <!-- JavaScript로 내용이 채워집니다. -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const ctx = document.getElementById('in-out-stock-chart').getContext('2d');
+            let stockChart;
+
+            const mockData = {
+                "ganada": {
+                    timeSeries: {
+                        labels: ["07-01", "07-10", "07-20", "08-01", "08-10", "08-20"],
+                        inbound: [4000, 5000, 3000, 6000, 2000, 7000],
+                        outbound: [3500, 4500, 4000, 5000, 3000, 6000],
+                        stock: [10000, 10500, 9500, 10500, 9500, 10500]
+                    },
+                    partners: {
+                        inbound: [{ name: "A제약", share: 50 }, { name: "B수입사", share: 30 }],
+                        outbound: [{ name: "서울 대형병원", share: 70 }, { name: "하나로 약국", share: 20 }]
+                    },
+                    products: [
+                        { name: "A백신", current: 50000, safety: 20000 },
+                        { name: "D주사제", current: 10000, safety: 15000 },
+                        { name: "F연고", current: 8000, safety: 5000 }
+                    ]
+                },
+                "ramaba": {
+                    timeSeries: {
+                        labels: ["07-01", "07-10", "07-20", "08-01", "08-10", "08-20"],
+                        inbound: [8000, 6000, 9000, 5000, 7000, 8000],
+                        outbound: [7000, 7500, 8000, 6000, 6500, 7000],
+                        stock: [20000, 18500, 19500, 18500, 19000, 20000]
+                    },
+                    partners: {
+                        inbound: [{ name: "A제약", share: 80 }, { name: "C수입사", share: 15 }],
+                        outbound: [{ name: "경기 약국체인", share: 60 }, { name: "온누리 병원", share: 35 }]
+                    },
+                    products: [
+                        { name: "A백신", current: 80000, safety: 40000 },
+                        { name: "C해열제", current: 25000, safety: 30000 }
+                    ]
+                }
+            };
+
+            function formatNumber(value) {
+                if (value >= 1000) return (value / 1000) + 'k';
+                return value;
+            }
+
+            function renderChart(data) {
+                if (stockChart) stockChart.destroy();
+                stockChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [
+                            {
+                                label: '입고량',
+                                data: data.inbound,
+                                backgroundColor: 'rgba(52, 152, 219, 0.8)',
+                                yAxisID: 'y_quantity'
+                            },
+                            {
+                                label: '출고량',
+                                data: data.outbound,
+                                backgroundColor: 'rgba(231, 76, 60, 0.8)',
+                                yAxisID: 'y_quantity'
+                            },
+                            {
+                                type: 'line',
+                                label: '재고량',
+                                data: data.stock,
+                                borderColor: 'rgba(46, 204, 113, 1)',
+                                backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                                yAxisID: 'y_stock',
+                                tension: 0.1,
+                                fill: true
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y_quantity: {
+                                beginAtZero: true,
+                                position: 'left',
+                                title: { display: true, text: '입출고량' },
+                                ticks: { callback: (value) => formatNumber(value) }
+                            },
+                            y_stock: {
+                                beginAtZero: true,
+                                position: 'right',
+                                title: { display: true, text: '재고량' },
+                                grid: { drawOnChartArea: false },
+                                ticks: { callback: (value) => formatNumber(value) }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function renderPartners(data) {
+                const container = document.getElementById('partners-container');
+                container.innerHTML = `
+                    <h3>입고처</h3>
+                    <ul class="partners-list">${data.inbound.map(p => `<li>${p.name} (${p.share}%)</li>`).join('')}</ul>
+                    <h3>출고처</h3>
+                    <ul class="partners-list">${data.outbound.map(p => `<li>${p.name} (${p.share}%)</li>`).join('')}</ul>
+                `;
+            }
+
+            function renderProductStock(data) {
+                const tbody = document.getElementById('product-stock-body');
+                tbody.innerHTML = '';
+                data.forEach(item => {
+                    const row = tbody.insertRow();
+                    const isLow = item.current < item.safety;
+                    const stockPercentage = Math.min((item.current / (item.safety * 2)) * 100, 100);
+
+                    row.innerHTML = `
+                        <td>${item.name}</td>
+                        <td>
+                            <div>${item.current.toLocaleString()}</div>
+                            <div class="stock-bar-container">
+                                <div class="stock-bar ${isLow ? 'low' : ''}" style="width: ${stockPercentage}%"></div>
+                            </div>
+                        </td>
+                        <td>${item.safety.toLocaleString()}</td>
+                    `;
+                });
+            }
+
+            function updateDashboard() {
+                const selectedCompanyId = document.getElementById('company-select').value;
+                const data = mockData[selectedCompanyId];
+                renderChart(data.timeSeries);
+                renderPartners(data.partners);
+                renderProductStock(data.products);
+            }
+
+            document.getElementById('search-btn').addEventListener('click', updateDashboard);
+            updateDashboard();
+        });
+    </script>
+</body>
+</html>

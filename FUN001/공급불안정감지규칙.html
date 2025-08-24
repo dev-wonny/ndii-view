@@ -1,0 +1,831 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>위기대응 의료제품 감지·알림 - 추가 화면</title>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#0f162e; --panel-2:#131b36; --muted:#8ea3c1; --text:#e6eefc;
+      --primary:#6aa9ff; --accent:#66e0a3; --warn:#ffb020; --alert:#ff7043; --critical:#ff3b3b;
+      --ok:#39d98a; --border: #203056; --badge:#172248;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif}
+    a{color:var(--primary);text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    header{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#0d1330,#0b1020)}
+    header h1{font-size:16px;margin:0;font-weight:700}
+    header .pill{border:1px solid var(--border);padding:4px 8px;border-radius:999px;background:var(--badge);color:var(--muted)}
+
+    .app{display:grid;grid-template-columns:240px 1fr 320px;gap:0;height:calc(100% - 58px)}
+    nav{border-right:1px solid var(--border);background:var(--panel)}
+    main{background:var(--panel-2);overflow:auto}
+    aside{border-left:1px solid var(--border);background:var(--panel);padding:16px;overflow:auto}
+
+    .menu{list-style:none;margin:0;padding:8px}
+    .menu li{margin:4px 0}
+    .menu a{display:block;padding:10px 12px;border-radius:10px;color:var(--text);border:1px solid transparent}
+    .menu a.active{background:#19234a;border-color:#2a3c74}
+    .menu small{color:var(--muted)}
+
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+    .controls{display:flex;gap:8px;flex-wrap:wrap}
+    .controls .field{display:flex;flex-direction:column;gap:4px}
+    .controls input,.controls select,.controls textarea{background:#0e1530;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;min-height:36px}
+    .controls label{font-size:12px;color:var(--muted)}
+
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:#132049;color:var(--text);cursor:pointer}
+    .btn.primary{background:#1a2f66;border-color:#2a3c74}
+    .btn.ghost{background:transparent}
+    .btn.warn{background:#3a2a00;border-color:#6b4b00}
+
+    .section{padding:12px 16px}
+    .card{border:1px solid var(--border);border-radius:14px;background:#0e1632;overflow:hidden}
+    .card h3{margin:0;padding:12px 14px;border-bottom:1px solid var(--border);font-size:14px;color:#d2def7}
+
+    table{width:100%;border-collapse:separate;border-spacing:0}
+    thead th{position:sticky;top:0;background:#101a3a;z-index:1}
+    th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+    tbody tr:hover{background:#121d3f}
+    tr:last-child td{border-bottom:0}
+
+    .badge{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);color:var(--muted);background:var(--badge);padding:2px 8px;border-radius:999px;font-size:12px}
+    .sev-NORMAL{background:#102b22;color:#8dd0b7;border-color:#2b5e4f}
+    .sev-WARN{background:#2e240c;color:#ffd68a;border-color:#5d4c18}
+    .sev-ALERT{background:#3a1b14;color:#ffb39c;border-color:#5d2a20}
+    .sev-CRITICAL{background:#3a1414;color:#ff9b9b;border-color:#6d2626}
+    .status-DRAFT{background:#15192b;color:#9fb1d6;border-color:#2a3c74}
+    .status-ACTIVE{background:#0f2c1d;color:#88e9b9;border-color:#1c5c40}
+    .status-RETIRED{background:#2a2232;color:#c8a9e8;border-color:#4a3a62}
+
+    .grid{display:grid;gap:12px}
+    .grid.cols-2{grid-template-columns:1fr 1fr}
+    .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+
+    .kicker{font-size:12px;color:var(--muted);margin-bottom:8px}
+
+    /* Modal */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.5)}
+    .modal.open{display:flex}
+    .modal .dialog{width:min(920px,90vw);max-height:88vh;overflow:auto;background:#0e1632;border:1px solid var(--border);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+    .dialog header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding:12px 16px;background:#0f1a3b}
+    .dialog header h3{margin:0;font-size:15px}
+    .dialog .content{padding:14px}
+
+    .help{font-size:12px;color:var(--muted)}
+    .monospace{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;font-size:12px}
+
+    .tag{display:inline-flex;align-items:center;border-radius:6px;border:1px solid var(--border);padding:2px 6px;margin:2px;font-size:12px;background:#101a3a}
+    .right-note{position:sticky;top:12px}
+
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+    .empty{padding:24px;text-align:center;color:var(--muted)}
+
+    .footer-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+
+    /* tiny color chips */
+    .chip{display:inline-block;width:12px;height:12px;border-radius:3px;border:1px solid #0003;margin-right:6px;vertical-align:middle}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="pill">식약처 · 위기대응 의료제품</div>
+    <h1>감지·알림 추가 화면</h1>
+    <span class="pill">HTML + JS (Vanilla, 단일파일)</span>
+  </header>
+
+  <div class="app" role="application">
+    <nav aria-label="보조 메뉴">
+      <ul class="menu" id="navMenu">
+        <li><a href="#rules" class="active">감지 규칙 관리 <small>(DETECT_CRITERIA)</small></a></li>
+        <li><a href="#category">알림 정책 관리 <small>(DETECT_CATEGORY)</small></a></li>
+        <li><a href="#events">경고 이벤트 조회 <small>(DETECT_HISTORY)</small></a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <!-- 감지 규칙 관리 -->
+      <section id="view-rules" data-route="rules" hidden>
+        <div class="toolbar">
+          <div class="controls">
+            <div class="field">
+              <label for="fMode">Mode</label>
+              <select id="fMode">
+                <option value="">전체</option>
+                <option value="AUTO">AUTO</option>
+                <option value="MANUAL">MANUAL</option>
+                <option value="HYBRID">HYBRID</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="fScope">Scope</label>
+              <select id="fScope">
+                <option value="">전체</option>
+                <option value="ITEM">ITEM</option>
+                <option value="REGION">REGION</option>
+                <option value="ITEM_REGION">ITEM_REGION</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="fMetric">Metric</label>
+              <select id="fMetric">
+                <option value="">전체</option>
+                <option>DSI</option>
+                <option>BSI</option>
+                <option>SURGE</option>
+                <option>STOCKOUT</option>
+                <option>REPORT_DELAY</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="fStatus">Status</label>
+              <select id="fStatus">
+                <option value="">전체</option>
+                <option>DRAFT</option>
+                <option>ACTIVE</option>
+                <option>RETIRED</option>
+              </select>
+            </div>
+          </div>
+          <div class="controls">
+            <button class="btn" id="btnRulesReset">조건초기화</button>
+            <button class="btn primary" id="btnRuleNew">+ 신규 규칙</button>
+            <button class="btn ghost" id="btnRulesCsv">CSV 내보내기</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="card">
+            <h3>규칙 목록</h3>
+            <div style="overflow:auto">
+              <table aria-label="감지 규칙 목록" id="tblRules">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>상태</th>
+                    <th>Mode</th>
+                    <th>Scope</th>
+                    <th>대상</th>
+                    <th>Metric</th>
+                    <th>기간</th>
+                    <th>임계/기준</th>
+                    <th>승인</th>
+                    <th>작업</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 알림 정책 관리 -->
+      <section id="view-category" data-route="category" hidden>
+        <div class="toolbar">
+          <div class="controls">
+            <div class="field">
+              <label for="fcSeverity">Severity</label>
+              <select id="fcSeverity">
+                <option value="">전체</option>
+                <option>NORMAL</option>
+                <option>WARN</option>
+                <option>ALERT</option>
+                <option>CRITICAL</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="fcEnabled">사용여부</label>
+              <select id="fcEnabled">
+                <option value="">전체</option>
+                <option value="Y">Y</option>
+                <option value="N">N</option>
+              </select>
+            </div>
+          </div>
+          <div class="controls">
+            <button class="btn" id="btnCatReset">조건초기화</button>
+            <button class="btn primary" id="btnCatNew">+ 정책 추가</button>
+            <button class="btn ghost" id="btnCatCsv">CSV 내보내기</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="card">
+            <h3>알림 정책 목록</h3>
+            <div style="overflow:auto">
+              <table aria-label="알림 정책 목록" id="tblCategory">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Severity</th>
+                    <th>Code</th>
+                    <th>제목 템플릿</th>
+                    <th>채널</th>
+                    <th>대상 역할</th>
+                    <th>색상</th>
+                    <th>사용</th>
+                    <th>작업</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 경고 이벤트 조회 -->
+      <section id="view-events" data-route="events" hidden>
+        <div class="toolbar">
+          <div class="controls">
+            <div class="field"><label for="feStart">시작일</label><input type="date" id="feStart"></div>
+            <div class="field"><label for="feEnd">종료일</label><input type="date" id="feEnd"></div>
+            <div class="field"><label for="feProd">제품코드</label><input id="feProd" placeholder="예: A-12345"></div>
+            <div class="field"><label for="feRegion">지역코드</label><input id="feRegion" placeholder="예: 11-110"></div>
+            <div class="field"><label for="feSeverity">Severity</label>
+              <select id="feSeverity"><option value="">전체</option><option>WARN</option><option>ALERT</option><option>CRITICAL</option></select>
+            </div>
+            <div class="field"><label for="feStatus">상태</label>
+              <select id="feStatus"><option value="">전체</option><option>OPEN</option><option>ACK</option><option>RESOLVED</option></select>
+            </div>
+          </div>
+          <div class="controls">
+            <button class="btn" id="btnEvReset">조건초기화</button>
+            <button class="btn primary" id="btnEvSearch">조회</button>
+            <button class="btn ghost" id="btnEvCsv">CSV 내보내기</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="card">
+            <h3>경고 이벤트 목록</h3>
+            <div style="overflow:auto">
+              <table aria-label="이벤트 목록" id="tblEvents">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>발생시각</th>
+                    <th>대상</th>
+                    <th>등급변경</th>
+                    <th>상태</th>
+                    <th>요약</th>
+                    <th>작업</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <aside>
+      <div class="right-note">
+        <div class="kicker">오른쪽 설명</div>
+        <h3 style="margin-top:0">화면 안내</h3>
+        <p class="help">좌측 메뉴에서 화면을 선택하세요. 각 화면은 다음 요구사항을 충족합니다.</p>
+        <ul class="help">
+          <li><strong>감지 규칙 관리</strong>: DETECT_CRITERIA 등록/수정/비활성화, 승인·사유 로깅</li>
+          <li><strong>알림 정책 관리</strong>: DETECT_CATEGORY 템플릿/색상/채널/대상 관리</li>
+          <li><strong>경고 이벤트 조회</strong>: DETECT_HISTORY 필터링·엑셀, 상세 팝업(ACK/RESOLVED)</li>
+        </ul>
+        <hr style="border:0;border-top:1px solid var(--border)"/>
+        <p class="help">• 외부 라이브러리 없이 동작 (폐쇄망 호환)<br/>• CSV 내보내기, 로컬 임시저장(localStorage)<br/>• 접근성: label 연결, 키보드 포커스, 색 대비</p>
+      </div>
+    </aside>
+  </div>
+
+  <!-- 규칙 편집 모달 -->
+  <div class="modal" id="modalRule" role="dialog" aria-modal="true" aria-labelledby="ruleTitle">
+    <div class="dialog">
+      <header>
+        <h3 id="ruleTitle">감지 규칙 편집</h3>
+        <button class="btn" onclick="closeRuleModal()" aria-label="닫기">닫기</button>
+      </header>
+      <div class="content">
+        <form id="ruleForm" class="grid cols-2">
+          <input type="hidden" name="criteria_id" />
+          <div class="field"><label>ID</label><input name="criteria_id_display" disabled></div>
+          <div class="field"><label>Status</label>
+            <select name="status">
+              <option>DRAFT</option>
+              <option>ACTIVE</option>
+              <option>RETIRED</option>
+            </select>
+          </div>
+          <div class="field"><label>Mode</label>
+            <select name="mode" id="rfMode">
+              <option>AUTO</option>
+              <option>MANUAL</option>
+              <option>HYBRID</option>
+            </select>
+          </div>
+          <div class="field"><label>Scope</label>
+            <select name="scope" id="rfScope">
+              <option>ITEM</option>
+              <option>REGION</option>
+              <option>ITEM_REGION</option>
+            </select>
+          </div>
+          <div class="field"><label>Product Group</label><input name="product_group" placeholder="예: antipyretic"></div>
+          <div class="field"><label>Product Code</label><input name="product_code" placeholder="예: A-12345"></div>
+          <div class="field"><label>Region Code</label><input name="region_code" placeholder="예: 11-110"></div>
+          <div class="field"><label>Metric</label>
+            <select name="metric">
+              <option>DSI</option>
+              <option>BSI</option>
+              <option>SURGE</option>
+              <option>STOCKOUT</option>
+              <option>REPORT_DELAY</option>
+            </select>
+          </div>
+          <div class="field"><label>Window Days</label><input name="window_days" type="number" min="1" value="7"></div>
+          <div class="field"><label>Target Days (DSI)</label><input name="target_days" type="number" min="0"></div>
+          <div class="field thresh"><label>Yellow Th</label><input name="yellow_th" type="number" step="0.1"></div>
+          <div class="field thresh"><label>Orange Th</label><input name="orange_th" type="number" step="0.1"></div>
+          <div class="field thresh"><label>Red Th</label><input name="red_th" type="number" step="0.1"></div>
+          <div class="field"><label>Min Volume (완화)</label><input name="min_volume" type="number" min="0"></div>
+          <div class="field autoOnly"><label>Baseline Method</label>
+            <select name="baseline_method">
+              <option value="">(선택)</option>
+              <option>PCTL20</option>
+              <option>YOY_MA7</option>
+              <option>MEDIAN</option>
+            </select>
+          </div>
+          <div class="field"><label>Effective From</label><input name="effective_from" type="date"></div>
+          <div class="field"><label>Effective To</label><input name="effective_to" type="date"></div>
+          <div class="field"><label>Approved By</label><input name="approved_by"></div>
+          <div class="field"><label>Approved At</label><input name="approved_at" type="datetime-local"></div>
+          <div class="field" style="grid-column:1/-1"><label>Rationale (사유)</label>
+            <textarea name="rationale" rows="3" placeholder="예: 독감 유행 대비 강화"></textarea>
+          </div>
+        </form>
+        <div class="footer-actions">
+          <button class="btn" onclick="closeRuleModal()">취소</button>
+          <button class="btn primary" id="btnRuleSave">저장</button>
+        </div>
+        <p class="help">모드에 따라 입력 필드가 자동 전환됩니다. AUTO는 Baseline, MANUAL은 임계치 사용.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 카테고리(알림 정책) 모달 -->
+  <div class="modal" id="modalCat" role="dialog" aria-modal="true" aria-labelledby="catTitle">
+    <div class="dialog">
+      <header>
+        <h3 id="catTitle">알림 정책 편집</h3>
+        <button class="btn" onclick="closeCatModal()" aria-label="닫기">닫기</button>
+      </header>
+      <div class="content">
+        <form id="catForm" class="grid cols-2">
+          <input type="hidden" name="category_id" />
+          <div class="field"><label>ID</label><input name="category_id_display" disabled></div>
+          <div class="field"><label>Severity</label>
+            <select name="severity">
+              <option>NORMAL</option><option>WARN</option><option>ALERT</option><option>CRITICAL</option>
+            </select>
+          </div>
+          <div class="field"><label>Code</label><input name="code" placeholder="예: SHORTAGE"></div>
+          <div class="field"><label>Enabled</label>
+            <select name="enabled"><option>Y</option><option>N</option></select>
+          </div>
+          <div class="field" style="grid-column:1/-1"><label>제목 템플릿</label><input name="title_tmpl" placeholder="예: [경고] {REGION} {ITEM} 공급 불안정"></div>
+          <div class="field" style="grid-column:1/-1"><label>본문 템플릿</label><textarea name="msg_tmpl" rows="3" placeholder="예: DSI={DSI}, 기준={THRESHOLD}"></textarea></div>
+          <div class="field"><label>채널 (쉼표)</label><input name="channels" placeholder="DASHBOARD,EMAIL"></div>
+          <div class="field"><label>대상 역할 (쉼표)</label><input name="notify_roles" placeholder="ROLE_ADMIN,ROLE_SITREP"></div>
+          <div class="field" style="grid-column:1/-1"><label>색상</label>
+            <div>
+              <span class="chip" id="chipColor"></span>
+              <input name="color" value="#ffb020" oninput="document.getElementById('chipColor').style.background=this.value"/>
+            </div>
+          </div>
+          <div class="field"><label>아이콘</label><input name="icon" placeholder="예: warning"></div>
+        </form>
+        <div class="footer-actions">
+          <button class="btn" onclick="closeCatModal()">취소</button>
+          <button class="btn primary" id="btnCatSave">저장</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 이벤트 상세 모달 -->
+  <div class="modal" id="modalEvent" role="dialog" aria-modal="true" aria-labelledby="evTitle">
+    <div class="dialog">
+      <header>
+        <h3 id="evTitle">경고 이벤트 상세</h3>
+        <button class="btn" onclick="closeEventModal()" aria-label="닫기">닫기</button>
+      </header>
+      <div class="content">
+        <div id="evSummary" class="grid cols-3" style="margin-bottom:8px"></div>
+        <div class="grid cols-2">
+          <div class="card">
+            <h3>당시 지표 (Metrics Snapshot)</h3>
+            <div class="section monospace" id="evMetrics"></div>
+          </div>
+          <div class="card">
+            <h3>적용된 규칙 (matched_rules)</h3>
+            <div class="section" id="evRules"></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:12px">
+          <h3>처리 이력 (Timeline)</h3>
+          <div class="section" id="evTimeline"></div>
+        </div>
+        <div class="footer-actions">
+          <select id="evNextStatus">
+            <option value="ACK">확인(ACK)</option>
+            <option value="RESOLVED">종결(RESOLVED)</option>
+          </select>
+          <input id="evReason" placeholder="사유 코드 (예: ACTION_TAKEN)" />
+          <input id="evNote" placeholder="메모" />
+          <button class="btn" onclick="applyEventAction()">상태 변경</button>
+          <button class="btn ghost" onclick="linkToRuleFromEvent()">규칙으로 이동</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /*********************************
+     * 유틸 함수
+     *********************************/
+    const qs = (sel, el=document) => el.querySelector(sel);
+    const qsa = (sel, el=document) => [...el.querySelectorAll(sel)];
+    const fmtDateTime = d => new Date(d).toLocaleString('ko-KR');
+    const fmtDate = d => new Date(d).toISOString().slice(0,10);
+    const esc = s => (s??'').toString().replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+
+    function downloadCSV(filename, rows){
+      const process = v => v==null?'' : '"'+ String(v).replaceAll('"','""') +'"';
+      const csv = rows.map(r=>r.map(process).join(',')).join('\n');
+      const blob = new Blob(["\ufeff"+csv], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob); const a = document.createElement('a');
+      a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    }
+
+    function uid(prefix){ return prefix + Math.floor(100000 + Math.random()*900000); }
+
+    function badge(text, cls='badge'){ return `<span class="${cls}">${esc(text)}</span>` }
+    function sevBadge(sev){ return `<span class="badge sev-${sev}">${esc(sev)}</span>` }
+    function statusBadge(st){ return `<span class="badge status-${st}">${esc(st)}</span>` }
+
+    function saveLS(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+    function loadLS(key, def){ try{ return JSON.parse(localStorage.getItem(key)) ?? def }catch{ return def } }
+
+    /*********************************
+     * 초기 샘플 데이터 (문서 예시 기반)
+     *********************************/
+    let RULES = loadLS('RULES', [
+      {criteria_id:1001, status:'ACTIVE', mode:'AUTO', scope:'ITEM', product_group:'vaccine', product_code:'', region_code:'', metric:'DSI', window_days:14, target_days:7, yellow_th:null, orange_th:null, red_th:null, min_volume:0, baseline_method:'PCTL20', effective_from:'2025-08-01', effective_to:'', approved_by:'userA', approved_at:'2025-08-01T09:00', rationale:'백신 평시 자동'},
+      {criteria_id:2001, status:'ACTIVE', mode:'MANUAL', scope:'ITEM_REGION', product_group:'antipyretic', product_code:'A-12345', region_code:'11-000', metric:'DSI', window_days:7, target_days:7, yellow_th:5, orange_th:3, red_th:2, min_volume:800, baseline_method:'', effective_from:'2025-08-15', effective_to:'2025-09-30', approved_by:'userAdmin', approved_at:'2025-08-15T08:30', rationale:'서울 A해열제 강화'},
+      {criteria_id:2002, status:'ACTIVE', mode:'MANUAL', scope:'ITEM', product_group:'digest', product_code:'B-56789', region_code:'', metric:'STOCKOUT', window_days:1, target_days:null, yellow_th:null, orange_th:null, red_th:0, min_volume:0, baseline_method:'', effective_from:'2025-08-01', effective_to:'', approved_by:'userX', approved_at:'2025-08-01T10:00', rationale:'즉시 품절 감지'},
+      {criteria_id:3001, status:'ACTIVE', mode:'AUTO', scope:'REGION', product_group:'*', product_code:'', region_code:'28-000', metric:'SURGE', window_days:7, target_days:null, yellow_th:1.8, orange_th:2.2, red_th:2.8, min_volume:0, baseline_method:'YOY_MA7', effective_from:'2025-08-10', effective_to:'', approved_by:'userS', approved_at:'2025-08-10T11:45', rationale:'부산 수요 급증 감지'}
+    ]);
+
+    let CATS = loadLS('CATS', [
+      {category_id:10, severity:'ALERT', code:'SHORTAGE', title_tmpl:'[경고] {REGION} {ITEM} 공급 불안정', msg_tmpl:'DSI={DSI}, 기준={THRESHOLD}', color:'#ffb020', icon:'warning', notify_roles:'ROLE_ADMIN,ROLE_SITREP', channels:'DASHBOARD,EMAIL', enabled:'Y'},
+      {category_id:20, severity:'CRITICAL', code:'STOCKOUT', title_tmpl:'[심각] {REGION} {ITEM} 품절', msg_tmpl:'재고=0', color:'#ff3b3b', icon:'alert-octagon', notify_roles:'ROLE_ADMIN', channels:'DASHBOARD,EMAIL,SMS', enabled:'Y'},
+      {category_id:30, severity:'WARN', code:'SURGE', title_tmpl:'[주의] {REGION} 판매 급증', msg_tmpl:'YoY x{MULTIPLIER}', color:'#ffd166', icon:'trending-up', notify_roles:'ROLE_ADMIN,ROLE_SALES', channels:'DASHBOARD', enabled:'Y'}
+    ]);
+
+    let EVENTS = loadLS('EVENTS', [
+      {event_id:900001, detected_at:'2025-08-20T09:10:00', detect_type:'AUTO', product_code:'A-12345', region_code:'11-110', severity_before:'WARN', severity_after:'ALERT', matched_rules:[{criteria_id:1001, metric:'DSI'}], metrics_snapshot:{DSI:2.8, BSI:0.6, Surge:0.31}, status:'OPEN', ack_by:'', ack_at:'', resolved_by:'', resolved_at:'', reason_code:'', note:'', snapshot_id:'SNAP-20250820-0900'},
+      {event_id:900002, detected_at:'2025-08-19T14:22:00', detect_type:'MANUAL_TRIGGER', product_code:'B-56789', region_code:'28-000', severity_before:'ALERT', severity_after:'CRITICAL', matched_rules:[{criteria_id:2002, metric:'STOCKOUT'}], metrics_snapshot:{DSI:0, Stock:0}, status:'ACK', ack_by:'userB', ack_at:'2025-08-19T14:30:00', resolved_by:'', resolved_at:'', reason_code:'', note:'확인함', snapshot_id:'SNAP-20250819-1400'},
+      {event_id:900003, detected_at:'2025-08-18T07:05:00', detect_type:'AUTO', product_code:'', region_code:'28-000', severity_before:'NORMAL', severity_after:'WARN', matched_rules:[{criteria_id:3001, metric:'SURGE'}], metrics_snapshot:{YoY:1.9}, status:'RESOLVED', ack_by:'userC', ack_at:'2025-08-18T08:00:00', resolved_by:'userC', resolved_at:'2025-08-18T10:15:00', reason_code:'ACTION_TAKEN', note:'모니터링', snapshot_id:'SNAP-20250818-0700'}
+    ]);
+
+    /*********************************
+     * 라우팅 및 초기 표시
+     *********************************/
+    function switchView(hash){
+      if(!hash) hash = '#rules';
+      qsa('[data-route]').forEach(sec=>sec.hidden = ('#'+sec.dataset.route) !== hash);
+      qsa('.menu a').forEach(a=>a.classList.toggle('active', a.getAttribute('href')===hash));
+      if(hash==="#rules") renderRules();
+      if(hash==="#category") renderCats();
+      if(hash==="#events") renderEvents();
+    }
+
+    window.addEventListener('hashchange', ()=>switchView(location.hash));
+    document.addEventListener('DOMContentLoaded', ()=>{
+      // mount sections
+      qsa('[data-route]').forEach((s,i)=>{ if(i===0) s.hidden=false; });
+      switchView(location.hash);
+    });
+
+    /*********************************
+     * 감지 규칙 관리
+     *********************************/
+    function ruleTargetSummary(r){
+      const parts = [];
+      if(r.product_group && r.product_group!=='*') parts.push(`그룹:${esc(r.product_group)}`);
+      if(r.product_code) parts.push(`품목:${esc(r.product_code)}`);
+      if(r.region_code) parts.push(`지역:${esc(r.region_code)}`);
+      return parts.join(' / ') || '*';
+    }
+
+    function ruleThresholdSummary(r){
+      if(r.mode==='AUTO') return `Baseline:${r.baseline_method||'-'}`;
+      const t = [r.yellow_th, r.orange_th, r.red_th].map(x=>x??'-').join('/');
+      return `Y/O/R: ${t}`;
+    }
+
+    function renderRules(){
+      const tbody = qs('#tblRules tbody');
+      const m = qs('#fMode').value, s=qs('#fScope').value, me=qs('#fMetric').value, st=qs('#fStatus').value;
+      const list = RULES.filter(r=>(!m||r.mode===m)&&(!s||r.scope===s)&&(!me||r.metric===me)&&(!st||r.status===st));
+      if(!list.length){ tbody.innerHTML = `<tr><td colspan="10" class="empty">데이터가 없습니다.</td></tr>`; return; }
+      tbody.innerHTML = list.map(r=>`
+        <tr>
+          <td>${r.criteria_id}</td>
+          <td>${statusBadge(r.status)}</td>
+          <td>${badge(r.mode)}</td>
+          <td>${badge(r.scope)}</td>
+          <td>${ruleTargetSummary(r)}</td>
+          <td>${badge(r.metric)}</td>
+          <td>${esc(r.effective_from||'-')} ~ ${esc(r.effective_to||'-')}</td>
+          <td>${esc(ruleThresholdSummary(r))}</td>
+          <td>${esc(r.approved_by||'-')}<br><span class="help">${r.approved_at?fmtDateTime(r.approved_at):''}</span></td>
+          <td>
+            <button class="btn" onclick="openRuleModal(${r.criteria_id})">수정</button>
+            <button class="btn warn" onclick="retireRule(${r.criteria_id})">Retire</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    qs('#fMode').addEventListener('change', renderRules);
+    qs('#fScope').addEventListener('change', renderRules);
+    qs('#fMetric').addEventListener('change', renderRules);
+    qs('#fStatus').addEventListener('change', renderRules);
+    qs('#btnRulesReset').addEventListener('click', ()=>{ ['fMode','fScope','fMetric','fStatus'].forEach(id=>qs('#'+id).value=''); renderRules(); });
+
+    qs('#btnRulesCsv').addEventListener('click', ()=>{
+      const rows = [["ID","Status","Mode","Scope","Target","Metric","From","To","Threshold/Baseline","ApprovedBy","ApprovedAt"]];
+      qsa('#tblRules tbody tr').forEach(tr=>{
+        const tds=[...tr.children].map(td=>td.innerText.replace(/\n/g,' '));
+        rows.push([tds[0], tds[1], tds[2], tds[3], tds[4], tds[5], tds[6].split(' ~ ')[0], tds[6].split(' ~ ')[1], tds[7], tds[8].split(' ')[0]||'', tds[8].split(' ').slice(1).join(' ')]);
+      });
+      downloadCSV('rules.csv', rows);
+    });
+
+    qs('#btnRuleNew').addEventListener('click', ()=>openRuleModal());
+
+    function openRuleModal(id){
+      const modal = qs('#modalRule');
+      const f = qs('#ruleForm');
+      const data = id? RULES.find(r=>r.criteria_id===id) : {criteria_id: uid("")};
+      // fill
+      f.criteria_id.value = data.criteria_id;
+      f.criteria_id_display.value = data.criteria_id || '(신규)';
+      f.status.value = data.status || 'DRAFT';
+      f.mode.value = data.mode || 'AUTO';
+      f.scope.value = data.scope || 'ITEM';
+      f.product_group.value = data.product_group || '';
+      f.product_code.value = data.product_code || '';
+      f.region_code.value = data.region_code || '';
+      f.metric.value = data.metric || 'DSI';
+      f.window_days.value = data.window_days ?? 7;
+      f.target_days.value = data.target_days ?? '';
+      f.yellow_th.value = data.yellow_th ?? '';
+      f.orange_th.value = data.orange_th ?? '';
+      f.red_th.value = data.red_th ?? '';
+      f.min_volume.value = data.min_volume ?? 0;
+      f.baseline_method.value = data.baseline_method || '';
+      f.effective_from.value = data.effective_from || '';
+      f.effective_to.value = data.effective_to || '';
+      f.approved_by.value = data.approved_by || '';
+      f.approved_at.value = data.approved_at ? data.approved_at.slice(0,16) : '';
+      f.rationale.value = data.rationale || '';
+
+      // mode 별 필드 토글
+      toggleRuleFields();
+      modal.classList.add('open');
+    }
+
+    function closeRuleModal(){ qs('#modalRule').classList.remove('open'); }
+
+    function toggleRuleFields(){
+      const mode = qs('#rfMode').value;
+      qsa('.autoOnly').forEach(el=> el.style.display = (mode==='AUTO'||mode==='HYBRID')?'' : 'none');
+      qsa('.thresh').forEach(el=> el.style.display = (mode==='MANUAL'||mode==='HYBRID')?'' : 'none');
+    }
+    qs('#rfMode').addEventListener('change', toggleRuleFields);
+
+    qs('#btnRuleSave').addEventListener('click', ()=>{
+      const f = qs('#ruleForm');
+      const obj = Object.fromEntries(new FormData(f).entries());
+      const idx = RULES.findIndex(x=>x.criteria_id==obj.criteria_id);
+      // normalize
+      obj.criteria_id = Number(obj.criteria_id);
+      ['window_days','target_days','yellow_th','orange_th','red_th','min_volume'].forEach(k=>{ if(obj[k]==='') obj[k]=null; else obj[k]= Number(obj[k]); });
+      if(obj.effective_to==='') obj.effective_to='';
+
+      if(idx>=0) RULES[idx] = {...RULES[idx], ...obj}; else RULES.push(obj);
+      saveLS('RULES', RULES);
+      closeRuleModal();
+      renderRules();
+    });
+
+    function retireRule(id){
+      const r = RULES.find(x=>x.criteria_id===id); if(!r) return;
+      if(!confirm(`규칙 ${id} 을(를) RETIRED 로 전환하시겠어요?`)) return;
+      r.status='RETIRED'; saveLS('RULES', RULES); renderRules();
+    }
+
+    /*********************************
+     * 알림 정책 관리
+     *********************************/
+    function renderCats(){
+      const tbody = qs('#tblCategory tbody');
+      const sev = qs('#fcSeverity').value; const en = qs('#fcEnabled').value;
+      const list = CATS.filter(c=>(!sev||c.severity===sev)&&(!en||c.enabled===en));
+      if(!list.length){ tbody.innerHTML = `<tr><td colspan="9" class="empty">데이터가 없습니다.</td></tr>`; return; }
+      tbody.innerHTML = list.map(c=>`
+        <tr>
+          <td>${c.category_id}</td>
+          <td>${sevBadge(c.severity)}</td>
+          <td>${esc(c.code)}</td>
+          <td>${esc(c.title_tmpl)}</td>
+          <td>${esc(c.channels)}</td>
+          <td>${esc(c.notify_roles)}</td>
+          <td><span class="chip" style="background:${c.color}"></span>${esc(c.color)}</td>
+          <td>${c.enabled}</td>
+          <td><button class="btn" onclick="openCatModal(${c.category_id})">수정</button></td>
+        </tr>
+      `).join('');
+    }
+
+    qs('#fcSeverity').addEventListener('change', renderCats);
+    qs('#fcEnabled').addEventListener('change', renderCats);
+    qs('#btnCatReset').addEventListener('click', ()=>{ qs('#fcSeverity').value=''; qs('#fcEnabled').value=''; renderCats(); });
+    qs('#btnCatNew').addEventListener('click', ()=>openCatModal());
+
+    qs('#btnCatCsv').addEventListener('click', ()=>{
+      const rows = [["ID","Severity","Code","Title","Channels","Roles","Color","Enabled"]];
+      qsa('#tblCategory tbody tr').forEach(tr=>rows.push([...tr.children].map(td=>td.innerText)));
+      downloadCSV('categories.csv', rows);
+    });
+
+    function openCatModal(id){
+      const modal = qs('#modalCat');
+      const f = qs('#catForm');
+      const c = id? CATS.find(x=>x.category_id===id) : {category_id: Number(uid(''))};
+      f.category_id.value = c.category_id;
+      f.category_id_display.value = c.category_id || '(신규)';
+      f.severity.value = c.severity || 'WARN';
+      f.code.value = c.code || '';
+      f.enabled.value = c.enabled || 'Y';
+      f.title_tmpl.value = c.title_tmpl || '';
+      f.msg_tmpl.value = c.msg_tmpl || '';
+      f.channels.value = c.channels || 'DASHBOARD';
+      f.notify_roles.value = c.notify_roles || 'ROLE_ADMIN';
+      f.color.value = c.color || '#ffb020';
+      qs('#chipColor').style.background = f.color.value;
+      f.icon.value = c.icon || '';
+      modal.classList.add('open');
+    }
+    function closeCatModal(){ qs('#modalCat').classList.remove('open'); }
+
+    qs('#btnCatSave').addEventListener('click', ()=>{
+      const f = qs('#catForm');
+      const obj = Object.fromEntries(new FormData(f).entries());
+      obj.category_id = Number(obj.category_id);
+      const idx = CATS.findIndex(c=>c.category_id===obj.category_id);
+      if(idx>=0) CATS[idx] = {...CATS[idx], ...obj}; else CATS.push(obj);
+      saveLS('CATS', CATS);
+      closeCatModal();
+      renderCats();
+    });
+
+    /*********************************
+     * 이벤트 조회 & 상세
+     *********************************/
+    function renderEvents(){
+      const tbody = qs('#tblEvents tbody');
+      const s=qs('#feStart').value, e=qs('#feEnd').value, p=qs('#feProd').value.trim().toLowerCase(), r=qs('#feRegion').value.trim().toLowerCase();
+      const sev=qs('#feSeverity').value, st=qs('#feStatus').value;
+      let list = EVENTS.slice();
+      if(s) list = list.filter(x=>x.detected_at>=s);
+      if(e) list = list.filter(x=>x.detected_at<= e + 'T23:59:59');
+      if(p) list = list.filter(x=> (x.product_code||'').toLowerCase().includes(p));
+      if(r) list = list.filter(x=> (x.region_code||'').toLowerCase().includes(r));
+      if(sev) list = list.filter(x=> x.severity_after===sev);
+      if(st) list = list.filter(x=> x.status===st);
+
+      if(!list.length){ tbody.innerHTML = `<tr><td colspan="7" class="empty">데이터가 없습니다.</td></tr>`; return; }
+      tbody.innerHTML = list.map(ev=>{
+        const target = [ev.product_code||'*', ev.region_code||'*'].join(' / ');
+        const sev = sevBadge(ev.severity_after);
+        return `<tr>
+          <td>${ev.event_id}</td>
+          <td>${fmtDateTime(ev.detected_at)}</td>
+          <td>${esc(target)}</td>
+          <td>${esc(ev.severity_before||'-')} → ${sev}</td>
+          <td>${badge(ev.status)}</td>
+          <td class="help monospace">${esc(JSON.stringify(ev.metrics_snapshot))}</td>
+          <td><button class="btn" onclick="openEventModal(${ev.event_id})">상세</button></td>
+        </tr>`;
+      }).join('');
+    }
+
+    qs('#btnEvSearch').addEventListener('click', renderEvents);
+    qs('#btnEvReset').addEventListener('click', ()=>{ ['feStart','feEnd','feProd','feRegion','feSeverity','feStatus'].forEach(id=>qs('#'+id).value=''); renderEvents(); });
+    qs('#btnEvCsv').addEventListener('click', ()=>{
+      const rows = [["ID","DetectedAt","Product","Region","Before","After","Status","Snapshot"]];
+      qsa('#tblEvents tbody tr').forEach(tr=>{
+        const [id,dt,target,chg,st,ss] = [...tr.children].map(td=>td.innerText);
+        const [prod,region] = target.split(' / ');
+        const [before, after] = chg.split(' → ');
+        rows.push([id,dt,prod,region,before,after,st,ss]);
+      });
+      downloadCSV('events.csv', rows);
+    });
+
+    let currentEventId = null;
+    function openEventModal(id){
+      const ev = EVENTS.find(x=>x.event_id===id); if(!ev) return;
+      currentEventId = id;
+      // summary
+      qs('#evSummary').innerHTML = `
+        <div class="card"><h3>요약</h3><div class="section">
+          <div class="help">이벤트 ID</div><div>${ev.event_id}</div>
+          <div class="help" style="margin-top:8px">발생시각</div><div>${fmtDateTime(ev.detected_at)}</div>
+          <div class="help" style="margin-top:8px">상태</div><div>${badge(ev.status)}</div>
+        </div></div>
+        <div class="card"><h3>대상</h3><div class="section">
+          <div class="help">제품</div><div>${esc(ev.product_code||'*')}</div>
+          <div class="help" style="margin-top:8px">지역</div><div>${esc(ev.region_code||'*')}</div>
+          <div class="help" style="margin-top:8px">등급</div><div>${esc(ev.severity_before||'-')} → ${sevBadge(ev.severity_after)}</div>
+        </div></div>
+        <div class="card"><h3>스냅샷</h3><div class="section">
+          <div class="help">SNAPSHOT ID</div><div class="monospace">${esc(ev.snapshot_id)}</div>
+          <div class="help" style="margin-top:8px">유형</div><div class="badge">${esc(ev.detect_type)}</div>
+        </div></div>`;
+
+      // metrics
+      qs('#evMetrics').innerText = JSON.stringify(ev.metrics_snapshot, null, 2);
+
+      // rules
+      qs('#evRules').innerHTML = ev.matched_rules.map(m=>{
+        return `<div class="tag">criteria_id: <strong style="margin-left:6px">${esc(m.criteria_id)}</strong>&nbsp;/ metric: ${esc(m.metric)}</div>`;
+      }).join('') || '<div class="help">규칙 정보 없음</div>';
+
+      // timeline
+      const tl = [];
+      tl.push(`<div>OPEN <span class="help">${fmtDateTime(ev.detected_at)}</span></div>`);
+      if(ev.ack_at) tl.push(`<div>ACK by <strong>${esc(ev.ack_by)}</strong> <span class="help">${fmtDateTime(ev.ack_at)}</span></div>`);
+      if(ev.resolved_at) tl.push(`<div>RESOLVED by <strong>${esc(ev.resolved_by)}</strong> <span class="help">${fmtDateTime(ev.resolved_at)}</span> <span class="help">(${esc(ev.reason_code)})</span> — ${esc(ev.note)}</div>`);
+      qs('#evTimeline').innerHTML = tl.map(x=>`<div class="tag">${x}</div>`).join('');
+
+      // defaults for action inputs
+      qs('#evNextStatus').value = 'ACK';
+      qs('#evReason').value = ev.reason_code||'ACTION_TAKEN';
+      qs('#evNote').value = ev.note||'';
+
+      qs('#modalEvent').classList.add('open');
+    }
+    function closeEventModal(){ qs('#modalEvent').classList.remove('open'); }
+
+    function applyEventAction(){
+      const ev = EVENTS.find(x=>x.event_id===currentEventId); if(!ev) return;
+      const next = qs('#evNextStatus').value; const reason = qs('#evReason').value; const note = qs('#evNote').value;
+      const now = new Date().toISOString();
+      if(next==='ACK') { ev.status='ACK'; ev.ack_by='currentUser'; ev.ack_at=now; }
+      if(next==='RESOLVED') { ev.status='RESOLVED'; ev.resolved_by='currentUser'; ev.resolved_at=now; ev.reason_code=reason; ev.note=note; }
+      saveLS('EVENTS', EVENTS); renderEvents(); openEventModal(ev.event_id); // refresh content
+    }
+
+    function linkToRuleFromEvent(){
+      const ev = EVENTS.find(x=>x.event_id===currentEventId); if(!ev) return;
+      const rid = (ev.matched_rules?.[0]?.criteria_id);
+      location.hash = '#rules';
+      setTimeout(()=>{
+        renderRules();
+        if(rid){
+          const row = [...qs('#tblRules tbody').children].find(tr=> tr.children[0].innerText==rid);
+          if(row){ row.scrollIntoView({behavior:'smooth', block:'center'}); row.style.outline='2px solid var(--primary)'; setTimeout(()=>row.style.outline='', 1500); }
+        }
+      }, 50);
+      closeEventModal();
+    }
+
+    /*********************************
+     * 네비게이션 초기화
+     *********************************/
+    qsa('#navMenu a').forEach(a=>{
+      a.addEventListener('click', (e)=>{
+        e.preventDefault(); location.hash = a.getAttribute('href');
+      });
+    });
+
+    // 앱 시작 시 기본 해시
+    if(!location.hash) location.hash = '#rules';
+  </script>
+</body>
+</html>

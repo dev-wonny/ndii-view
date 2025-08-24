@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>품목별 데이터 시각화 (전국 재고, 지역별 재고, 주요 취급 업체) - DASH-003</title>
+  <style>
+    :root{
+      --bg:#0b1021; --panel:#111936; --panel2:#0d1530; --border:#243156; --text:#e6eefc;
+      --muted:#9fb0d6; --accent:#5b8cff; --ok:#2ad19b; --warn:#ffb020; --alert:#ff6b6b; --good:#3bc27a;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif}
+    .wrap{max-width:1400px;margin:0 auto;padding:20px 16px 60px}
+
+    h1{font-size:20px;margin:0 0 12px}
+    .sub{color:var(--muted);font-size:13px}
+    .panel{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.22)}
+    .hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px dashed var(--border)}
+    .hdr h2{font-size:16px;margin:0}
+    .row{display:grid;gap:16px}
+    .cols-2{grid-template-columns:1.1fr .9fr}
+
+    .filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+    .filters label{font-size:12px;color:var(--muted)}
+    .filters input,.filters select{background:#0b1429;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:8px 10px}
+
+    .btn{cursor:pointer;border:1px solid var(--border);background:#14213b;color:var(--text);padding:8px 12px;border-radius:10px}
+    .btn:hover{background:#1b2a4b}
+    .btn.primary{background:var(--accent);border-color:#3b6bff;color:#fff;font-weight:600}
+    .btn.ghost{background:transparent}
+
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:12px 16px}
+    .kpi{background:#0e1832;border:1px solid var(--border);border-radius:12px;padding:12px;min-height:84px}
+    .kpi b{display:block;font-size:20px;margin-top:2px}
+
+    /* Chart area */
+    #chart{height:360px}
+    svg{width:100%;height:100%;display:block}
+    .axis text{fill:#cfe2ff;font-size:11px}
+    .axis path,.axis line{stroke:#30406c}
+    .grid line{stroke:#223059}
+    .bar{fill:#5b8cff;opacity:.85}
+    .line{fill:none;stroke:#2ad19b;stroke-width:2}
+    .dot{fill:#2ad19b}
+    .legend{display:flex;gap:12px;align-items:center}
+    .legend i{display:inline-block;width:14px;height:8px;border-radius:4px}
+
+    /* Tables */
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left}
+    th{color:#b8c7e6;font-weight:600}
+    tr:hover td{background:#0f1a35}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+    .chip{display:inline-flex;align-items:center;gap:6px;background:#0c1630;border:1px solid var(--border);border-radius:999px;padding:3px 8px;color:#cfe2ff;font-size:12px}
+    .barMeter{height:8px;background:#243f75;border-radius:999px;overflow:hidden}
+    .barMeter>i{display:block;height:100%;background:var(--good)}
+
+    .tableWrap{padding:12px 16px;max-height:420px;overflow:auto}
+    .rowTables{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+    .sev-ok{background:rgba(58,194,122,.12);border-color:#2a7854;color:#9ee6c1}
+    .sev-warn{background:rgba(255,176,32,.12);border-color:#8a6210;color:#ffd28c}
+    .sev-alert{background:rgba(255,107,107,.12);border-color:#8f2c2c;color:#ffb3b3}
+
+    @media (max-width:1100px){
+      .cols-2,.rowTables{grid-template-columns:1fr}
+      .kpis{grid-template-columns:repeat(2,1fr)}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>품목별 데이터 시각화 <span class="sub">(전국, 지역별, 주요 취급 업체)</span></h1>
+
+  <!-- Filters / KPI -->
+  <div class="panel">
+    <div class="hdr">
+      <div class="filters">
+        <label>제품</label>
+        <select id="product"></select>
+        <label>기간</label>
+        <input type="date" id="from"/>
+        <span class="sub">~</span>
+        <input type="date" id="to"/>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" id="btnReset">초기화</button>
+        <button class="btn primary" id="btnSearch">조회</button>
+      </div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><span class="sub">총 생산/수입량</span><b id="kpiProd">-</b></div>
+      <div class="kpi"><span class="sub">전국 평균 재고일수</span><b id="kpiDsi">-</b></div>
+      <div class="kpi"><span class="sub">지역 수(활성)</span><b id="kpiRegions">-</b></div>
+      <div class="kpi"><span class="sub">과다 재고 의심</span><b id="kpiHoard">-</b></div>
+    </div>
+  </div>
+
+  <!-- Combo Chart -->
+  <div class="panel" style="margin-top:16px">
+    <div class="hdr">
+      <h2>생산/수입 대비 전국 재고 추이</h2>
+      <div class="legend">
+        <span><i style="background:#5b8cff"></i> 생산·수입량(막대)</span>
+        <span><i style="background:#2ad19b"></i> 전국 재고량(선)</span>
+        <button class="btn ghost" id="btnExportSeries" style="margin-left:8px">CSV 다운로드</button>
+      </div>
+    </div>
+    <div id="chart"></div>
+  </div>
+
+  <!-- Region & Companies -->
+  <div class="row rowTables" style="margin-top:16px">
+    <div class="panel">
+      <div class="hdr">
+        <h2>지역별 재고 현황</h2>
+        <div class="sub">재고량·DSI·상태</div>
+      </div>
+      <div class="tableWrap">
+        <table id="tblRegion">
+          <thead>
+          <tr>
+            <th>지역</th>
+            <th class="mono">재고량</th>
+            <th>DSI</th>
+            <th>상태</th>
+          </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="hdr">
+        <h2>주요 취급 업체</h2>
+        <div class="sub">재고량 순</div>
+      </div>
+      <div class="tableWrap">
+        <table id="tblCompanies">
+          <thead>
+          <tr>
+            <th>업체명</th>
+            <th>역할</th>
+            <th class="mono">재고량</th>
+          </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const USE_MOCK = true; // 실제 API 연결 시 false
+const API = '/api/v1';
+const $ = (s,el=document)=>el.querySelector(s);
+const $$ = (s,el=document)=>[...el.querySelectorAll(s)];
+const fmt = n => n==null?'-':Number(n).toLocaleString('ko-KR');
+const toISO = d => (d instanceof Date? d : new Date(d)).toISOString().slice(0,10);
+function csvEscape(v){ if(v==null) return ''; const s=String(v); return (/,|"|\n/.test(s))? '"'+s.replace(/"/g,'""')+'"': s; }
+
+// ===== MOCK DATA =====
+const MOCK = (()=>{
+  const today=new Date(); const from=new Date(); from.setDate(today.getDate()-30);
+  const dates=[]; const prod=[]; const stock=[];
+  let s=80000; // starting stock
+  for(let d=new Date(from); d<=today; d.setDate(d.getDate()+1)){
+    const q = 1500 + Math.round(Math.random()*1500); // production/import
+    s = Math.max(20000, s + q - (1200 + Math.round(Math.random()*1600))); // stock = stock + prod - consumption
+    dates.push(new Date(d)); prod.push(q); stock.push(s);
+  }
+  return {
+    products:[
+      {productId:'P001', productName:'A백신'},
+      {productId:'P002', productName:'B해열제 500mg'},
+      {productId:'P003', productName:'C주사제'}
+    ],
+    series:{ dates, prod, stock },
+    regions:[
+      {region:'서울/경기', qty:100000, dsi:22.5, level:'warn'},
+      {region:'강원', qty:28000, dsi:18.1, level:'ok'},
+      {region:'충청', qty:20000, dsi:35.2, level:'alert'},
+      {region:'호남', qty:32000, dsi:20.2, level:'ok'},
+      {region:'영남', qty:54000, dsi:26.8, level:'warn'},
+      {region:'제주', qty:9000, dsi:16.2, level:'ok'}
+    ],
+    companies:[
+      {name:'A제약', role:'생산자', qty:200000},
+      {name:'라마바 상사', role:'도매상', qty:80000},
+      {name:'가나다 유통', role:'도매상', qty:50000},
+      {name:'서울메디', role:'소매상', qty:22000}
+    ]
+  }
+})();
+
+async function fetchJSON(url){ const r=await fetch(url); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }
+
+// API shims
+async function getProducts(){ if(USE_MOCK) return MOCK.products; const j=await fetchJSON(`${API}/meta/products`); return j.items||[]; }
+async function getSeries(params){
+  if(USE_MOCK) return MOCK.series;
+  const q=new URLSearchParams({from:params.from,to:params.to,productId:params.productId}).toString();
+  const [pi, national] = await Promise.all([
+    fetchJSON(`${API}/supply/production-import/timeseries?${q}`),
+    fetchJSON(`${API}/inventory/snapshots/timeseries?aggregate=national&${q}`)
+  ]);
+  // normalize
+  const dates = (pi.series||[]).map(o=>new Date(o.date));
+  const prod = (pi.series||[]).map(o=>o.quantity);
+  const stock = (national.series||[]).map(o=>o.stockQuantity);
+  return {dates, prod, stock};
+}
+async function getRegionAgg(params){
+  if(USE_MOCK) return MOCK.regions;
+  const q=new URLSearchParams({from:params.from,to:params.to,productId:params.productId}).toString();
+  const j = await fetchJSON(`${API}/inventory/snapshots/regions?${q}`);
+  return j.items||[];
+}
+async function getTopCompanies(params){
+  if(USE_MOCK) return MOCK.companies;
+  const q=new URLSearchParams({date:params.to,productId:params.productId,limit:10}).toString();
+  const j = await fetchJSON(`${API}/inventory/snapshots/top?${q}`);
+  return (j.items||[]).map(x=>({name:x.companyName, role:x.companyType, qty:x.stockQuantity}))
+}
+
+// INIT
+init();
+async function init(){
+  const to = new Date(); const from = new Date(); from.setDate(to.getDate()-30);
+  $('#from').value = toISO(from); $('#to').value = toISO(to);
+
+  const prods = await getProducts();
+  const selP = $('#product'); selP.innerHTML='';
+  prods.forEach(p=>{ const o=document.createElement('option'); o.value=p.productId; o.textContent=p.productName; selP.appendChild(o); });
+
+  $('#btnSearch').addEventListener('click', load);
+  $('#btnReset').addEventListener('click', ()=>{ if(selP.options.length) selP.selectedIndex=0; init(); });
+  $('#btnExportSeries').addEventListener('click', exportSeriesCSV);
+
+  await load();
+}
+
+async function load(){
+  const params = { from: $('#from').value, to: $('#to').value, productId: $('#product').value };
+  const [series, regions, companies] = await Promise.all([
+    getSeries(params), getRegionAgg(params), getTopCompanies(params)
+  ]);
+
+  // KPI
+  const totalProd = (series.prod||[]).reduce((a,b)=>a+b,0);
+  const avgDsi = (regions||[]).reduce((a,r)=>a+r.dsi,0) / Math.max(1,(regions||[]).length);
+  const hoard = (regions||[]).filter(r=>r.level==='alert').length;
+  $('#kpiProd').textContent = fmt(totalProd);
+  $('#kpiDsi').textContent = isFinite(avgDsi)? `${avgDsi.toFixed(1)} 일` : '-';
+  $('#kpiRegions').textContent = (regions||[]).length;
+  $('#kpiHoard').textContent = hoard;
+
+  // Chart
+  renderCombo('#chart', series);
+
+  // Tables
+  renderRegion('#tblRegion tbody', regions);
+  renderCompanies('#tblCompanies tbody', companies);
+}
+
+// ====== RENDER: Combo (Bar + Line) ======
+function renderCombo(sel, series){
+  const el=$(sel); el.innerHTML='';
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg'); el.appendChild(svg);
+  const w = el.clientWidth||800, h = el.clientHeight||360; svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+  const m = {t:18,r:16,b:40,l:44};
+  const iw = w - m.l - m.r; const ih = h - m.t - m.b;
+
+  const labels = (series.dates||[]).map(d=> toISO(d).slice(5));
+  const bars = series.prod||[]; const line = series.stock||[];
+  const n = Math.max(labels.length, bars.length, line.length);
+  const maxY = Math.max(1, ...bars, ...line);
+
+  const x = i => m.l + (iw) * (i+0.5)/n;
+  const bx = i => m.l + (iw) * (i)/n + 2; // bar left
+  const bw = (iw)/n - 4; // bar width
+  const y = v => m.t + ih - (v/maxY)*ih;
+
+  // grid
+  const gGrid = svg.appendChild(g());
+  const ticks = 5;
+  for(let i=0;i<=ticks;i++){
+    const yy = m.t + ih * i/ticks;
+    gGrid.appendChild(lineEl(m.l, yy, m.l+iw, yy, '#223059'));
+    const tv = Math.round(maxY*(1-i/ticks));
+    const tx = textEl(String(tv), m.l-6, yy+3); tx.setAttribute('text-anchor','end'); tx.setAttribute('fill','#cfe2ff'); tx.setAttribute('font-size','10');
+    gGrid.appendChild(tx);
+  }
+
+  // bars
+  const gBars = svg.appendChild(g());
+  bars.forEach((v,i)=>{
+    const rect = rectEl(bx(i), y(v), Math.max(0,bw), Math.max(1, m.t+ih - y(v)));
+    rect.setAttribute('class','bar');
+    rect.setAttribute('opacity', 0.85);
+    gBars.appendChild(rect);
+  });
+
+  // line
+  const gLine = svg.appendChild(g());
+  let d=""; line.forEach((v,i)=>{ const X=x(i), Y=y(v); d += (i?"L":"M")+X+","+Y; });
+  const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('d', d); path.setAttribute('class','line'); gLine.appendChild(path);
+  line.forEach((v,i)=>{ const c=circleEl(x(i), y(v), 2.5); c.setAttribute('class','dot'); gLine.appendChild(c); });
+
+  // x labels (show every ~7th to avoid clutter)
+  const step = Math.ceil(n/7);
+  for(let i=0;i<n;i+=step){
+    const tx = textEl(labels[i]||'', x(i), h-8); tx.setAttribute('text-anchor','middle'); tx.setAttribute('fill','#cfe2ff'); tx.setAttribute('font-size','10'); svg.appendChild(tx);
+  }
+}
+
+// ====== RENDER: Tables ======
+function renderRegion(sel, rows){
+  const tb=$(sel); tb.innerHTML='';
+  rows.forEach(r=>{
+    const tr=document.createElement('tr');
+    const badge = `<span class="chip ${sevCls(r.level)}">${sevLabel(r.level)}</span>`;
+    tr.innerHTML = `
+      <td>${r.region}</td>
+      <td class="mono">${fmt(r.qty)}</td>
+      <td>${Number(r.dsi).toFixed(1)}일</td>
+      <td>${badge}</td>`;
+    tb.appendChild(tr);
+  });
+}
+function renderCompanies(sel, rows){
+  const tb=$(sel); tb.innerHTML='';
+  rows.forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.name}</td>
+      <td>${r.role}</td>
+      <td class="mono">${fmt(r.qty)}</td>`;
+    tb.appendChild(tr);
+  });
+}
+function sevCls(level){ return level==='alert'?'sev-alert': level==='warn'?'sev-warn':'sev-ok'; }
+function sevLabel(level){ return level==='alert'?'위험': level==='warn'?'주의':'양호'; }
+
+// ===== Helpers to build SVG =====
+function g(){ return document.createElementNS('http://www.w3.org/2000/svg','g'); }
+function lineEl(x1,y1,x2,y2,stroke){ const l=document.createElementNS('http://www.w3.org/2000/svg','line'); l.setAttribute('x1',x1); l.setAttribute('y1',y1); l.setAttribute('x2',x2); l.setAttribute('y2',y2); l.setAttribute('stroke',stroke||'#30406c'); l.setAttribute('stroke-width','1'); l.setAttribute('opacity','.7'); return l; }
+function rectEl(x,y,w,h){ const r=document.createElementNS('http://www.w3.org/2000/svg','rect'); r.setAttribute('x',x); r.setAttribute('y',y); r.setAttribute('width',w); r.setAttribute('height',h); r.setAttribute('rx','2'); return r; }
+function circleEl(cx,cy,r){ const c=document.createElementNS('http://www.w3.org/2000/svg','circle'); c.setAttribute('cx',cx); c.setAttribute('cy',cy); c.setAttribute('r',r); return c; }
+function textEl(t,x,y){ const e=document.createElementNS('http://www.w3.org/2000/svg','text'); e.textContent=t; e.setAttribute('x',x); e.setAttribute('y',y); return e; }
+</script>
+</body>
+</html>
