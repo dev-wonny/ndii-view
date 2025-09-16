@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>심사 실적 상세 · 다운로드 전용</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{--primary:#005aa0;--bg:#f6f7f9;--card:#fff;--bd:#dcdfe4;}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,'Noto Sans KR',sans-serif;}
+    header{background:var(--primary);color:#fff;padding:14px 18px;font-weight:700;display:flex;align-items:center;gap:10px}
+    header a{color:#fff;opacity:.9;text-decoration:none;border:1px solid rgba(255,255,255,.5);padding:4px 8px;border-radius:6px}
+    .wrap{max-width:1200px;margin:24px auto;padding:0 16px}
+    .card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:18px}
+    h2{margin:0 0 12px;color:#222}
+    table{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px}
+    th,td{border:1px solid var(--bd);padding:10px;text-align:center}
+    th{background:#f1f3f5}
+    .summary{display:flex;gap:16px;flex-wrap:wrap;font-weight:700}
+    .pill{display:inline-block;padding:.2rem .6rem;border-radius:999px;border:1px solid var(--bd);background:#fff}
+    .muted{color:#6b7280}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:2px}
+    button{padding:9px 14px;border:1px solid var(--primary);background:#fff;color:var(--primary);border-radius:8px;cursor:pointer}
+  </style>
+</head>
+<body>
+<header>
+  <a href="index.html">← 목록</a>
+  의약품통합정보시스템 · 심사 실적 상세
+</header>
+
+<div class="wrap">
+  <!-- 민원 기본 -->
+  <div class="card">
+    <h2>민원 접수 기본 정보</h2>
+    <table id="base"><tbody></tbody></table>
+  </div>
+
+  <!-- 다운로드 전용 -->
+  <div class="card">
+    <h2>다운로드</h2>
+    <div class="toolbar">
+      <button id="btnExcelCsv">엑셀(CSV, UTF-8-BOM)</button>
+      <button id="btnExcelXls">엑셀(XLS, XML 2003)</button>
+    </div>
+    <div class="muted">※ 현재 화면에 표시된 모든 심사 실적 데이터를 그대로 다운로드합니다.</div>
+  </div>
+
+  <!-- 심사 실적 -->
+  <div class="card">
+    <h2>부서별 · 심사자별 실적 (결과회신일 포함)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>부서</th>
+          <th>심사자</th>
+          <th>심사 의뢰일(배정)</th>
+          <th>심사 시작일</th>
+          <th>심사 종료일(결과 회신)</th>
+          <th>소요기간(일)</th>
+          <th>진행 상태</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <!-- 요약 -->
+  <div class="card">
+    <h2>요약(현황)</h2>
+    <div class="summary">
+      <div>총 심사자 수: <span id="total"></span></div>
+      <div>평균 소요기간: <span id="avg"></span>일</div>
+      <div>지연 여부: <span id="delay"></span></div>
+      <div>부서 분포: <span id="deptSpread" class="pill"></span></div>
+      <div>결과회신 최종일: <span id="lastReply"></span></div>
+    </div>
+    <div class="muted" style="margin-top:8px">※ 소요기간 = 종료일 − 시작일 (종료일 미기입 시 진행중)</div>
+  </div>
+
+  <!-- 집계: 부서별 -->
+  <div class="card">
+    <h2>집계 · 부서별</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>부서</th>
+          <th>심사건수</th>
+          <th>완료건수</th>
+          <th>평균 소요기간(일)</th>
+        </tr>
+      </thead>
+      <tbody id="aggDept"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+/* === Mock 데이터: 부서 내 복수 심사자, 동일 심사자의 타부서/다회차 참여 포함 === */
+const CASES = [
+  {
+    id: "2024000047",
+    productName: "아모테스트정 (1213-1245)",
+    company: "한미약품(주)",
+    kind: "제조",
+    receivedAt: "2024-01-03",
+    approvedAt: "2024-04-05",
+    status: "심사 완료",
+    reviews: [
+      { dept:"품질", reviewer:"김철수", request:"2024-01-05", start:"2024-01-07", end:"2024-01-20", status:"완료" },
+      { dept:"품질", reviewer:"김은우", request:"2024-01-10", start:"2024-01-11", end:"2024-01-22", status:"완료" },
+      { dept:"안유", reviewer:"홍길동", request:"2024-01-05", start:"2024-01-06", end:"2024-01-15", status:"완료" },
+      { dept:"GCP", reviewer:"홍길동", request:"2024-01-16", start:"2024-01-17", end:"2024-01-21", status:"완료" },
+      { dept:"RMP", reviewer:"이영희", request:"2024-01-08", start:"2024-01-09", end:"2024-01-12", status:"완료" },
+      { dept:"RMP", reviewer:"이영희", request:"2024-01-14", start:"2024-01-15", end:"2024-01-18", status:"완료" },
+      { dept:"품질", reviewer:"이영희", request:"2024-01-19", start:"2024-01-19", end:"2024-01-20", status:"완료" },
+      { dept:"GMP", reviewer:"박민수", request:"2024-01-05", start:"2024-01-06", end:"2024-01-12", status:"완료" },
+      { dept:"GMP", reviewer:"박민수", request:"2024-01-14", start:"2024-01-15", end:"2024-01-25", status:"완료" }
+    ]
+  },
+  {
+    id: "2024000213",
+    productName: "로자탄정 50mg",
+    company: "동화약품",
+    kind: "수입",
+    receivedAt: "2025-02-12",
+    approvedAt: "",
+    status: "심사 중",
+    reviews: [
+      { dept:"안유", reviewer:"오지은", request:"2025-02-13", start:"2025-02-14", end:"2025-03-02", status:"완료" },
+      { dept:"안유", reviewer:"오지은", request:"2025-03-05", start:"2025-03-06", end:"", status:"진행" },
+      { dept:"품질", reviewer:"정해준", request:"2025-02-13", start:"", end:"", status:"대기" },
+      { dept:"GCP", reviewer:"최수진", request:"2025-03-01", start:"2025-03-02", end:"2025-03-12", status:"완료" },
+      { dept:"안유", reviewer:"최수진", request:"2025-03-14", start:"2025-03-15", end:"2025-03-18", status:"완료" },
+      { dept:"GMP", reviewer:"문성현", request:"2025-02-13", start:"2025-02-16", end:"2025-03-10", status:"완료" }
+    ]
+  },
+  {
+    id: "2025000301",
+    productName: "테라신시럽 100ml",
+    company: "녹십자",
+    kind: "제조",
+    receivedAt: "2025-03-01",
+    approvedAt: "2025-04-02",
+    status: "심사 완료",
+    reviews: [
+      { dept:"RMP", reviewer:"이영희", request:"2025-03-03", start:"2025-03-06", end:"2025-03-10", status:"완료" },
+      { dept:"RMP", reviewer:"이영희", request:"2025-03-15", start:"2025-03-16", end:"2025-03-18", status:"완료" },
+      { dept:"RMP", reviewer:"이영희", request:"2025-03-22", start:"2025-03-23", end:"2025-03-28", status:"완료" },
+      { dept:"품질", reviewer:"김철수", request:"2025-03-02", start:"2025-03-03", end:"2025-03-12", status:"완료" },
+      { dept:"품질", reviewer:"김은우", request:"2025-03-05", start:"2025-03-06", end:"2025-03-14", status:"완료" },
+      { dept:"GCP", reviewer:"최수진", request:"2025-03-05", start:"2025-03-05", end:"2025-03-20", status:"완료" }
+    ]
+  }
+];
+
+/* === Util === */
+const params = new URLSearchParams(location.search);
+const id = params.get("id");
+const data = CASES.find(v=>v.id===id) || CASES[0];
+
+function days(a,b){ if(!a || !b) return ""; const d1=new Date(a), d2=new Date(b); return Math.max(0, Math.round((d2-d1)/(1000*60*60*24))); }
+
+/* === 기본(결과회신 최종일 포함) === */
+const $base = document.querySelector("#base tbody");
+const lastReplyDate = data.reviews.map(r=>r.end).filter(Boolean).sort().slice(-1)[0] || "-";
+$base.innerHTML = `
+<tr><th>접수번호</th><td>${data.id}</td><th>제품명</th><td>${data.productName}</td></tr>
+<tr><th>업소명</th><td>${data.company}</td><th>제조/수입</th><td>${data.kind}</td></tr>
+<tr><th>민원 접수일자</th><td>${data.receivedAt}</td><th>민원 허가일자</th><td>${data.approvedAt || "-"}</td></tr>
+<tr><th>진행 상태</th><td>${data.status}</td><th>결과회신 최종일</th><td>${lastReplyDate}</td></tr>
+`;
+
+/* === 렌더 (전체 표시) === */
+const $rows = document.getElementById("rows");
+const $total = document.getElementById("total");
+const $avg = document.getElementById("avg");
+const $delay = document.getElementById("delay");
+const $deptSpread = document.getElementById("deptSpread");
+const $lastReply = document.getElementById("lastReply");
+const $aggDept = document.getElementById("aggDept");
+
+function render(){
+  const rows = data.reviews;
+
+  // 테이블
+  $rows.innerHTML = "";
+  let durations=[];
+  rows.forEach(r=>{
+    const dur = days(r.start, r.end);
+    if(dur!=="" && !isNaN(dur)) durations.push(dur);
+    $rows.innerHTML += `
+      <tr>
+        <td>${r.dept}</td>
+        <td>${r.reviewer}</td>
+        <td>${r.request || "-"}</td>
+        <td>${r.start || "-"}</td>
+        <td>${r.end || "-"}</td>
+        <td>${dur === "" ? "-" : dur}</td>
+        <td>${r.status}</td>
+      </tr>
+    `;
+  });
+
+  // 요약
+  $total.textContent = rows.length;
+  $avg.textContent = durations.length ? (durations.reduce((a,b)=>a+b,0)/durations.length).toFixed(1) : "-";
+  $delay.textContent = rows.some(r=>r.status==="지연") ? "지연 있음" : "정상";
+  $deptSpread.textContent = [...new Set(rows.map(r=>r.dept))].join(" · ") || "-";
+  const last = rows.map(r=>r.end).filter(Boolean).sort().slice(-1)[0] || "-";
+  $lastReply.textContent = last;
+
+  // 집계 · 부서별
+  const byDept = {};
+  rows.forEach(r=>{
+    const d=r.dept;
+    byDept[d] = byDept[d] || {cnt:0, done:0, durations:[]};
+    byDept[d].cnt++;
+    if(r.end) byDept[d].done++;
+    const dur = days(r.start, r.end);
+    if(dur!=="" && !isNaN(dur)) byDept[d].durations.push(dur);
+  });
+  $aggDept.innerHTML = Object.keys(byDept).sort().map(d=>{
+    const x = byDept[d];
+    const avg = x.durations.length ? (x.durations.reduce((a,b)=>a+b,0)/x.durations.length).toFixed(1) : "-";
+    return `<tr><td>${d}</td><td>${x.cnt}</td><td>${x.done}</td><td>${avg}</td></tr>`;
+  }).join("") || `<tr><td colspan="4">데이터 없음</td></tr>`;
+}
+render();
+
+/* === 엑셀 내보내기 (현재 화면 데이터 그대로) === */
+function exportRows(){
+  return data.reviews.map(r=>{
+    const dur = days(r.start, r.end);
+    return [r.dept, r.reviewer, r.request||"", r.start||"", r.end||"", (dur===""?"":dur), r.status||""];
+  });
+}
+
+// 1) CSV (UTF-8 with BOM)
+document.getElementById("btnExcelCsv").onclick = ()=>{
+  const header = ["부서","심사자","심사의뢰일(배정)","심사시작일","결과회신일","소요기간(일)","진행상태"];
+  const rows = exportRows();
+  const csv = [header, ...rows].map(arr =>
+    arr.map(v=>{
+      const s = (v??"").toString().replace(/"/g,'""');
+      return /[",\n]/.test(s)? `"${s}"` : s;
+    }).join(",")
+  ).join("\n");
+  const BOM = "\uFEFF";
+  const blob = new Blob([BOM + csv], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `심사실적_${data.id}_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click(); URL.revokeObjectURL(url); a.remove();
+};
+
+// 2) XLS (Excel 2003 XML)
+document.getElementById("btnExcelXls").onclick = ()=>{
+  const header = ["부서","심사자","심사의뢰일(배정)","심사시작일","결과회신일","소요기간(일)","진행상태"];
+  const rows = exportRows();
+  const esc = (s)=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const xmlRows = [
+    `<Row>${header.map(h=>`<Cell><Data ss:Type="String">${esc(h)}</Data></Cell>`).join("")}</Row>`,
+    ...rows.map(r=>`<Row>${
+      r.map(v=>{
+        const isNum = /^-?\d+(\.\d+)?$/.test(v);
+        const type = isNum ? "Number" : "String";
+        return `<Cell><Data ss:Type="${type}">${esc(v)}</Data></Cell>`;
+      }).join("")
+    }</Row>`)
+  ].join("");
+  const xml =
+`<?xml version="1.0" encoding="UTF-8"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Worksheet ss:Name="심사실적">
+  <Table>
+   ${xmlRows}
+  </Table>
+ </Worksheet>
+</Workbook>`;
+  const blob = new Blob([xml], {type: "application/vnd.ms-excel;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `심사실적_${data.id}_${new Date().toISOString().slice(0,10)}.xls`;
+  document.body.appendChild(a); a.click(); URL.revokeObjectURL(url); a.remove();
+};
+</script>
+</body>
+</html>

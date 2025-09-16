@@ -11,8 +11,9 @@
         *{box-sizing:border-box}
         body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;color:var(--text);background:var(--bg)}
         
-        header{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:12px;align-items:center}
+        header{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between}
         header h1{font-size:18px;margin:0 12px 0 0}
+        #userInfo{display:flex;align-items:center;gap:8px}
         
         .container{padding:16px;max-width:1400px;margin:0 auto}
         .hidden{display:none !important}
@@ -32,6 +33,8 @@
         
         .search-area, .action-area, .info-box{border:1px solid var(--line);background-color:var(--card);padding:15px;margin-bottom:20px;border-radius:12px}
         .search-area form, .search-area{display:flex;gap:15px;align-items:center;flex-wrap:wrap}
+        .search-area .form-group.date-range{display:flex;align-items:center;gap:8px}
+        .search-area .form-group.date-range input{width:150px}
         
         .form-group{display:flex;align-items:center;gap:8px}
         label{font-weight:600;color:var(--muted)}
@@ -50,8 +53,19 @@
         
         .action-area{text-align:right}
         
-        table{width:100%;border-collapse:separate;border-spacing:0;margin-top:20px}
-        th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}
+        .table-container{overflow-x:auto;margin-top:20px;border:1px solid var(--line);border-radius:8px}
+        table{width:100%;min-width:1200px;border-collapse:separate;border-spacing:0}
+        th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;font-size:14px;white-space:nowrap}
+        th:first-child,td:first-child{width:60px;min-width:60px}
+        th:nth-child(2),td:nth-child(2){width:200px;min-width:200px}
+        th:nth-child(3),td:nth-child(3){width:250px;min-width:250px;white-space:normal;word-wrap:break-word}
+        th:nth-child(4),td:nth-child(4){width:180px;min-width:180px}
+        th:nth-child(5),td:nth-child(5){width:80px;min-width:80px}
+        th:nth-child(6),td:nth-child(6){width:80px;min-width:80px}
+        th:nth-child(7),td:nth-child(7){width:150px;min-width:150px}
+        th:nth-child(8),td:nth-child(8){width:100px;min-width:100px}
+        th:nth-child(9),td:nth-child(9){width:100px;min-width:100px}
+        th:nth-child(10),td:nth-child(10){width:120px;min-width:120px}
         thead th{color:var(--muted);font-weight:600;background:#fafafa;position:sticky;top:0}
         thead th.sortable{cursor:pointer}
         thead th.sortable:hover{background:#f3f4f6}
@@ -99,6 +113,157 @@
             .form-group{flex-direction:column;align-items:stretch}
             input[type="text"]{width:100%}
             .row.two{grid-template-columns:1fr}
+            .table-container{overflow-x:auto;margin-top:16px}
+            table{min-width:800px}
+            th,td{padding:8px;font-size:12px}
+        }
+
+        /* 승인/반려 모달 스타일 */
+        .approval-info {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .approval-info h4 {
+            color: var(--primary);
+            margin: 16px 0 12px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--line);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .info-item label {
+            font-weight: 600;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .info-item span {
+            color: var(--text);
+            font-size: 14px;
+            padding: 4px 0;
+        }
+
+        .evidence-section {
+            background: var(--bg);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .evidence-content {
+            margin-top: 12px;
+        }
+
+        .evidence-item {
+            margin-bottom: 16px;
+        }
+
+        .evidence-item label {
+            font-weight: 600;
+            color: var(--muted);
+            font-size: 14px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .evidence-text {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid var(--line);
+            min-height: 60px;
+            white-space: pre-wrap;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid var(--line);
+        }
+
+        .file-name {
+            color: var(--primary);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .no-file {
+            color: var(--muted);
+            font-style: italic;
+            font-size: 14px;
+        }
+
+        .approval-actions {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .action-buttons .btn {
+            flex: 1;
+            padding: 12px 16px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* 모든 row 클릭 가능 표시 */
+        #recordTable tbody tr {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        #recordTable tbody tr:hover {
+            background-color: #f0f9ff;
+            border-left: 4px solid var(--primary);
+        }
+
+        #recordTable tbody tr:hover td {
+            color: var(--primary);
+        }
+
+        /* 승인대기 row 특별 표시 */
+        #recordTable tbody tr[data-approve="승인대기"] {
+            border-left: 3px solid var(--warn);
+        }
+
+        #recordTable tbody tr[data-approve="승인대기"]:hover {
+            border-left: 4px solid var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -106,13 +271,15 @@
 
     <header>
         <h1>의약품통합정보시스템 - 교육 실적 관리</h1>
+        <div id="userInfo" style="margin-left: auto; color: var(--muted); font-size: 14px;">
+            <span id="currentUserInfo">식약처 - 김관리자</span>
+        </div>
     </header>
 
     <nav>
         <a href="#" class="nav-link active" data-target="EDU-003">교육과정 관리</a>
         <a href="#" class="nav-link" data-target="EDU-004">심사자별 교육 이수 현황</a>
         <a href="#" class="nav-link" data-target="EDU-005">교육 실적 현황 보고서</a>
-        <a href="#" class="nav-link" data-target="EDU-006">들어야 하는 교육 목록</a>
     </nav>
 
     <main class="container">
@@ -123,10 +290,21 @@
                     <form id="courseSearchForm">
                          <div class="form-group"><label for="courseNameInput">교육명</label><input type="text" id="courseNameInput"></div>
                          <div class="form-group"><label for="courseTypeSelect">필수여부</label><select id="courseTypeSelect"><option value="전체">전체</option><option value="필수">필수</option><option value="선택">선택</option></select></div>
+                         <div class="form-group"><label for="dataSourceSelect">데이터 소스</label><select id="dataSourceSelect"><option value="전체">전체</option><option value="API">평가원 교육관리시스템</option><option value="EXTERNAL">외부 교육기관</option></select></div>
+                         <div class="form-group date-range"><label for="startDateInput">교육기간</label><input type="date" id="startDateInput" placeholder="시작일"> ~ <input type="date" id="endDateInput" placeholder="종료일"></div>
                          <button type="submit" class="btn btn-search">조회</button><button type="reset" class="btn btn-secondary">초기화</button>
                     </form>
+                    <div style="margin-top: 12px;">
+                        <span id="searchResultInfo" style="color: var(--muted); font-weight: 500;">검색 결과: 전체</span>
                 </div>
-                <div class="action-area"><button id="add-course-btn" class="btn btn-primary">신규 등록</button></div>
+                </div>
+                <div class="action-area">
+                    <div>
+                        <button id="sync-api-btn" class="btn btn-primary">API 동기화</button>
+                        <button id="add-course-btn" class="btn btn-primary">신규 등록</button>
+                    </div>
+                </div>
+                <div class="table-container">
                 <table id="courseTable">
                     <thead><tr>
                         <th class="sortable" data-sort="id">No <span class="sort-arrow">↕</span></th>
@@ -135,11 +313,14 @@
                         <th class="sortable" data-sort="startDate">교육기간 <span class="sort-arrow">↕</span></th>
                         <th class="sortable" data-sort="type">필수여부 <span class="sort-arrow">↕</span></th>
                         <th class="sortable" data-sort="hours">인정시간 <span class="sort-arrow">↕</span></th>
+                            <th class="sortable" data-sort="dataSource">데이터 소스 <span class="sort-arrow">↕</span></th>
+                            <th class="sortable" data-sort="registrant">등록자 <span class="sort-arrow">↕</span></th>
                         <th class="sortable" data-sort="regDate">등록일 <span class="sort-arrow">↕</span></th>
                         <th>관리</th>
                     </tr></thead>
                     <tbody></tbody>
                 </table>
+                </div>
             </div>
         </section>
 
@@ -154,7 +335,16 @@
                     </form>
                 </div>
                 <!-- auditorInfoBox 제거 -->
-                <div class="action-area"><button class="btn btn-primary" id="add-record-btn">이수 기록 등록</button></div>
+                <div class="action-area">
+                    <div>
+                        <button id="sync-records-api-btn" class="btn btn-primary">API 동기화</button>
+                        <button class="btn btn-primary" id="add-record-btn">이수 기록 등록</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                <div class="table-hint" style="background: #f0f9ff; padding: 8px 12px; margin-bottom: 8px; border-radius: 6px; border-left: 4px solid var(--primary); font-size: 14px; color: var(--primary);">
+                    💡 행을 클릭하면 이수 기록의 상세 정보와 증빙자료를 확인할 수 있습니다
+                </div>
                 <table id="recordTable">
                     <thead><tr>
                         <th>심사자명</th>
@@ -164,89 +354,85 @@
                         <th>이수일</th>
                         <th>필수여부</th>
                         <th>인정시간</th>
+                            <th>데이터 소스</th>
+                            <th>등록자</th>
                         <th>상태</th>
                         <th>관리</th>
                     </tr></thead>
                     <tbody></tbody>
                 </table>
+                </div>
             </div>
         </section>
 
         <section id="EDU-005">
             <div class="card">
                 <h2>교육 실적 현황 보고서</h2>
-                 <div class="search-area">
-                     <form id="reportSearchForm">
-                        <div class="form-group"><label>조회기간</label><input type="date" id="reportStartDate"> ~ <input type="date" id="reportEndDate"></div>
-                        <div class="form-group"><label for="reportDeptSelect">부서</label><select id="reportDeptSelect"><option value="">전체 부서</option><option value="신약심사부">신약심사부</option><option value="허가총괄부">허가총괄부</option><option value="생물의약품부">생물의약품부</option><option value="품질안전부">품질안전부</option><option value="임상정책부">임상정책부</option></select></div>
-                        <div class="form-group"><label for="reportAuditorNameInput">심사자</label><input type="text" id="reportAuditorNameInput"></div>
-                        <button type="submit" class="btn btn-search">조회</button><button type="reset" class="btn btn-secondary">초기화</button>
-                     </form>
+                
+                <!-- 보고서 유형 선택 -->
+                <div class="report-type-selector" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <h3 style="margin: 0 0 10px 0; font-size: 16px; color: var(--text);">보고서 유형 선택</h3>
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                            <input type="radio" name="reportType" value="personal" checked>
+                            <span>개인별 보고서</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                            <input type="radio" name="reportType" value="department">
+                            <span>부서별 보고서</span>
+                        </label>
+                    </div>
                 </div>
-                <div class="action-area" style="display: flex; justify-content: space-between; align-items: center;">
-                     <span id="reportSummary"></span>
-                     <div><button class="btn btn-secondary">엑셀 다운로드</button><button class="btn btn-secondary">인쇄</button></div>
+
+                <!-- 개인별 보고서 -->
+                <div id="personalReport" class="report-section">
+                    <h3 style="margin: 0 0 15px 0; font-size: 18px; color: var(--primary);">개인별 교육 실적 보고서</h3>
+                    <div class="search-area">
+                        <form id="personalReportForm">
+                            <div class="form-group"><label>조회기간</label><input type="date" id="personalStartDate"> ~ <input type="date" id="personalEndDate"></div>
+                            <div class="form-group"><label for="personalAuditorInput">심사자</label><input type="text" id="personalAuditorInput" placeholder="심사자 이름을 입력하세요 (예: 홍길동, 김철수)"></div>
+                            <button type="submit" class="btn btn-search">조회</button><button type="reset" class="btn btn-secondary">초기화</button>
+                        </form>
+                    </div>
+                    <div class="action-area" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <span id="personalReportSummary"></span>
+                        <div><button id="personalExcelBtn" class="btn btn-primary">엑셀 다운로드</button><button id="personalPrintBtn" class="btn btn-secondary">인쇄</button></div>
+                    </div>
                 </div>
+
+                <!-- 부서별 보고서 -->
+                <div id="departmentReport" class="report-section" style="display: none;">
+                    <h3 style="margin: 0 0 15px 0; font-size: 18px; color: var(--primary);">부서별 교육 실적 보고서</h3>
+                    <div class="search-area">
+                        <form id="departmentReportForm">
+                            <div class="form-group"><label>조회기간</label><input type="date" id="deptStartDate"> ~ <input type="date" id="deptEndDate"></div>
+                            <div class="form-group"><label for="deptSelect">부서</label><select id="deptSelect"><option value="">전체 부서</option><option value="신약심사부">신약심사부</option><option value="허가총괄부">허가총괄부</option><option value="생물의약품부">생물의약품부</option><option value="품질안전부">품질안전부</option><option value="임상정책부">임상정책부</option></select></div>
+                            <div class="form-group"><label for="deptAuditorInput">심사자</label><input type="text" id="deptAuditorInput" placeholder="심사자 이름을 입력하세요 (예: 홍길동, 김철수)"></div>
+                            <button type="submit" class="btn btn-search">조회</button><button type="reset" class="btn btn-secondary">초기화</button>
+                        </form>
+                    </div>
+                    <div class="action-area" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <span id="departmentReportSummary"></span>
+                        <div><button id="departmentExcelBtn" class="btn btn-primary">엑셀 다운로드</button><button id="departmentPrintBtn" class="btn btn-secondary">인쇄</button></div>
+                    </div>
+                </div>
+                <div class="table-container">
                 <table id="reportTable">
                         <thead><tr>
-                            <th class="sortable" data-sort="dept">부서 <span class="sort-arrow">↕</span></th>
-                            <th class="sortable" data-sort="auditor">성명 <span class="sort-arrow">↕</span></th>
-                            <th>직급</th>
-                            <th class="sortable" data-sort="course">교육명 <span class="sort-arrow">↕</span></th>
-                            <th class="sortable" data-sort="startDate">교육 시작일 <span class="sort-arrow">↕</span></th>
-                            <th class="sortable" data-sort="endDate">교육 종료일 <span class="sort-arrow">↕</span></th>
-                            <th>필수여부</th><th>인정시간</th>
+                            <th>부서</th>
+                            <th>성명</th>
+                            <th>교육과정</th>
+                            <th>이수일자</th>
+                            <th>인정시간</th>
+                            <th>상태</th>
+                            <th>데이터소스</th>
                         </tr></thead>
                         <tbody></tbody>
                 </table>
             </div>
-        </section>
-
-        <section id="EDU-006">
-            <div class="card">
-                <h2>들어야 하는 교육 목록</h2>
-                <div class="search-area">
-                    <form id="myEducationSearchForm">
-                        <div class="form-group">
-                            <label for="myNameInput">이름</label>
-                            <input type="text" id="myNameInput" placeholder="본인 이름을 입력하세요">
-                        </div>
-                        <div class="form-group">
-                            <label for="myDeptSelect">부서</label>
-                            <select id="myDeptSelect">
-                                <option value="">부서 선택</option>
-                                <option value="신약심사부">신약심사부</option>
-                                <option value="허가총괄부">허가총괄부</option>
-                                <option value="생물의약품부">생물의약품부</option>
-                                <option value="품질안전부">품질안전부</option>
-                                <option value="임상정책부">임상정책부</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-search">조회</button>
-                        <button type="reset" class="btn btn-secondary">초기화</button>
-                    </form>
-                </div>
-                
-                <div class="info-box" id="myEducationInfo" style="display: none;">
-                    <h4>교육 이수 현황 요약</h4>
-                    <div id="myEducationSummary"></div>
-                </div>
-                
-                <table id="myEducationTable">
-                    <thead><tr>
-                        <th>교육명</th>
-                        <th>교육기간</th>
-                        <th>필수여부</th>
-                        <th>인정시간</th>
-                        <th>이수일</th>
-                        <th>상태</th>
-                        <th>비고</th>
-                        <th>증빙자료</th>
-                    </tr></thead>
-                    <tbody></tbody>
-                </table>
             </div>
         </section>
+
     </main>
     
     <div id="modal-popup" class="modal-overlay">
@@ -275,185 +461,414 @@
 
         // localStorage에서 데이터 로드 또는 초기화
         const initData = () => {
+            // localStorage 초기화 (디버깅용)
+            localStorage.removeItem('eduDb');
+            localStorage.removeItem('currentUser');
+            
             const savedDb = localStorage.getItem('eduDb');
             if (savedDb) {
                 db = JSON.parse(savedDb);
+                // 기존 교육과정에 데이터 소스 정보가 없으면 추가
+                db.courses.forEach(course => {
+                    if (!course.dataSource) {
+                        course.dataSource = "API";
+                        course.orgName = "평가원 교육관리시스템";
+                    }
+                    if (!course.registrant) {
+                        course.registrant = course.dataSource === "API" ? "평가원 관리자" : "외부 등록자";
+                    }
+                });
+                
+                // 기존 이수 기록에 누락된 필드 추가
+                if (db.auditors) {
+                    Object.keys(db.auditors).forEach(auditorName => {
+                        if (db.auditors[auditorName] && db.auditors[auditorName].records) {
+                            db.auditors[auditorName].records.forEach(record => {
+                                if (!record.dataSource) {
+                                    record.dataSource = "API";
+                                }
+                                if (!record.registrant) {
+                                    record.registrant = auditorName;
+                                }
+                                if (!record.status) {
+                                    record.status = "완료";
+                                }
+                            });
+                        }
+                    });
+                }
+                
+                // 업데이트된 데이터 저장
+                saveData();
             } else {
                 db = {
                     courses: [
-                        { id: 1, name: "개인정보보호 및 정보보안 교육", desc: "개인정보 처리 및 정보보안 관련 필수 교육", startDate: "2025-02-01", endDate: "2025-02-28", type: "필수", hours: 2, regDate: "2025-01-10" },
-                        { id: 2, name: "의약품 GMP 기본 과정", desc: "의약품 제조 및 품질관리 표준 교육", startDate: "2025-04-01", endDate: "2025-04-30", type: "선택", hours: 8, regDate: "2025-03-10" },
-                        { id: 3, name: "2025년 신약 허가·심사 워크숍", desc: "신약 개발 및 심사 관련 최신 동향 및 실무 교육", startDate: "2025-07-15", endDate: "2025-07-16", type: "필수", hours: 16, regDate: "2025-06-01" },
-                        { id: 4, name: "바이오의약품 심사 가이드라인", desc: "바이오의약품 심사 기준 및 절차 교육", startDate: "2025-08-01", endDate: "2025-08-10", type: "필수", hours: 8, regDate: "2025-07-15" },
-                        { id: 5, name: "의약품 통계 분석 심화", desc: "임상시험 데이터 분석 및 통계적 해석 교육", startDate: "2025-10-20", endDate: "2025-10-21", type: "선택", hours: 16, regDate: "2025-09-01" },
-                        { id: 6, name: "의약품 부작용 보고 시스템", desc: "의약품 안전성 모니터링 및 부작용 보고 절차", startDate: "2025-03-01", endDate: "2025-03-15", type: "필수", hours: 4, regDate: "2025-02-15" },
-                        { id: 7, name: "임상시험 윤리 및 규정", desc: "임상시험 관련 윤리적 고려사항 및 규정 준수", startDate: "2025-05-10", endDate: "2025-05-20", type: "필수", hours: 6, regDate: "2025-04-20" },
-                        { id: 8, name: "의약품 품질관리 실무", desc: "의약품 품질관리 실무 및 검사 방법론", startDate: "2025-06-01", endDate: "2025-06-10", type: "선택", hours: 12, regDate: "2025-05-15" },
-                        { id: 9, name: "신약 개발 프로세스", desc: "신약 개발 단계별 프로세스 및 심사 포인트", startDate: "2025-09-01", endDate: "2025-09-15", type: "필수", hours: 10, regDate: "2025-08-20" },
-                        { id: 10, name: "의약품 허가 후 관리", desc: "의약품 허가 후 안전성 및 효능성 모니터링", startDate: "2025-11-01", endDate: "2025-11-10", type: "선택", hours: 8, regDate: "2025-10-15" },
-                        { id: 11, name: "생물학적 제제 심사", desc: "생물학적 제제의 특성 및 심사 기준", startDate: "2025-12-01", endDate: "2025-12-10", type: "필수", hours: 14, regDate: "2025-11-20" },
-                        { id: 12, name: "의약품 경제성 평가", desc: "의약품 경제성 평가 방법론 및 적용 사례", startDate: "2026-01-15", endDate: "2026-01-20", type: "선택", hours: 12, regDate: "2025-12-25" },
-                        { id: 13, name: "2026년 신약 심사 가이드라인 업데이트", desc: "2026년도 신약 심사 기준 및 가이드라인 변경사항", startDate: "2026-02-01", endDate: "2026-02-15", type: "필수", hours: 8, regDate: "2026-01-20" },
-                        { id: 14, name: "디지털 헬스케어 의약품 심사", desc: "디지털 기술을 활용한 의약품 및 의료기기 심사 기준", startDate: "2026-03-01", endDate: "2026-03-10", type: "필수", hours: 12, regDate: "2026-02-15" },
-                        { id: 15, name: "희귀질환 의약품 심사 특론", desc: "희귀질환 의약품의 특별 심사 기준 및 절차", startDate: "2026-04-01", endDate: "2026-04-15", type: "선택", hours: 16, regDate: "2026-03-20" },
-                        { id: 16, name: "의약품 임상시험 설계 고급과정", desc: "임상시험 설계의 고급 기법 및 통계적 고려사항", startDate: "2026-05-01", endDate: "2026-05-10", type: "선택", hours: 20, regDate: "2026-04-15" },
-                        { id: 17, name: "의약품 안전성 관리 시스템", desc: "의약품 안전성 모니터링 및 리스크 관리 체계", startDate: "2026-06-01", endDate: "2026-06-15", type: "필수", hours: 10, regDate: "2026-05-20" },
-                        { id: 18, name: "바이오시밀러 심사 실무", desc: "바이오시밀러의 심사 기준 및 품질 평가 방법", startDate: "2026-07-01", endDate: "2026-07-10", type: "필수", hours: 14, regDate: "2026-06-20" },
-                        { id: 19, name: "의약품 품질 표준 및 규정", desc: "국제 의약품 품질 표준 및 국내 규정 비교", startDate: "2026-08-01", endDate: "2026-08-15", type: "선택", hours: 12, regDate: "2026-07-20" },
-                        { id: 20, name: "의약품 허가 후 변경사항 심사", desc: "의약품 허가 후 변경사항 심사 기준 및 절차", startDate: "2026-09-01", endDate: "2026-09-10", type: "필수", hours: 8, regDate: "2026-08-20" },
-                        { id: 21, name: "의약품 임상시험 윤리 심화", desc: "임상시험 윤리 위원회 운영 및 윤리적 고려사항", startDate: "2026-10-01", endDate: "2026-10-15", type: "필수", hours: 10, regDate: "2026-09-20" },
-                        { id: 22, name: "의약품 데이터 무결성", desc: "의약품 개발 및 심사 과정의 데이터 무결성 보장", startDate: "2026-11-01", endDate: "2026-11-10", type: "선택", hours: 16, regDate: "2026-10-20" },
-                        { id: 23, name: "의약품 글로벌 규제 동향", desc: "주요 국가별 의약품 규제 동향 및 협력 방안", startDate: "2026-12-01", endDate: "2026-12-15", type: "선택", hours: 18, regDate: "2026-11-20" },
-                        { id: 24, name: "의약품 심사 품질 관리", desc: "의약품 심사 과정의 품질 관리 및 개선 방안", startDate: "2027-01-15", endDate: "2027-01-25", type: "필수", hours: 12, regDate: "2026-12-25" },
+                        { id: 1, name: "개인정보보호 및 정보보안 교육", desc: "개인정보 처리 및 정보보안 관련 필수 교육", startDate: "2025-02-01", endDate: "2025-02-28", type: "필수", hours: 2, regDate: "2025-01-10", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "김보안" },
+                        { id: 2, name: "의약품 GMP 기본 과정", desc: "의약품 제조 및 품질관리 표준 교육", startDate: "2025-04-01", endDate: "2025-04-30", type: "선택", hours: 8, regDate: "2025-03-10", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "이품질" },
+                        { id: 3, name: "2025년 신약 허가·심사 워크숍", desc: "신약 개발 및 심사 관련 최신 동향 및 실무 교육", startDate: "2025-07-15", endDate: "2025-07-16", type: "필수", hours: 16, regDate: "2025-06-01", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "박신약" },
+                        { id: 4, name: "바이오의약품 심사 가이드라인", desc: "바이오의약품 심사 기준 및 절차 교육", startDate: "2025-08-01", endDate: "2025-08-10", type: "필수", hours: 8, regDate: "2025-07-15", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "최바이오" },
+                        { id: 5, name: "의약품 통계 분석 심화", desc: "임상시험 데이터 분석 및 통계적 해석 교육", startDate: "2025-10-20", endDate: "2025-10-21", type: "선택", hours: 16, regDate: "2025-09-01", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "정통계" },
+                        { id: 6, name: "의약품 부작용 보고 시스템", desc: "의약품 안전성 모니터링 및 부작용 보고 절차", startDate: "2025-03-01", endDate: "2025-03-15", type: "필수", hours: 4, regDate: "2025-02-15", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "한안전" },
+                        { id: 7, name: "임상시험 윤리 및 규정", desc: "임상시험 관련 윤리적 고려사항 및 규정 준수", startDate: "2025-05-10", endDate: "2025-05-20", type: "필수", hours: 6, regDate: "2025-04-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "윤윤리" },
+                        { id: 8, name: "의약품 품질관리 실무", desc: "의약품 품질관리 실무 및 검사 방법론", startDate: "2025-06-01", endDate: "2025-06-10", type: "선택", hours: 12, regDate: "2025-05-15", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "강품질" },
+                        { id: 9, name: "신약 개발 프로세스", desc: "신약 개발 단계별 프로세스 및 심사 포인트", startDate: "2025-09-01", endDate: "2025-09-15", type: "필수", hours: 10, regDate: "2025-08-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "조개발" },
+                        { id: 10, name: "의약품 허가 후 관리", desc: "의약품 허가 후 안전성 및 효능성 모니터링", startDate: "2025-11-01", endDate: "2025-11-10", type: "선택", hours: 8, regDate: "2025-10-15", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "서관리" },
+                        { id: 11, name: "생물학적 제제 심사", desc: "생물학적 제제의 특성 및 심사 기준", startDate: "2025-12-01", endDate: "2025-12-10", type: "필수", hours: 14, regDate: "2025-11-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "임생물" },
+                        { id: 12, name: "의약품 경제성 평가", desc: "의약품 경제성 평가 방법론 및 적용 사례", startDate: "2026-01-15", endDate: "2026-01-20", type: "선택", hours: 12, regDate: "2025-12-25", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "노경제" },
+                        { id: 13, name: "2026년 신약 심사 가이드라인 업데이트", desc: "2026년도 신약 심사 기준 및 가이드라인 변경사항", startDate: "2026-02-01", endDate: "2026-02-15", type: "필수", hours: 8, regDate: "2026-01-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "오가이드" },
+                        { id: 14, name: "디지털 헬스케어 의약품 심사", desc: "디지털 기술을 활용한 의약품 및 의료기기 심사 기준", startDate: "2026-03-01", endDate: "2026-03-10", type: "필수", hours: 12, regDate: "2026-02-15", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "김디지털" },
+                        { id: 15, name: "희귀질환 의약품 심사 특론", desc: "희귀질환 의약품의 특별 심사 기준 및 절차", startDate: "2026-04-01", endDate: "2026-04-15", type: "선택", hours: 16, regDate: "2026-03-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "이희귀" },
+                        { id: 16, name: "의약품 임상시험 설계 고급과정", desc: "임상시험 설계의 고급 기법 및 통계적 고려사항", startDate: "2026-05-01", endDate: "2026-05-10", type: "선택", hours: 20, regDate: "2026-04-15", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "박임상" },
+                        { id: 17, name: "의약품 안전성 관리 시스템", desc: "의약품 안전성 모니터링 및 리스크 관리 체계", startDate: "2026-06-01", endDate: "2026-06-15", type: "필수", hours: 10, regDate: "2026-05-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "안리스크" },
+                        { id: 18, name: "바이오시밀러 심사 실무", desc: "바이오시밀러의 심사 기준 및 품질 평가 방법", startDate: "2026-07-01", endDate: "2026-07-10", type: "필수", hours: 14, regDate: "2026-06-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "신시밀러" },
+                        { id: 19, name: "의약품 품질 표준 및 규정", desc: "국제 의약품 품질 표준 및 국내 규정 비교", startDate: "2026-08-01", endDate: "2026-08-15", type: "선택", hours: 12, regDate: "2026-07-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "표표준" },
+                        { id: 20, name: "의약품 허가 후 변경사항 심사", desc: "의약품 허가 후 변경사항 심사 기준 및 절차", startDate: "2026-09-01", endDate: "2026-09-10", type: "필수", hours: 8, regDate: "2026-08-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "변변경" },
+                        { id: 21, name: "의약품 임상시험 윤리 심화", desc: "임상시험 윤리 위원회 운영 및 윤리적 고려사항", startDate: "2026-10-01", endDate: "2026-10-15", type: "필수", hours: 10, regDate: "2026-09-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "심윤리" },
+                        { id: 22, name: "의약품 데이터 무결성", desc: "의약품 개발 및 심사 과정의 데이터 무결성 보장", startDate: "2026-11-01", endDate: "2026-11-10", type: "선택", hours: 16, regDate: "2026-10-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "무무결" },
+                        { id: 23, name: "의약품 글로벌 규제 동향", desc: "주요 국가별 의약품 규제 동향 및 협력 방안", startDate: "2026-12-01", endDate: "2026-12-15", type: "선택", hours: 18, regDate: "2026-11-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "글로벌" },
+                        { id: 24, name: "의약품 심사 품질 관리", desc: "의약품 심사 과정의 품질 관리 및 개선 방안", startDate: "2027-01-15", endDate: "2027-01-25", type: "필수", hours: 12, regDate: "2026-12-25", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "품품질" },
+                        // 외부 교육기관 등록 교육과정
+                        { id: 25, name: "의약품 안전성 모니터링", desc: "의약품 안전성 모니터링 및 부작용 관리 실무", startDate: "2025-03-15", endDate: "2025-03-20", type: "필수", hours: 6, regDate: "2025-03-01", dataSource: "EXTERNAL", orgName: "외부 교육기관", registrant: "김안전" },
+                        { id: 26, name: "의약품 품질관리 전문가 과정", desc: "의약품 품질관리 전문가 양성을 위한 심화 과정", startDate: "2025-05-01", endDate: "2025-05-15", type: "선택", hours: 20, regDate: "2025-04-15", dataSource: "EXTERNAL", orgName: "외부 교육기관", registrant: "이품질" },
+                        { id: 27, name: "의약품 임상시험 윤리 심화", desc: "임상시험 윤리 위원회 운영 및 윤리적 고려사항", startDate: "2025-06-01", endDate: "2025-06-10", type: "필수", hours: 8, regDate: "2025-05-20", dataSource: "EXTERNAL", orgName: "외부 교육기관", registrant: "박윤리" },
+                        { id: 28, name: "의약품 데이터 무결성 관리", desc: "의약품 개발 및 심사 과정의 데이터 무결성 보장", startDate: "2025-08-01", endDate: "2025-08-15", type: "선택", hours: 12, regDate: "2025-07-20", dataSource: "EXTERNAL", orgName: "외부 교육기관", registrant: "최데이터" },
+                        { id: 29, name: "의약품 글로벌 규제 동향", desc: "주요 국가별 의약품 규제 동향 및 협력 방안", startDate: "2025-10-01", endDate: "2025-10-15", type: "선택", hours: 16, regDate: "2025-09-20", dataSource: "EXTERNAL", orgName: "외부 교육기관", registrant: "정글로벌" },
                     ],
-                    // ===== 더미 데이터 추가된 부분 =====
+                    // 심사자 정보 및 이수 기록
                     auditors: {
                         '홍길동': { info: { name: '홍길동', dept: '신약심사부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 2, date: '2025-04-20' },
-                            { id: 2, courseId: 1, date: '2025-02-15' },
+                            { id: 1, courseId: 2, date: '2025-04-20', status: '완료', dataSource: 'API', registrant: '홍길동', approve: '승인' },
+                            { id: 2, courseId: 1, date: '2025-02-15', status: '완료', dataSource: 'API', registrant: '홍길동', approve: '승인' },
+                            { id: 3, courseId: 25, date: '2025-03-18', status: '완료', dataSource: 'EXTERNAL', registrant: '홍길동', approve: '승인대기', auditorName: '홍길동', notes: '의약품 안전성 모니터링 교육을 수료했습니다. 수료증 첨부합니다.', fileName: '수료증_홍길동.pdf' },
                         ]},
                         '김철수': { info: { name: '김철수', dept: '허가총괄부', rank: '주무관' }, records: [
-                            { id: 1, courseId: 4, date: '2025-08-10' },
-                            { id: 2, courseId: 1, date: '2025-02-18' },
+                            { id: 1, courseId: 4, date: '2025-08-10', status: '완료', dataSource: 'API', registrant: '김철수', approve: '승인' },
+                            { id: 2, courseId: 1, date: '2025-02-18', status: '완료', dataSource: 'API', registrant: '김철수', approve: '승인' },
+                            { id: 4, courseId: 26, date: '2025-05-10', status: '완료', dataSource: 'EXTERNAL', registrant: '김철수', approve: '승인', auditorName: '김철수', notes: '의약품 품질관리 전문가 과정을 수료했습니다. 실무 경험을 바탕으로 교육을 이수했습니다.', fileName: '품질관리_수료증.pdf' },
                         ]},
                         '이영희': { info: { name: '이영희', dept: '신약심사부', rank: '연구관' }, records: [
-                             { id: 1, courseId: 5, date: '2025-10-21' },
-                             { id: 2, courseId: 3, date: '2025-07-16' },
-                             { id: 3, courseId: 1, date: '2025-02-20' },
+                             { id: 1, courseId: 5, date: '2025-10-21', status: '완료', dataSource: 'API', registrant: '이영희', approve: '승인' },
+                             { id: 2, courseId: 3, date: '2025-07-16', status: '완료', dataSource: 'API', registrant: '이영희', approve: '승인' },
+                             { id: 3, courseId: 1, date: '2025-02-20', status: '완료', dataSource: 'API', registrant: '이영희', approve: '승인' },
+                             { id: 4, courseId: 27, date: '2025-06-05', status: '완료', dataSource: 'EXTERNAL', registrant: '이영희', approve: '승인대기', auditorName: '이영희', notes: '의약품 임상시험 윤리 심화 교육을 수료했습니다. 수료증 첨부합니다.', fileName: '임상시험윤리_수료증_이영희.pdf' },
                         ]},
                         '박선우': { info: { name: '박선우', dept: '생물의약품부', rank: '선임연구관' }, records: [
-                             { id: 1, courseId: 1, date: '2025-02-11' },
-                             { id: 2, courseId: 4, date: '2025-08-05' },
+                             { id: 1, courseId: 1, date: '2025-02-11', status: '완료', dataSource: 'API', registrant: '박선우', approve: '승인' },
+                             { id: 2, courseId: 4, date: '2025-08-05', status: '완료', dataSource: 'API', registrant: '박선우', approve: '승인' },
+                             { id: 5, courseId: 28, date: '2025-08-10', status: '완료', dataSource: 'EXTERNAL', registrant: '박선우', approve: '반려', auditorName: '박선우', notes: '의약품 데이터 무결성 관리 교육을 수료했습니다. 수료증 첨부합니다.', fileName: '데이터무결성_수료증_박선우.pdf' },
                         ]},
                         '최민준': { info: { name: '최민준', dept: '신약심사부', rank: '심사원' }, records: [
-                             { id: 1, courseId: 1, date: '2025-09-05' },
+                             { id: 1, courseId: 1, date: '2025-09-05', status: '완료', dataSource: 'API', registrant: '최민준', approve: '승인' },
+                             { id: 6, courseId: 29, date: '2025-10-15', status: '완료', dataSource: 'EXTERNAL', registrant: '최민준', approve: '승인', auditorName: '최민준', notes: '의약품 글로벌 규제 동향 교육을 수료했습니다. 수료증 첨부합니다.', fileName: '글로벌규제_수료증_최민준.pdf' },
                         ]},
                         '정수진': { info: { name: '정수진', dept: '품질안전부', rank: '주무관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-25' },
-                            { id: 2, courseId: 3, date: '2025-07-20' },
+                            { id: 1, courseId: 1, date: '2025-02-25', status: '완료', dataSource: 'API', registrant: '정수진' },
+                            { id: 2, courseId: 3, date: '2025-07-20', status: '완료', dataSource: 'API', registrant: '정수진' },
                         ]},
                         '한지민': { info: { name: '한지민', dept: '품질안전부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 2, date: '2025-04-15' },
+                            { id: 1, courseId: 2, date: '2025-04-15', status: '완료', dataSource: 'API', registrant: '한지민' },
                         ]},
                         '송민호': { info: { name: '송민호', dept: '임상정책부', rank: '연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-28' },
-                            { id: 2, courseId: 5, date: '2025-10-25' },
+                            { id: 1, courseId: 1, date: '2025-02-28', status: '완료', dataSource: 'API', registrant: '송민호', approve: '승인' },
+                            { id: 2, courseId: 5, date: '2025-10-25', status: '완료', dataSource: 'API', registrant: '송민호', approve: '승인' },
+                            { id: 7, courseId: 25, date: '2025-03-20', status: '완료', dataSource: 'EXTERNAL', registrant: '송민호', approve: '승인대기', auditorName: '송민호', notes: '의약품 안전성 모니터링 교육을 수료했습니다. 수료증 첨부합니다.', fileName: '안전성모니터링_수료증_송민호.pdf' },
                         ]},
                         '윤서연': { info: { name: '윤서연', dept: '허가총괄부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 4, date: '2025-08-15' },
+                            { id: 1, courseId: 4, date: '2025-08-15', status: '완료', dataSource: 'API', registrant: '윤서연', approve: '승인' },
+                            { id: 8, courseId: 26, date: '2025-05-15', status: '완료', dataSource: 'EXTERNAL', registrant: '윤서연', approve: '승인', auditorName: '윤서연', notes: '의약품 품질관리 전문가 과정을 수료했습니다. 수료증 첨부합니다.', fileName: '품질관리전문가_수료증_윤서연.pdf' },
                         ]},
                         '임동현': { info: { name: '임동현', dept: '생물의약품부', rank: '주무관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-03-01' },
-                            { id: 2, courseId: 2, date: '2025-04-10' },
+                            { id: 1, courseId: 1, date: '2025-03-01', status: '완료', dataSource: 'API', registrant: '임동현', approve: '승인' },
+                            { id: 2, courseId: 2, date: '2025-04-10', status: '완료', dataSource: 'API', registrant: '임동현', approve: '승인' },
+                            { id: 9, courseId: 27, date: '2025-06-08', status: '완료', dataSource: 'EXTERNAL', registrant: '임동현', approve: '반려', auditorName: '임동현', notes: '의약품 임상시험 윤리 심화 교육을 수료했습니다. 수료증 첨부합니다.', fileName: '임상시험윤리_수료증_임동현.pdf' },
                         ]},
                         '김미영': { info: { name: '김미영', dept: '신약심사부', rank: '선임연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-15', approve: '승인' },
-                            { id: 2, courseId: 3, date: '2025-07-20', approve: '승인' },
-                            { id: 3, courseId: 6, date: '2025-03-10', approve: '승인' },
-                            { id: 4, courseId: 7, date: '2025-05-15', approve: '승인' },
-                            { id: 5, courseId: 9, date: '2025-09-10', approve: '승인' },
+                            { id: 1, courseId: 1, date: '2025-02-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '김미영' },
+                            { id: 2, courseId: 3, date: '2025-07-20', approve: '승인', status: '완료', dataSource: 'API', registrant: '김미영' },
+                            { id: 3, courseId: 6, date: '2025-03-10', approve: '승인', status: '완료', dataSource: 'API', registrant: '김미영' },
+                            { id: 4, courseId: 7, date: '2025-05-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '김미영' },
+                            { id: 5, courseId: 9, date: '2025-09-10', approve: '승인', status: '완료', dataSource: 'API', registrant: '김미영' },
                         ]},
                         '박준호': { info: { name: '박준호', dept: '허가총괄부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-20', approve: '승인' },
-                            { id: 2, courseId: 4, date: '2025-08-05', approve: '승인' },
-                            { id: 3, courseId: 6, date: '2025-03-12', approve: '승인' },
+                            { id: 1, courseId: 1, date: '2025-02-20', approve: '승인', status: '완료', dataSource: 'API', registrant: '박준호' },
+                            { id: 2, courseId: 4, date: '2025-08-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '박준호' },
+                            { id: 3, courseId: 6, date: '2025-03-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '박준호' },
                         ]},
                         '이수진': { info: { name: '이수진', dept: '품질안전부', rank: '연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-18', approve: '승인' },
-                            { id: 2, courseId: 2, date: '2025-04-25', approve: '승인' },
-                            { id: 3, courseId: 6, date: '2025-03-08', approve: '승인' },
-                            { id: 4, courseId: 8, date: '2025-06-05', approve: '승인' },
+                            { id: 1, courseId: 1, date: '2025-02-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '이수진' },
+                            { id: 2, courseId: 2, date: '2025-04-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '이수진' },
+                            { id: 3, courseId: 6, date: '2025-03-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '이수진' },
+                            { id: 4, courseId: 8, date: '2025-06-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '이수진' },
                         ]},
                         '최영수': { info: { name: '최영수', dept: '임상정책부', rank: '주무관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-22', approve: '승인' },
-                            { id: 2, courseId: 7, date: '2025-05-18', approve: '승인' },
+                            { id: 1, courseId: 1, date: '2025-02-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '최영수' },
+                            { id: 2, courseId: 7, date: '2025-05-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '최영수' },
                         ]},
                         '정다은': { info: { name: '정다은', dept: '생물의약품부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-25', approve: '승인' },
-                            { id: 2, courseId: 4, date: '2025-08-12', approve: '승인' },
-                            { id: 3, courseId: 11, date: '2025-12-05', approve: '승인' },
+                            { id: 1, courseId: 1, date: '2025-02-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '정다은' },
+                            { id: 2, courseId: 4, date: '2025-08-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '정다은' },
+                            { id: 3, courseId: 11, date: '2025-12-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '정다은' },
                         ]},
                         '한승우': { info: { name: '한승우', dept: '신약심사부', rank: '연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-28', approve: '승인' },
-                            { id: 2, courseId: 3, date: '2025-07-25', approve: '승인' },
-                            { id: 3, courseId: 5, date: '2025-10-25', approve: '승인' },
-                            { id: 4, courseId: 6, date: '2025-03-15', approve: '승인' },
-                            { id: 5, courseId: 7, date: '2025-05-20', approve: '승인' },
-                            { id: 6, courseId: 9, date: '2025-09-12', approve: '승인' },
+                            { id: 1, courseId: 1, date: '2025-02-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '한승우' },
+                            { id: 2, courseId: 3, date: '2025-07-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '한승우' },
+                            { id: 3, courseId: 5, date: '2025-10-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '한승우' },
+                            { id: 4, courseId: 6, date: '2025-03-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '한승우' },
+                            { id: 5, courseId: 7, date: '2025-05-20', approve: '승인', status: '완료', dataSource: 'API', registrant: '한승우' },
+                            { id: 6, courseId: 9, date: '2025-09-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '한승우' },
                         ]},
                         '윤지현': { info: { name: '윤지현', dept: '허가총괄부', rank: '선임연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-10', approve: '승인' },
-                            { id: 2, courseId: 2, date: '2025-04-20', approve: '승인' },
-                            { id: 3, courseId: 6, date: '2025-03-05', approve: '승인' },
-                            { id: 4, courseId: 8, date: '2025-06-08', approve: '승인' },
-                            { id: 5, courseId: 10, date: '2025-11-05', approve: '승인' },
+                            { id: 1, courseId: 1, date: '2025-02-10', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤지현' },
+                            { id: 2, courseId: 2, date: '2025-04-20', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤지현' },
+                            { id: 3, courseId: 6, date: '2025-03-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤지현' },
+                            { id: 4, courseId: 8, date: '2025-06-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤지현' },
+                            { id: 5, courseId: 10, date: '2025-11-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤지현' },
                         ]},
                         '강민석': { info: { name: '강민석', dept: '품질안전부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-12', approve: '승인' },
-                            { id: 2, courseId: 6, date: '2025-03-18', approve: '승인' },
+                            { id: 1, courseId: 1, date: '2025-02-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '강민석' },
+                            { id: 2, courseId: 6, date: '2025-03-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '강민석' },
                         ]},
                         '조현아': { info: { name: '조현아', dept: '임상정책부', rank: '연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-16', approve: '승인' },
-                            { id: 2, courseId: 7, date: '2025-05-12', approve: '승인' },
-                            { id: 3, courseId: 12, date: '2026-01-18', approve: '승인' },
+                            { id: 1, courseId: 1, date: '2025-02-16', approve: '승인', status: '완료', dataSource: 'API', registrant: '조현아' },
+                            { id: 2, courseId: 7, date: '2025-05-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '조현아' },
+                            { id: 3, courseId: 12, date: '2026-01-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '조현아' },
                         ]},
                         '서동현': { info: { name: '서동현', dept: '신약심사부', rank: '주무관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-14', approve: '승인' },
-                            { id: 2, courseId: 6, date: '2025-03-20', approve: '승인' },
-                            { id: 3, courseId: 7, date: '2025-05-25', approve: '승인' },
+                            { id: 1, courseId: 1, date: '2025-02-14', approve: '승인', status: '완료', dataSource: 'API', registrant: '서동현' },
+                            { id: 2, courseId: 6, date: '2025-03-20', approve: '승인', status: '완료', dataSource: 'API', registrant: '서동현' },
+                            { id: 3, courseId: 7, date: '2025-05-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '서동현' },
                         ]},
                         '김태영': { info: { name: '김태영', dept: '허가총괄부', rank: '연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-19', approve: '승인' },
-                            { id: 2, courseId: 4, date: '2025-08-08', approve: '승인' },
-                            { id: 3, courseId: 6, date: '2025-03-25', approve: '승인' },
-                            { id: 4, courseId: 8, date: '2025-06-12', approve: '승인' },
+                            { id: 1, courseId: 1, date: '2025-02-19', approve: '승인', status: '완료', dataSource: 'API', registrant: '김태영' },
+                            { id: 2, courseId: 4, date: '2025-08-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '김태영' },
+                            { id: 3, courseId: 6, date: '2025-03-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '김태영' },
+                            { id: 4, courseId: 8, date: '2025-06-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '김태영' },
                         ]},
                         '박소연': { info: { name: '박소연', dept: '생물의약품부', rank: '선임연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-11', approve: '승인' },
-                            { id: 2, courseId: 3, date: '2025-07-18', approve: '승인' },
-                            { id: 3, courseId: 4, date: '2025-08-15', approve: '승인' },
-                            { id: 4, courseId: 6, date: '2025-03-22', approve: '승인' },
-                            { id: 5, courseId: 7, date: '2025-05-28', approve: '승인' },
-                            { id: 6, courseId: 9, date: '2025-09-18', approve: '승인' },
-                            { id: 7, courseId: 11, date: '2025-12-08', approve: '승인' },
+                            { id: 1, courseId: 1, date: '2025-02-11', approve: '승인', status: '완료', dataSource: 'API', registrant: '박소연' },
+                            { id: 2, courseId: 3, date: '2025-07-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '박소연' },
+                            { id: 3, courseId: 4, date: '2025-08-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '박소연' },
+                            { id: 4, courseId: 6, date: '2025-03-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '박소연' },
+                            { id: 5, courseId: 7, date: '2025-05-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '박소연' },
+                            { id: 6, courseId: 9, date: '2025-09-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '박소연' },
+                            { id: 7, courseId: 11, date: '2025-12-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '박소연' },
                         ]},
                         '이준호': { info: { name: '이준호', dept: '품질안전부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-13', approve: '승인' },
-                            { id: 2, courseId: 6, date: '2025-03-28', approve: '승인' },
+                            { id: 1, courseId: 1, date: '2025-02-13', approve: '승인', status: '완료', dataSource: 'API', registrant: '이준호' },
+                            { id: 2, courseId: 6, date: '2025-03-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '이준호' },
                         ]},
                         '최수진': { info: { name: '최수진', dept: '임상정책부', rank: '주무관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-17', approve: '승인' },
-                            { id: 2, courseId: 7, date: '2025-05-22', approve: '승인' },
-                            { id: 3, courseId: 12, date: '2026-01-22', approve: '승인' },
+                            { id: 1, courseId: 1, date: '2025-02-17', approve: '승인', status: '완료', dataSource: 'API', registrant: '최수진' },
+                            { id: 2, courseId: 7, date: '2025-05-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '최수진' },
+                            { id: 3, courseId: 12, date: '2026-01-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '최수진' },
                         ]},
                         '정민수': { info: { name: '정민수', dept: '신약심사부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-21', approve: '승인' },
-                            { id: 2, courseId: 6, date: '2025-03-30', approve: '승인' },
-                            { id: 3, courseId: 7, date: '2025-05-30', approve: '승인' },
-                            { id: 4, courseId: 9, date: '2025-09-25', approve: '승인' },
+                            { id: 1, courseId: 1, date: '2025-02-21', approve: '승인', status: '완료', dataSource: 'API', registrant: '정민수' },
+                            { id: 2, courseId: 6, date: '2025-03-30', approve: '승인', status: '완료', dataSource: 'API', registrant: '정민수' },
+                            { id: 3, courseId: 7, date: '2025-05-30', approve: '승인', status: '완료', dataSource: 'API', registrant: '정민수' },
+                            { id: 4, courseId: 9, date: '2025-09-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '정민수' },
+                        ]},
+                        '한지훈': { info: { name: '한지훈', dept: '허가총괄부', rank: '연구관' }, records: [
+                            { id: 1, courseId: 1, date: '2025-02-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '한지훈' },
+                            { id: 2, courseId: 2, date: '2025-04-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '한지훈' },
+                            { id: 3, courseId: 4, date: '2025-08-20', approve: '승인', status: '완료', dataSource: 'API', registrant: '한지훈' },
+                            { id: 4, courseId: 6, date: '2025-04-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '한지훈' },
+                            { id: 5, courseId: 8, date: '2025-06-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '한지훈' },
+                        ]},
+                        '김하늘': { info: { name: '김하늘', dept: '생물의약품부', rank: '주무관' }, records: [
+                            { id: 1, courseId: 1, date: '2025-02-23', approve: '승인', status: '완료', dataSource: 'API', registrant: '김하늘' },
+                            { id: 2, courseId: 3, date: '2025-07-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '김하늘' },
+                            { id: 3, courseId: 4, date: '2025-08-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '김하늘' },
+                            { id: 4, courseId: 6, date: '2025-04-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '김하늘' },
+                        ]},
+                        '박성민': { info: { name: '박성민', dept: '품질안전부', rank: '선임연구관' }, records: [
+                            { id: 1, courseId: 1, date: '2025-02-24', approve: '승인', status: '완료', dataSource: 'API', registrant: '박성민' },
+                            { id: 2, courseId: 2, date: '2025-04-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '박성민' },
+                            { id: 3, courseId: 5, date: '2025-10-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '박성민' },
+                            { id: 4, courseId: 6, date: '2025-04-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '박성민' },
+                            { id: 5, courseId: 7, date: '2025-06-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '박성민' },
+                            { id: 6, courseId: 8, date: '2025-06-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '박성민' },
+                            { id: 7, courseId: 9, date: '2025-09-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '박성민' },
+                        ]},
+                        '이서연': { info: { name: '이서연', dept: '임상정책부', rank: '심사원' }, records: [
+                            { id: 1, courseId: 1, date: '2025-02-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '이서연' },
+                            { id: 2, courseId: 7, date: '2025-06-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '이서연' },
+                            { id: 3, courseId: 12, date: '2026-01-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '이서연' },
                         ]},
                         '한미영': { info: { name: '한미영', dept: '허가총괄부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-23', approve: '승인' },
-                            { id: 2, courseId: 2, date: '2025-04-28', approve: '승인' },
-                            { id: 3, courseId: 6, date: '2025-04-02', approve: '승인' },
+                            { id: 1, courseId: 1, date: '2025-02-23', approve: '승인', status: '완료', dataSource: 'API', registrant: '한미영' },
+                            { id: 2, courseId: 2, date: '2025-04-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '한미영' },
+                            { id: 3, courseId: 6, date: '2025-04-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '한미영' },
+                        ]},
+                        '최동현': { info: { name: '최동현', dept: '신약심사부', rank: '연구관' }, records: [
+                            { id: 1, courseId: 1, date: '2025-02-26', approve: '승인', status: '완료', dataSource: 'API', registrant: '최동현' },
+                            { id: 2, courseId: 2, date: '2025-05-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '최동현' },
+                            { id: 3, courseId: 3, date: '2025-07-30', approve: '승인', status: '완료', dataSource: 'API', registrant: '최동현' },
+                            { id: 4, courseId: 4, date: '2025-08-30', approve: '승인', status: '완료', dataSource: 'API', registrant: '최동현' },
+                            { id: 5, courseId: 6, date: '2025-04-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '최동현' },
+                        ]},
+                        '강예린': { info: { name: '강예린', dept: '허가총괄부', rank: '주무관' }, records: [
+                            { id: 1, courseId: 1, date: '2025-02-27', approve: '승인', status: '완료', dataSource: 'API', registrant: '강예린' },
+                            { id: 2, courseId: 2, date: '2025-05-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '강예린' },
+                            { id: 3, courseId: 4, date: '2025-09-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '강예린' },
+                            { id: 4, courseId: 6, date: '2025-04-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '강예린' },
+                            { id: 5, courseId: 8, date: '2025-06-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '강예린' },
+                        ]},
+                        '윤태준': { info: { name: '윤태준', dept: '생물의약품부', rank: '심사원' }, records: [
+                            { id: 1, courseId: 1, date: '2025-02-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤태준' },
+                            { id: 2, courseId: 3, date: '2025-08-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤태준' },
+                            { id: 3, courseId: 4, date: '2025-09-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤태준' },
+                            { id: 4, courseId: 6, date: '2025-04-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤태준' },
+                        ]},
+                        '조민지': { info: { name: '조민지', dept: '품질안전부', rank: '연구관' }, records: [
+                            { id: 1, courseId: 1, date: '2025-03-01', approve: '승인', status: '완료', dataSource: 'API', registrant: '조민지' },
+                            { id: 2, courseId: 2, date: '2025-05-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '조민지' },
+                            { id: 3, courseId: 5, date: '2025-10-30', approve: '승인', status: '완료', dataSource: 'API', registrant: '조민지' },
+                            { id: 4, courseId: 6, date: '2025-04-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '조민지' },
+                            { id: 5, courseId: 7, date: '2025-06-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '조민지' },
+                            { id: 6, courseId: 8, date: '2025-06-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '조민지' },
+                        ]},
+                        '서준호': { info: { name: '서준호', dept: '임상정책부', rank: '선임연구관' }, records: [
+                            { id: 1, courseId: 1, date: '2025-03-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '서준호' },
+                            { id: 2, courseId: 3, date: '2025-08-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '서준호' },
+                            { id: 3, courseId: 4, date: '2025-09-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '서준호' },
+                            { id: 4, courseId: 6, date: '2025-04-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '서준호' },
+                            { id: 5, courseId: 7, date: '2025-06-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '서준호' },
+                            { id: 6, courseId: 9, date: '2025-09-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '서준호' },
+                            { id: 7, courseId: 11, date: '2025-12-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '서준호' },
+                        ]},
+                        '김다은': { info: { name: '김다은', dept: '신약심사부', rank: '주무관' }, records: [
+                            { id: 1, courseId: 1, date: '2025-03-03', approve: '승인', status: '완료', dataSource: 'API', registrant: '김다은' },
+                            { id: 2, courseId: 2, date: '2025-05-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '김다은' },
+                            { id: 3, courseId: 6, date: '2025-04-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '김다은' },
+                            { id: 4, courseId: 7, date: '2025-06-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '김다은' },
+                        ]},
+                        '박지훈': { info: { name: '박지훈', dept: '허가총괄부', rank: '심사원' }, records: [
+                            { id: 1, courseId: 1, date: '2025-03-04', approve: '승인', status: '완료', dataSource: 'API', registrant: '박지훈' },
+                            { id: 2, courseId: 2, date: '2025-05-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '박지훈' },
+                            { id: 3, courseId: 4, date: '2025-09-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '박지훈' },
+                            { id: 4, courseId: 6, date: '2025-05-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '박지훈' },
+                            { id: 5, courseId: 8, date: '2025-06-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '박지훈' },
+                        ]},
+                        '이하늘': { info: { name: '이하늘', dept: '생물의약품부', rank: '연구관' }, records: [
+                            { id: 1, courseId: 1, date: '2025-03-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '이하늘' },
+                            { id: 2, courseId: 3, date: '2025-08-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '이하늘' },
+                            { id: 3, courseId: 4, date: '2025-09-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '이하늘' },
+                            { id: 4, courseId: 6, date: '2025-05-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '이하늘' },
+                            { id: 5, courseId: 7, date: '2025-06-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '이하늘' },
+                        ]},
+                        '최서윤': { info: { name: '최서윤', dept: '품질안전부', rank: '선임연구관' }, records: [
+                            { id: 1, courseId: 1, date: '2025-03-06', approve: '승인', status: '완료', dataSource: 'API', registrant: '최서윤' },
+                            { id: 2, courseId: 2, date: '2025-05-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '최서윤' },
+                            { id: 3, courseId: 5, date: '2025-11-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '최서윤' },
+                            { id: 4, courseId: 6, date: '2025-05-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '최서윤' },
+                            { id: 5, courseId: 7, date: '2025-06-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '최서윤' },
+                            { id: 6, courseId: 8, date: '2025-07-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '최서윤' },
+                            { id: 7, courseId: 9, date: '2025-09-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '최서윤' },
+                            { id: 8, courseId: 11, date: '2025-12-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '최서윤' },
                         ]},
                         '윤성민': { info: { name: '윤성민', dept: '생물의약품부', rank: '연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-26', approve: '승인' },
-                            { id: 2, courseId: 4, date: '2025-08-18', approve: '승인' },
-                            { id: 3, courseId: 6, date: '2025-04-05', approve: '승인' },
-                            { id: 5, courseId: 10, date: '2025-11-08', approve: '승인' },
+                            { id: 1, courseId: 1, date: '2025-02-26', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤성민' },
+                            { id: 2, courseId: 4, date: '2025-08-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤성민' },
+                            { id: 3, courseId: 6, date: '2025-04-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤성민' },
+                            { id: 5, courseId: 10, date: '2025-11-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤성민' },
+                        ]},
+                        '강민재': { info: { name: '강민재', dept: '임상정책부', rank: '주무관' }, records: [
+                            { id: 1, courseId: 1, date: '2025-03-07', approve: '승인', status: '완료', dataSource: 'API', registrant: '강민재' },
+                            { id: 2, courseId: 7, date: '2025-06-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '강민재' },
+                            { id: 3, courseId: 12, date: '2026-01-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '강민재' },
+                        ]},
+                        '윤서준': { info: { name: '윤서준', dept: '신약심사부', rank: '심사원' }, records: [
+                            { id: 1, courseId: 1, date: '2025-03-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤서준' },
+                            { id: 2, courseId: 2, date: '2025-05-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤서준' },
+                            { id: 3, courseId: 3, date: '2025-08-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤서준' },
+                            { id: 4, courseId: 6, date: '2025-05-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤서준' },
+                            { id: 5, courseId: 7, date: '2025-06-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤서준' },
+                        ]},
+                        '조하린': { info: { name: '조하린', dept: '허가총괄부', rank: '연구관' }, records: [
+                            { id: 1, courseId: 1, date: '2025-03-09', approve: '승인', status: '완료', dataSource: 'API', registrant: '조하린' },
+                            { id: 2, courseId: 2, date: '2025-05-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '조하린' },
+                            { id: 3, courseId: 4, date: '2025-09-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '조하린' },
+                            { id: 4, courseId: 6, date: '2025-05-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '조하린' },
+                            { id: 5, courseId: 8, date: '2025-07-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '조하린' },
+                        ]},
+                        '서지민': { info: { name: '서지민', dept: '생물의약품부', rank: '선임연구관' }, records: [
+                            { id: 1, courseId: 1, date: '2025-03-10', approve: '승인', status: '완료', dataSource: 'API', registrant: '서지민' },
+                            { id: 2, courseId: 3, date: '2025-08-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '서지민' },
+                            { id: 3, courseId: 4, date: '2025-09-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '서지민' },
+                            { id: 4, courseId: 6, date: '2025-05-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '서지민' },
+                            { id: 5, courseId: 7, date: '2025-07-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '서지민' },
+                            { id: 6, courseId: 9, date: '2025-10-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '서지민' },
+                        ]},
+                        '김도현': { info: { name: '김도현', dept: '품질안전부', rank: '주무관' }, records: [
+                            { id: 1, courseId: 1, date: '2025-03-11', approve: '승인', status: '완료', dataSource: 'API', registrant: '김도현' },
+                            { id: 2, courseId: 2, date: '2025-05-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '김도현' },
+                            { id: 3, courseId: 5, date: '2025-11-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '김도현' },
+                            { id: 4, courseId: 6, date: '2025-05-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '김도현' },
+                            { id: 5, courseId: 7, date: '2025-07-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '김도현' },
+                        ]},
+                        '박서연': { info: { name: '박서연', dept: '임상정책부', rank: '심사원' }, records: [
+                            { id: 1, courseId: 1, date: '2025-03-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '박서연' },
+                            { id: 2, courseId: 7, date: '2025-07-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '박서연' },
+                            { id: 3, courseId: 12, date: '2026-02-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '박서연' },
+                        ]},
+                        '이준서': { info: { name: '이준서', dept: '신약심사부', rank: '연구관' }, records: [
+                            { id: 1, courseId: 1, date: '2025-03-13', approve: '승인', status: '완료', dataSource: 'API', registrant: '이준서' },
+                            { id: 2, courseId: 2, date: '2025-06-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '이준서' },
+                            { id: 3, courseId: 3, date: '2025-08-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '이준서' },
+                            { id: 4, courseId: 4, date: '2025-09-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '이준서' },
+                            { id: 5, courseId: 6, date: '2025-05-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '이준서' },
+                        ]},
+                        '최민지': { info: { name: '최민지', dept: '허가총괄부', rank: '선임연구관' }, records: [
+                            { id: 1, courseId: 1, date: '2025-03-14', approve: '승인', status: '완료', dataSource: 'API', registrant: '최민지' },
+                            { id: 2, courseId: 2, date: '2025-06-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '최민지' },
+                            { id: 3, courseId: 4, date: '2025-09-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '최민지' },
+                            { id: 4, courseId: 6, date: '2025-05-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '최민지' },
+                            { id: 5, courseId: 7, date: '2025-07-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '최민지' },
+                            { id: 6, courseId: 8, date: '2025-07-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '최민지' },
+                            { id: 7, courseId: 9, date: '2025-10-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '최민지' },
+                            { id: 8, courseId: 11, date: '2025-12-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '최민지' },
+                        ]},
+                        '정하늘': { info: { name: '정하늘', dept: '생물의약품부', rank: '주무관' }, records: [
+                            { id: 1, courseId: 1, date: '2025-03-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '정하늘' },
+                            { id: 2, courseId: 3, date: '2025-08-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '정하늘' },
+                            { id: 3, courseId: 4, date: '2025-10-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '정하늘' },
+                            { id: 4, courseId: 6, date: '2025-06-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '정하늘' },
+                        ]},
+                        '한서준': { info: { name: '한서준', dept: '품질안전부', rank: '심사원' }, records: [
+                            { id: 1, courseId: 1, date: '2025-03-16', approve: '승인', status: '완료', dataSource: 'API', registrant: '한서준' },
+                            { id: 2, courseId: 2, date: '2025-06-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '한서준' },
+                            { id: 3, courseId: 5, date: '2025-11-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '한서준' },
+                            { id: 4, courseId: 6, date: '2025-06-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '한서준' },
+                            { id: 5, courseId: 7, date: '2025-07-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '한서준' },
+                        ]},
+                        '김지우': { info: { name: '김지우', dept: '임상정책부', rank: '연구관' }, records: [
+                            { id: 1, courseId: 1, date: '2025-03-17', approve: '승인', status: '완료', dataSource: 'API', registrant: '김지우' },
+                            { id: 2, courseId: 7, date: '2025-07-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '김지우' },
+                            { id: 3, courseId: 9, date: '2025-10-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '김지우' },
+                            { id: 4, courseId: 12, date: '2026-02-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '김지우' },
+                        ]},
+                        '박민수': { info: { name: '박민수', dept: '신약심사부', rank: '선임연구관' }, records: [
+                            { id: 1, courseId: 1, date: '2025-03-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '박민수' },
+                            { id: 2, courseId: 2, date: '2025-06-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '박민수' },
+                            { id: 3, courseId: 3, date: '2025-08-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '박민수' },
+                            { id: 4, courseId: 4, date: '2025-10-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '박민수' },
+                            { id: 5, courseId: 6, date: '2025-06-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '박민수' },
+                            { id: 6, courseId: 7, date: '2025-07-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '박민수' },
+                            { id: 7, courseId: 8, date: '2025-07-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '박민수' },
+                            { id: 8, courseId: 9, date: '2025-10-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '박민수' },
                         ]},
                         '강지은': { info: { name: '강지은', dept: '품질안전부', rank: '선임연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-09', approve: '승인' },
-                            { id: 2, courseId: 2, date: '2025-04-22', approve: '승인' },
-                            { id: 3, courseId: 6, date: '2025-03-28', approve: '승인' },
-                            { id: 4, courseId: 8, date: '2025-06-15', approve: '승인' },
-                            { id: 5, courseId: 10, date: '2025-11-12', approve: '승인' },
+                            { id: 1, courseId: 1, date: '2025-02-09', approve: '승인', status: '완료', dataSource: 'API', registrant: '강지은' },
+                            { id: 2, courseId: 2, date: '2025-04-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '강지은' },
+                            { id: 3, courseId: 6, date: '2025-03-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '강지은' },
+                            { id: 4, courseId: 8, date: '2025-06-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '강지은' },
+                            { id: 5, courseId: 10, date: '2025-11-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '강지은' },
                         ]},
                         '조현우': { info: { name: '조현우', dept: '임상정책부', rank: '연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-24', approve: '승인' },
-                            { id: 2, courseId: 7, date: '2025-05-26', approve: '승인' },
-                            { id: 3, courseId: 12, date: '2026-01-25', approve: '승인' },
+                            { id: 1, courseId: 1, date: '2025-02-24', approve: '승인', status: '완료', dataSource: 'API', registrant: '조현우' },
+                            { id: 2, courseId: 7, date: '2025-05-26', approve: '승인', status: '완료', dataSource: 'API', registrant: '조현우' },
+                            { id: 3, courseId: 12, date: '2026-01-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '조현우' },
                         ]}
                     }
                     // ===================================
@@ -471,39 +886,86 @@
         const renderAll = () => {
             renderCourseTable();
             renderRecordTable();
-            renderReportTable();
-            renderRequiredEducationTable();
         };
 
         const renderCourseTable = (filterFn = () => true) => {
             const tbody = document.querySelector('#courseTable tbody');
             tbody.innerHTML = '';
-            db.courses.filter(filterFn).forEach(c => {
+            const filteredCourses = db.courses.filter(filterFn);
+            
+            // 검색 결과 개수 표시
+            const searchResultInfo = document.getElementById('searchResultInfo');
+            if (searchResultInfo) {
+                searchResultInfo.textContent = `검색 결과: ${filteredCourses.length}건`;
+            }
+            
+            if (filteredCourses.length === 0) {
+                const row = tbody.insertRow();
+                row.innerHTML = '<td colspan="10" style="text-align: center; padding: 40px; color: var(--muted);">검색 조건에 맞는 교육과정이 없습니다.</td>';
+                return;
+            }
+            
+            filteredCourses.forEach(c => {
                 const row = tbody.insertRow();
                 row.dataset.id = c.id;
-                row.innerHTML = `
-                    <td>${c.id}</td><td>${c.name}</td><td>${c.desc || '교육과정 상세정보'}</td><td>${c.startDate} ~ ${c.endDate}</td>
-                    <td><span class="status ${c.type === '필수' ? 'ok' : 'wait'}">${c.type}</span></td><td>${c.hours}</td><td>${c.regDate}</td>
-                    <td><div class="manage-buttons">
+                
+                // 데이터 소스 표시
+                let dataSourceDisplay = '';
+                if (c.dataSource === 'API') {
+                    dataSourceDisplay = '<span class="status ok">평가원 교육관리시스템</span>';
+                } else if (c.dataSource === 'EXTERNAL') {
+                    dataSourceDisplay = '<span class="status wait">외부 교육기관</span>';
+                } else {
+                    dataSourceDisplay = '<span class="status bad">미분류</span>';
+                }
+                
+                // 관리 버튼 (API 데이터는 수정/삭제 불가)
+                let manageButtons = '';
+                if (c.dataSource === 'API') {
+                    manageButtons = '<div class="manage-buttons"><button class="btn btn-secondary" style="height:30px;padding:0 10px;" disabled>평가원 데이터</button></div>';
+                } else {
+                    manageButtons = `
+                        <div class="manage-buttons">
                         <button class="btn btn-secondary btn-edit-course" style="height:30px;padding:0 10px;">수정</button>
                         <button class="btn btn-danger btn-delete-course" style="height:30px;padding:0 10px;">삭제</button>
-                    </div></td>`;
+                        </div>`;
+                }
+                
+                row.innerHTML = `
+                    <td>${c.id}</td>
+                    <td>${c.name}</td>
+                    <td>${c.desc || '교육과정 상세정보'}</td>
+                    <td>${c.startDate} ~ ${c.endDate}</td>
+                    <td><span class="status ${c.type === '필수' ? 'ok' : 'wait'}">${c.type}</span></td>
+                    <td>${c.hours}</td>
+                    <td>${dataSourceDisplay}</td>
+                    <td>${c.registrant || '-'}</td>
+                    <td>${c.regDate}</td>
+                    <td>${manageButtons}</td>`;
             });
         };
+
+        // 전역 변수로 현재 표시된 기록들을 저장
+        let currentDisplayedRecords = [];
 
         const renderRecordTable = () => {
             const dept = document.getElementById('deptSelect')?.value || '전체';
             const nameFilter = document.getElementById('auditorNameInput')?.value || '';
+            console.log('renderRecordTable 호출 - 부서:', dept, '이름 필터:', nameFilter);
+            
             const tbody = document.querySelector('#recordTable tbody');
             tbody.innerHTML = '';
+            currentDisplayedRecords = []; // 초기화
 
             // 부서별로 심사자 필터링
             let filteredAuditors = Object.entries(db.auditors);
+            console.log('전체 심사자 수:', filteredAuditors.length);
             
             if (dept !== '전체') {
                 filteredAuditors = filteredAuditors.filter(([name, auditor]) => 
                     auditor.info.dept === dept
                 );
+                console.log('부서 필터링 후 심사자 수:', filteredAuditors.length, '부서:', dept);
             }
             
             if (nameFilter) {
@@ -513,28 +975,70 @@
             }
 
             if (filteredAuditors.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9">검색 결과가 없습니다.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="11">검색 결과가 없습니다.</td></tr>';
                 return;
             }
 
-            // 부서에 속한 모든 심사자 결과 표시
+            // 부서에 속한 모든 심사자 결과 표시 (이수 기록만)
             filteredAuditors.forEach(([name, auditor]) => {
-                const completedCourseIds = new Set(auditor.records.map(r => r.courseId));
                 let recordsToDisplay = auditor.records.map(r => {
                     const course = db.courses.find(c => c.id === r.courseId);
-                    return { ...r, ...course, status: 'completed', approve: r.approve || '승인대기', auditorName: name, auditorDept: auditor.info.dept, auditorRank: auditor.info.rank };
+                    return { 
+                        ...r, 
+                        // course 정보는 별도 필드로 추가 (ID 충돌 방지)
+                        courseName: course?.name,
+                        courseDesc: course?.desc,
+                        courseStartDate: course?.startDate,
+                        courseEndDate: course?.endDate,
+                        courseType: course?.type,
+                        courseHours: course?.hours,
+                        courseRegDate: course?.regDate,
+                        courseOrgName: course?.orgName,
+                        courseRegistrant: course?.registrant,
+                        status: 'completed', 
+                        // 원본 approve 값 사용 (없으면 외부 교육기관은 승인대기, API는 승인)
+                        approve: (() => {
+                            // 원본 데이터에 approve 값이 있으면 그대로 사용
+                            if (r.approve !== undefined && r.approve !== null && r.approve !== '') {
+                                console.log('Using original approve value:', r.approve, 'for record:', r.id);
+                                return r.approve;
+                            }
+                            // 원본 데이터에 approve 값이 없으면 기본값 설정
+                            const result = r.dataSource === 'EXTERNAL' ? '승인대기' : '승인';
+                            console.log('Using default approve value:', result, 'for record:', r.id);
+                            return result;
+                        })(),
+                        auditorName: name, 
+                        auditorDept: auditor.info.dept, 
+                        auditorRank: auditor.info.rank,
+                        // 승인대기 상태면 항상 EXTERNAL로 표시, 아니면 원본 dataSource 사용
+                        dataSource: (() => {
+                            const originalApprove = r.approve;
+                            const originalDataSource = r.dataSource;
+                            const result = (originalApprove === '승인대기' || originalDataSource === 'EXTERNAL') ? 'EXTERNAL' : (originalDataSource || 'EXTERNAL');
+                            console.log('Data source processing for record', r.id, 'originalApprove:', originalApprove, 'originalDataSource:', originalDataSource, 'result:', result);
+                            return result;
+                        })(),
+                        registrant: r.registrant || name
+                    };
                 });
-
-                // 필수 미이수 과목 추가
-                db.courses.filter(c => c.type === '필수' && !completedCourseIds.has(c.id))
-                    .forEach(c => recordsToDisplay.push({ ...c, id: `m${c.id}`, date: '-', status: 'missing', auditorName: name, auditorDept: auditor.info.dept, auditorRank: auditor.info.rank }));
                 
                 recordsToDisplay.forEach(rec => {
                     const row = tbody.insertRow();
                     row.dataset.id = rec.id;
                     row.dataset.courseId = rec.courseId;
+                    row.dataset.approve = rec.approve || '승인';
                     
-                    // 상태 표시 (승인/반려/대기/미이수)
+                    // 원본 기록 ID를 보존하기 위해 originalId 추가 (심사자별 고유 ID)
+                    const recordWithOriginalId = {
+                        ...rec,
+                        originalId: `${name}_${rec.id}` // 심사자명_원본ID로 고유 ID 생성
+                    };
+                    
+                    // 현재 표시된 기록에 추가
+                    currentDisplayedRecords.push(recordWithOriginalId);
+                    
+                    // 상태 표시 (승인/반려/대기)
                     let statusDisplay = '-';
                     if (rec.status === 'completed') {
                         if (rec.approve === '승인') {
@@ -544,211 +1048,547 @@
                         } else {
                             statusDisplay = '<span class="status wait">승인대기</span>';
                         }
-                    } else if (rec.status === 'missing') {
-                        statusDisplay = '<span class="status bad">미이수</span>';
                     }
                     
-                    // 관리 버튼 단순화
+                    // 관리 버튼 (API 데이터는 수정/삭제 불가)
                     let manageButtons = '-';
                     if (rec.status === 'completed') {
-                        if (rec.approve === '승인대기') {
+                        if (rec.dataSource === 'API') {
+                            manageButtons = '<div class="manage-buttons"><button class="btn btn-secondary" style="height:28px;padding:0 8px;font-size:12px;" disabled>API 데이터</button></div>';
+                        } else if (rec.approve === '승인대기') {
                             manageButtons = `
                                 <div class="manage-buttons">
                                     <button class="btn btn-primary btn-approve-record" style="height:28px;padding:0 8px;font-size:12px;">승인</button>
                                     <button class="btn btn-danger btn-reject-record" style="height:28px;padding:0 8px;font-size:12px;">반려</button>
                                     <button class="btn btn-secondary btn-edit-record" style="height:28px;padding:0 8px;font-size:12px;">수정</button>
+                                </div>
+                                <div class="click-hint" style="font-size:11px;color:var(--muted);margin-top:4px;">
+                                    💡 행을 클릭하여 증빙자료 확인
                                 </div>`;
                         } else {
+                            // 승인 또는 반려된 기록은 수정 불가, 삭제만 가능
                             manageButtons = `
                                 <div class="manage-buttons">
-                                    <button class="btn btn-secondary btn-edit-record" style="height:28px;padding:0 8px;font-size:12px;">수정</button>
                                     <button class="btn btn-danger btn-delete-record" style="height:28px;padding:0 8px;font-size:12px;">삭제</button>
                                 </div>`;
                         }
                     }
                     
+                    // 데이터 소스 표시 (승인대기 상태면 항상 외부 교육기관으로 표시)
+                    let dataSourceDisplay = '';
+                    if (rec.approve === '승인대기') {
+                        dataSourceDisplay = '<span class="status wait">외부 교육기관</span>';
+                    } else if (rec.dataSource === 'API') {
+                        dataSourceDisplay = '<span class="status ok">평가원 교육관리시스템</span>';
+                    } else if (rec.dataSource === 'EXTERNAL') {
+                        dataSourceDisplay = '<span class="status wait">외부 교육기관</span>';
+                    } else {
+                        dataSourceDisplay = '<span class="status bad">미분류</span>';
+                    }
+                    
                     row.innerHTML = `
-                        <td>${rec.auditorName}</td>
-                        <td>${rec.auditorDept}</td>
-                        <td>${rec.auditorRank}</td>
-                        <td>${rec.name}</td>
-                        <td>${rec.date}</td>
-                        <td><span class="status ${rec.type === '필수' ? 'ok' : 'wait'}">${rec.type}</span></td>
-                        <td>${rec.hours}</td>
+                        <td>${rec.auditorName || '-'}</td>
+                        <td>${rec.auditorDept || '-'}</td>
+                        <td>${rec.auditorRank || '-'}</td>
+                        <td>${rec.courseName || '-'}</td>
+                        <td>${rec.date || '-'}</td>
+                        <td><span class="status ${rec.courseType === '필수' ? 'ok' : 'wait'}">${rec.courseType || '-'}</span></td>
+                        <td>${rec.courseHours || 0}</td>
+                        <td>${dataSourceDisplay}</td>
+                        <td>${rec.registrant || '-'}</td>
                         <td>${statusDisplay}</td>
                         <td>${manageButtons}</td>`;
                 });
             });
         };
 
-        const renderReportTable = (filterFn = () => true) => {
+        // 개인별 보고서 렌더링
+        const renderPersonalReport = (startDate, endDate, auditorName) => {
+            console.log('=== 개인별 보고서 렌더링 시작 ===');
+            console.log('startDate:', startDate, 'endDate:', endDate, 'auditorName:', auditorName);
+            
             const tbody = document.querySelector('#reportTable tbody');
+            if (!tbody) {
+                console.error('reportTable tbody를 찾을 수 없습니다');
+                return;
+            }
             tbody.innerHTML = '';
-            let count = 0;
-            Object.values(db.auditors).forEach(auditor => {
-                auditor.records.forEach(record => {
-                    const course = db.courses.find(c => c.id === record.courseId);
-                    if (!course) return; // 과정이 삭제된 경우 건너뜀
-                    const fullRecord = { ...auditor.info, ...course, ...record, auditor: auditor.info.name, course: course.name };
-                    if (filterFn(fullRecord)) {
-                        const row = tbody.insertRow();
-                        row.innerHTML = `<td>${fullRecord.dept}</td><td>${fullRecord.auditor}</td><td>${fullRecord.rank}</td>
-                                         <td>${fullRecord.course}</td><td>${fullRecord.startDate}</td><td>${fullRecord.endDate}</td><td><span class="status ${fullRecord.type === '필수' ? 'ok' : 'wait'}">${fullRecord.type}</span></td><td>${fullRecord.hours}</td>`;
-                        count++;
-                    }
-                });
-            });
-            document.getElementById('reportSummary').innerHTML = `<strong>검색 결과:</strong> 총 ${count}건`;
-        };
 
-        const renderRequiredEducationTable = () => {
-            const tbody = document.querySelector('#myEducationTable tbody');
-            const infoBox = document.getElementById('myEducationInfo');
-            const summaryDiv = document.getElementById('myEducationSummary');
+            const currentUser = getCurrentUser();
+            console.log('현재 사용자:', currentUser);
             
-            tbody.innerHTML = '';
-            infoBox.style.display = 'none';
+            const targetAuditor = auditorName || currentUser.userName;
+            console.log('대상 심사자:', targetAuditor);
             
-            // 이름과 부서가 입력되지 않았으면 기본 데이터 표시
-            const name = document.getElementById('myNameInput')?.value || '';
-            const dept = document.getElementById('myDeptSelect')?.value || '';
+            const auditor = db.auditors[targetAuditor];
+            console.log('찾은 심사자 데이터:', auditor);
             
-            if (!name || !dept) {
-                // 기본 데이터로 홍길동 정보 표시 (테스트용)
-                const defaultAuditor = db.auditors['홍길동'];
-                if (defaultAuditor) {
-                    displayAuditorData(defaultAuditor, '홍길동', '신약심사부');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="8">이름과 부서를 입력하고 조회해주세요.</td></tr>';
-                }
+            if (!auditor || !auditor.records) {
+                console.log('심사자 데이터가 없습니다');
+                tbody.innerHTML = '<tr><td colspan="7">해당 심사자의 이수 기록이 없습니다.</td></tr>';
+                document.getElementById('personalReportSummary').innerHTML = '<strong>검색 결과:</strong> 0건';
                 return;
             }
-            
-            // 해당 심사자 찾기
-            const auditor = db.auditors[name];
-            if (!auditor || auditor.info.dept !== dept) {
-                tbody.innerHTML = '<tr><td colspan="8">해당하는 심사자를 찾을 수 없습니다.</td></tr>';
-                return;
-            }
-            
-            displayAuditorData(auditor, name, dept);
-        };
-        
-        const displayAuditorData = (auditor, name, dept) => {
-            const tbody = document.querySelector('#myEducationTable tbody');
-            const infoBox = document.getElementById('myEducationInfo');
-            const summaryDiv = document.getElementById('myEducationSummary');
-            
-            tbody.innerHTML = '';
-            infoBox.style.display = 'none';
-            
-            // 교육 이수 현황 요약 정보 생성
-            const completedCourses = auditor.records.length;
-            const requiredCourses = db.courses.filter(c => c.type === '필수').length;
-            const completedRequiredCourses = auditor.records.filter(r => {
-                const course = db.courses.find(c => c.id === r.courseId);
-                return course && course.type === '필수';
-            }).length;
-            
-            const totalHours = auditor.records.reduce((sum, r) => {
-                const course = db.courses.find(c => c.id === r.courseId);
-                return sum + (course ? course.hours : 0);
-            }, 0);
-            
-            summaryDiv.innerHTML = `
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 15px 0;">
-                    <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 24px; font-weight: bold; color: var(--primary);">${completedCourses}</div>
-                        <div style="color: var(--muted);">이수 완료 교육</div>
-                    </div>
-                    <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 24px; font-weight: bold; color: var(--ok);">${completedRequiredCourses}/${requiredCourses}</div>
-                        <div style="color: var(--muted);">필수 교육 이수율</div>
-                    </div>
-                    <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 24px; font-weight: bold; color: var(--warn);">${totalHours}</div>
-                        <div style="color: var(--muted);">총 인정시간</div>
-                    </div>
-                </div>
-            `;
-            infoBox.style.display = 'block';
-            
-            // 모든 교육과정 표시 (이수 완료 + 미이수)
-            const completedCourseIds = new Set(auditor.records.map(r => r.courseId));
-            let allCourses = [];
-            
-            // 이수 완료된 교육
+
+            let count = 0;
+            let totalHours = 0;
+            let completedCount = 0;
+
             auditor.records.forEach(record => {
                 const course = db.courses.find(c => c.id === record.courseId);
                 if (course) {
-                    allCourses.push({
-                        ...course,
-                        ...record,
-                        status: 'completed',
-                        approve: record.approve || '승인대기'
+                    const recordDate = record.date;
+                    const isInRange = (!startDate || recordDate >= startDate) && (!endDate || recordDate <= endDate);
+                    
+                    if (isInRange) {
+                        const row = tbody.insertRow();
+                        row.innerHTML = `
+                            <td>${auditor.info.dept}</td>
+                            <td>${targetAuditor}</td>
+                            <td>${course.name}</td>
+                            <td>${recordDate}</td>
+                            <td>${course.hours}시간</td>
+                            <td><span class="status ${record.approve === '승인' ? 'ok' : record.approve === '반려' ? 'error' : 'wait'}">${record.approve || '승인대기'}</span></td>
+                            <td>${record.dataSource === 'API' ? '평가원 교육관리시스템' : '외부 교육기관'}</td>
+                        `;
+                        count++;
+                        totalHours += course.hours;
+                        if (record.approve === '승인') completedCount++;
+                    }
+                }
+            });
+
+            document.getElementById('personalReportSummary').innerHTML = `
+                <strong>검색 결과:</strong> 총 ${count}건 | 
+                <strong>총 이수시간:</strong> ${totalHours}시간 | 
+                <strong>승인 완료:</strong> ${completedCount}건
+            `;
+        };
+
+        // 부서별 보고서 렌더링
+        const renderDepartmentReport = (startDate, endDate, deptFilter, auditorName) => {
+            console.log('=== 부서별 보고서 렌더링 시작 ===');
+            console.log('startDate:', startDate, 'endDate:', endDate, 'deptFilter:', deptFilter, 'auditorName:', auditorName);
+            
+            const tbody = document.querySelector('#reportTable tbody');
+            if (!tbody) {
+                console.error('reportTable tbody를 찾을 수 없습니다');
+                return;
+            }
+            tbody.innerHTML = '';
+
+            let count = 0;
+            let totalHours = 0;
+            let completedCount = 0;
+            const deptStats = {};
+
+            Object.entries(db.auditors).forEach(([name, auditor]) => {
+                // 부서 필터링
+                const deptMatch = !deptFilter || auditor.info.dept === deptFilter;
+                // 심사자 이름 필터링
+                const nameMatch = !auditorName || name.toLowerCase().includes(auditorName.toLowerCase());
+                
+                if (auditor.records && deptMatch && nameMatch) {
+                    if (!deptStats[auditor.info.dept]) {
+                        deptStats[auditor.info.dept] = { total: 0, completed: 0, hours: 0 };
+                    }
+
+                    auditor.records.forEach(record => {
+                        const course = db.courses.find(c => c.id === record.courseId);
+                        if (course) {
+                            const recordDate = record.date;
+                            const isInRange = (!startDate || recordDate >= startDate) && (!endDate || recordDate <= endDate);
+                            
+                            if (isInRange) {
+                                const row = tbody.insertRow();
+                                row.innerHTML = `
+                                    <td>${auditor.info.dept}</td>
+                                    <td>${name}</td>
+                                    <td>${course.name}</td>
+                                    <td>${recordDate}</td>
+                                    <td>${course.hours}시간</td>
+                                    <td><span class="status ${record.approve === '승인' ? 'ok' : record.approve === '반려' ? 'error' : 'wait'}">${record.approve || '승인대기'}</span></td>
+                                    <td>${record.dataSource === 'API' ? '평가원 교육관리시스템' : '외부 교육기관'}</td>
+                                `;
+                                count++;
+                                totalHours += course.hours;
+                                deptStats[auditor.info.dept].total++;
+                                deptStats[auditor.info.dept].hours += course.hours;
+                                if (record.approve === '승인') {
+                                    completedCount++;
+                                    deptStats[auditor.info.dept].completed++;
+                                }
+                            }
+                        }
                     });
                 }
             });
+
+            let summaryText = `<strong>검색 결과:</strong> 총 ${count}건 | <strong>총 이수시간:</strong> ${totalHours}시간 | <strong>승인 완료:</strong> ${completedCount}건`;
             
-            // 미이수 교육 (필수만)
-            db.courses.filter(c => c.type === '필수' && !completedCourseIds.has(c.id))
-                .forEach(c => {
-                    allCourses.push({
-                        ...c,
-                        id: `m${c.id}`,
-                        date: '-',
-                        status: 'missing',
-                        approve: '-'
-                    });
-                });
+            if (Object.keys(deptStats).length > 1) {
+                summaryText += '<br><strong>부서별 현황:</strong> ';
+                summaryText += Object.entries(deptStats).map(([dept, stats]) => 
+                    `${dept} ${stats.completed}/${stats.total}건 (${stats.hours}시간)`
+                ).join(' | ');
+            }
+
+            document.getElementById('departmentReportSummary').innerHTML = summaryText;
+        };
+
+
+        // --- 이수 기록 상세 모달 관리 ---
+        const showRecordDetailsModal = (record) => {
+            console.log('showRecordDetailsModal called with record:', record);
+            console.log('Record approve status:', record.approve);
+            console.log('Record dataSource:', record.dataSource);
             
-            // 교육기간 순으로 정렬
-            allCourses.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+            // 교육과정 정보 찾기
+            const course = db.courses.find(c => c.id === record.courseId);
+            console.log('Found course:', course);
             
-            allCourses.forEach(course => {
-                const row = tbody.insertRow();
+            // 심사자 정보 찾기 - record에 auditorName이 있으면 사용, 없으면 찾기
+            let auditor = null;
+            let auditorName = record.auditorName;
+            
+            if (auditorName && db.auditors[auditorName]) {
+                auditor = db.auditors[auditorName];
+                console.log('Found auditor by auditorName:', auditor);
+                } else {
+                // auditorName이 없으면 모든 심사자에서 해당 기록을 찾기
+                for (const [name, aud] of Object.entries(db.auditors)) {
+                    if (aud.records && aud.records.find(r => r.id === record.id)) {
+                        auditor = aud;
+                        auditorName = name;
+                        console.log('Found auditor by searching records:', auditor, 'name:', name);
+                        break;
+                    }
+                }
+            }
+            console.log('Final auditor:', auditor);
+            console.log('Final auditorName:', auditorName);
+            
+            const modalContent = `
+                <div class="approval-info">
+                    <h4>이수 기록 상세 정보</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>심사자명:</label>
+                            <span>${auditorName || auditor?.info?.name || record.auditorName || '-'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>부서:</label>
+                            <span>${auditor?.info?.dept || '-'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>직급:</label>
+                            <span>${auditor?.info?.rank || '-'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>교육명:</label>
+                            <span>${course?.name || '-'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>이수일자:</label>
+                            <span>${record.date || '-'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>교육기관:</label>
+                            <span>${course?.orgName || '-'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>인정시간:</label>
+                            <span>${course?.hours || 0}시간</span>
+                        </div>
+                        <div class="info-item">
+                            <label>등록자:</label>
+                            <span>${record.registrant || '-'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>상태:</label>
+                            <span>${record.approve || '-'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>데이터 소스:</label>
+                            <span>${record.approve === '승인대기' ? '외부 교육기관' : (record.dataSource === 'API' ? '평가원 교육관리시스템' : '외부 교육기관')}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="evidence-section">
+                        <h4>증빙자료</h4>
+                        <div class="evidence-content">
+                            ${record.notes ? `
+                                <div class="evidence-item">
+                                    <label>비고/상세내용:</label>
+                                    <div class="evidence-text">${record.notes}</div>
+                                </div>
+                            ` : ''}
+                            <div class="evidence-item">
+                                <label>첨부파일:</label>
+                                <div class="file-info">
+                                    ${record.fileName ? `
+                                        <span class="file-name">📎 ${record.fileName}</span>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="downloadFile('${record.fileName}')">다운로드</button>
+                                    ` : '<span class="no-file">첨부된 파일이 없습니다.</span>'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${(() => {
+                        const shouldShowButtons = record.approve !== '승인' || record.dataSource === 'EXTERNAL';
+                        console.log('=== BUTTON DEBUG ===');
+                        console.log('Record ID:', record.id);
+                        console.log('Record approve:', record.approve, '(type:', typeof record.approve, ')');
+                        console.log('Record dataSource:', record.dataSource);
+                        console.log('Should show buttons:', shouldShowButtons);
+                        console.log('===================');
+                        
+                        if (!shouldShowButtons) {
+                            return `<div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin: 10px 0; border-radius: 4px;">
+                                <strong>디버그 정보:</strong><br>
+                                승인 상태: "${record.approve}"<br>
+                                데이터 소스: "${record.dataSource}"<br>
+                                버튼 표시 조건: 승인이 아닌 경우 또는 EXTERNAL 데이터<br>
+                                <em>승인/반려 버튼이 표시되지 않습니다.</em>
+                            </div>`;
+                        }
+                        
+                        return `
+                            <div class="approval-actions">
+                                <h4>처리 결과</h4>
+                                <div class="action-buttons">
+                                    <button type="button" class="btn btn-success" onclick="processApproval(${record.id}, '승인')">
+                                        ✅ 승인 처리
+                                    </button>
+                                    <button type="button" class="btn btn-danger" onclick="processApproval(${record.id}, '반려')">
+                                        ❌ 반려 처리
+                                    </button>
+                                    <button type="button" class="btn btn-danger" onclick="deleteRecord(${record.id})">
+                                        🗑️ 이수 삭제
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    })()}
+                </div>
+            `;
+            
+            console.log('Opening record details modal');
+            openModal('이수 기록 상세 정보', modalContent, { dataSource: record.dataSource });
+        };
+
+        // --- 승인/반려 모달 관리 ---
+        const showApprovalModal = (record, action) => {
+            console.log('showApprovalModal called with record:', record);
+            console.log('showApprovalModal called with action:', action);
+            
+            // 간단한 테스트용 모달 내용
+            const modalContent = `
+                <div class="approval-info">
+                    <h4>이수 기록 상세 정보</h4>
+                    <p><strong>심사자명:</strong> ${record.auditorName || '-'}</p>
+                    <p><strong>교육 ID:</strong> ${record.courseId || '-'}</p>
+                    <p><strong>이수일자:</strong> ${record.date || '-'}</p>
+                    <p><strong>상태:</strong> ${record.approve || '-'}</p>
+                    <p><strong>비고:</strong> ${record.notes || '없음'}</p>
+                    <p><strong>파일:</strong> ${record.fileName || '없음'}</p>
+                    
+                    <div class="approval-actions">
+                        <h4>처리 결과</h4>
+                        <div class="action-buttons">
+                            ${action === 'approve' ? `
+                                <button type="button" class="btn btn-success" onclick="processApproval(${record.id}, '승인')">
+                                    ✅ 승인 처리
+                                </button>
+                                <button type="button" class="btn btn-danger" onclick="deleteRecord(${record.id})">
+                                    🗑️ 이수 삭제
+                                </button>
+                            ` : `
+                                <button type="button" class="btn btn-danger" onclick="processApproval(${record.id}, '반려')">
+                                    ❌ 반려 처리
+                                </button>
+                                <button type="button" class="btn btn-danger" onclick="deleteRecord(${record.id})">
+                                    🗑️ 이수 삭제
+                                </button>
+                            `}
+                    </div>
+                    </div>
+                </div>
+            `;
+            
+            console.log('Opening approval modal with action:', action);
+            console.log('Modal content length:', modalContent.length);
+            openModal(`${action === 'approve' ? '승인' : '반려'} 처리`, modalContent);
+        };
+
+        // 승인/반려 처리 함수
+        window.processApproval = (recordId, action) => {
+            console.log('=== PROCESS APPROVAL DEBUG ===');
+            console.log('processApproval called with recordId:', recordId, 'action:', action);
+            console.log('currentDisplayedRecords:', currentDisplayedRecords);
+            
+            // 현재 표시된 기록에서 찾기 (원본 ID 사용)
+            const displayedRecord = currentDisplayedRecords.find(r => r.id === recordId);
+            console.log('Found displayed record:', displayedRecord);
+            
+            if (displayedRecord) {
+                // 원본 데이터에서 해당 기록을 찾아서 수정
+                let found = false;
                 
-                // 상태 표시
-                let statusDisplay = '-';
-                let noteDisplay = '-';
+                // displayedRecord에서 실제 원본 기록의 ID 찾기
+                const actualRecordId = displayedRecord.id;
+                const auditorName = displayedRecord.auditorName;
+                console.log('Looking for original record with ID:', actualRecordId, 'in auditor:', auditorName);
+                console.log('Available auditors:', Object.keys(db.auditors));
                 
-                if (course.status === 'completed') {
-                    if (course.approve === '승인') {
-                        statusDisplay = '<span class="status ok">승인</span>';
-                        noteDisplay = '교육 완료';
-                    } else if (course.approve === '반려') {
-                        statusDisplay = '<span class="status bad">반려</span>';
-                        noteDisplay = '재제출 필요';
+                // 특정 심사자에서 먼저 찾기
+                if (auditorName && db.auditors[auditorName] && db.auditors[auditorName].records) {
+                    console.log('Searching in auditor:', auditorName, 'records:', db.auditors[auditorName].records);
+                    const originalRecord = db.auditors[auditorName].records.find(r => r.id === actualRecordId);
+                    if (originalRecord) {
+                        console.log('Found original record before update:', originalRecord);
+                        originalRecord.approve = action;
+                        console.log('Updated original record:', originalRecord);
+                        found = true;
                     } else {
-                        statusDisplay = '<span class="status wait">승인대기</span>';
-                        noteDisplay = '승인 대기 중';
+                        console.log('Record not found in specific auditor:', auditorName);
                     }
                 } else {
-                    statusDisplay = '<span class="status bad">미이수</span>';
-                    noteDisplay = '필수 교육 - 이수 필요';
+                    console.log('Auditor not found or no records:', auditorName);
                 }
                 
-                row.innerHTML = `
-                    <td>${course.name}</td>
-                    <td>${course.startDate} ~ ${course.endDate}</td>
-                    <td><span class="status ${course.type === '필수' ? 'ok' : 'wait'}">${course.type}</span></td>
-                    <td>${course.hours}</td>
-                    <td>${course.date}</td>
-                    <td>${statusDisplay}</td>
-                    <td>${noteDisplay}</td>
-                    <td>${course.status === 'missing' ? `<button class="btn btn-primary btn-submit-proof" style="height:28px;padding:0 8px;font-size:12px;">증빙자료 제출</button>` : 
-                        course.status === 'completed' ? `<button class="btn btn-secondary btn-view-proof" style="height:28px;padding:0 8px;font-size:12px;">증빙자료 보기</button>` : '-'}</td>
-                `;
-            });
+                // 특정 심사자에서 찾지 못했다면 모든 심사자에서 찾기
+                if (!found) {
+                    for (const [name, auditor] of Object.entries(db.auditors)) {
+                        if (auditor.records) {
+                            const originalRecord = auditor.records.find(r => r.id === actualRecordId);
+                            if (originalRecord) {
+                                originalRecord.approve = action;
+                                console.log('Updated original record in auditor:', name, originalRecord);
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                if (found) {
+                    saveData();
+                    renderAll();
+                    closeModal();
+                    showToast(`이수 기록이 ${action} 처리되었습니다.`);
+                    
+                } else {
+                    console.error('Could not find original record to update');
+                    console.log('Looking for courseId:', displayedRecord.courseId, 'auditorName:', displayedRecord.auditorName);
+                    console.log('Available records:', Object.values(db.auditors).flatMap(a => a.records?.map(r => ({id: r.id, courseId: r.courseId, auditorName: r.auditorName})) || []));
+                    showToast('기록을 찾을 수 없습니다.');
+                }
+            } else {
+                console.error('Could not find displayed record');
+                showToast('기록을 찾을 수 없습니다.');
+            }
+        };
+
+
+        // 이수 기록 삭제 함수
+        window.deleteRecord = (recordId) => {
+            console.log('deleteRecord called with recordId:', recordId);
+            
+            // 현재 표시된 기록에서 찾기 (원본 ID 사용)
+            const displayedRecord = currentDisplayedRecords.find(r => r.id === recordId);
+            console.log('Found displayed record for deletion:', displayedRecord);
+            
+            if (displayedRecord) {
+                const courseName = displayedRecord.courseName || '알 수 없는 교육';
+                const auditorName = displayedRecord.auditorName || '알 수 없는 심사자';
+                
+                if (confirm(`'${courseName}' 이수 기록을 삭제하시겠습니까?\n심사자: ${auditorName}`)) {
+                    // 원본 데이터에서 해당 기록을 찾아서 삭제
+                    let found = false;
+                    
+                    // displayedRecord에서 실제 원본 기록의 ID 찾기
+                    const actualRecordId = displayedRecord.id;
+                    const actualAuditorName = displayedRecord.auditorName;
+                    console.log('Looking for original record to delete with ID:', actualRecordId, 'in auditor:', actualAuditorName);
+                    
+                    // 특정 심사자에서 먼저 찾기
+                    if (actualAuditorName && db.auditors[actualAuditorName] && db.auditors[actualAuditorName].records) {
+                        const recordIndex = db.auditors[actualAuditorName].records.findIndex(r => r.id === actualRecordId);
+                        if (recordIndex !== -1) {
+                            db.auditors[actualAuditorName].records.splice(recordIndex, 1);
+                            console.log('Deleted record from auditor:', actualAuditorName);
+                            found = true;
+                        }
+                    }
+                    
+                    // 특정 심사자에서 찾지 못했다면 모든 심사자에서 찾기
+                    if (!found) {
+                        for (const [name, auditor] of Object.entries(db.auditors)) {
+                            if (auditor.records) {
+                                const recordIndex = auditor.records.findIndex(r => r.id === actualRecordId);
+                                if (recordIndex !== -1) {
+                                    auditor.records.splice(recordIndex, 1);
+                                    console.log('Deleted record from auditor:', name);
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (found) {
+                        saveData();
+                        renderAll();
+                        closeModal();
+                        showToast('이수 기록이 삭제되었습니다.');
+                    } else {
+                        console.error('Could not find original record to delete');
+                        showToast('기록을 찾을 수 없습니다.');
+                    }
+                }
+            } else {
+                console.error('Could not find displayed record for deletion');
+                showToast('기록을 찾을 수 없습니다.');
+            }
+        };
+
+        // 파일 다운로드 함수 (시뮬레이션)
+        window.downloadFile = (fileName) => {
+            showToast(`파일 다운로드: ${fileName} (시뮬레이션)`);
         };
 
         // --- 모달 관리 ---
+        const openModal = (title, content, data = null) => {
+            console.log('openModal called with title:', title);
         const modal = document.getElementById('modal-popup');
         const modalTitle = document.getElementById('modal-title');
+        const modalFooter = document.querySelector('.modal-footer');
         
-        const openModal = (title, content, data = null) => {
+            console.log('Modal element:', modal);
+            console.log('Modal title element:', modalTitle);
+        
+            if (modalTitle) {
             modalTitle.textContent = title;
-            document.getElementById('modal-body-content').innerHTML = content;
+            }
+            
+            const modalBody = document.getElementById('modal-body-content');
+            console.log('Modal body element:', modalBody);
+            if (modalBody) {
+                modalBody.innerHTML = content;
+            }
+            
+            // 데이터 소스가 API인 경우 모달 푸터 숨기기
+            if (data && data.dataSource === 'API' && title === '이수 기록 상세 정보') {
+                if (modalFooter) {
+                    modalFooter.style.display = 'none';
+                }
+            } else {
+                if (modalFooter) {
+                    modalFooter.style.display = 'block';
+                }
+            }
             
             if (data) {
                 Object.keys(data).forEach(key => {
@@ -757,10 +1597,16 @@
                 });
             }
             
+            if (modal) {
             modal.style.display = 'block';
+                console.log('Modal displayed');
+            } else {
+                console.error('Modal element not found!');
+            }
         };
         
         const closeModal = () => {
+            const modal = document.getElementById('modal-popup');
             modal.style.display = 'none';
             document.getElementById('modal-form').reset();
         };
@@ -771,8 +1617,8 @@
         });
         
         // 모달 외부 클릭 시 닫기
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
+        document.getElementById('modal-popup').addEventListener('click', (e) => {
+            if (e.target.id === 'modal-popup') closeModal();
         });
         
         // 모달 폼 제출 이벤트
@@ -785,13 +1631,26 @@
             // 모달 제목에 따라 다른 저장 로직 실행
             const modalTitle = document.getElementById('modal-title').textContent;
             
-            if (modalTitle === '신규 이수 기록 등록') {
+            if (modalTitle === '신규 이수 기록 등록' || modalTitle === '내 이수 기록 등록') {
+                // 선택된 교육과정의 데이터 소스 확인
+                const selectedCourse = db.courses.find(c => c.id === parseInt(data.courseId));
+                const isApiCourse = selectedCourse && selectedCourse.dataSource === 'API';
+                
+                // 파일명 추출
+                const fileInput = document.getElementById('modal-file');
+                const fileName = fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0].name : null;
+                
                 // 새로운 이수 기록 저장
                 const newRecord = {
                     id: Date.now(), // 고유 ID 생성
                     courseId: parseInt(data.courseId),
                     date: data.date,
-                    approve: '승인대기'
+                    approve: isApiCourse ? '승인' : '승인대기', // API 교육과정은 자동 승인, 외부 교육기관 교육과정은 승인대기
+                    dataSource: isApiCourse ? 'API' : 'EXTERNAL',
+                    registrant: data.auditorName,
+                    auditorName: data.auditorName, // 심사자 이름 추가
+                    notes: data.notes || '',
+                    fileName: fileName
                 };
                 
                 if (!db.auditors[data.auditorName]) {
@@ -800,10 +1659,15 @@
                 }
                 
                 db.auditors[data.auditorName].records.push(newRecord);
-                showToast('이수 기록이 등록되었습니다.');
+                
+                if (isApiCourse) {
+                    showToast('이수 기록이 등록되었습니다. (평가원 교육관리시스템 교육과정으로 자동 승인 처리됨)');
+                } else {
+                    showToast('이수 기록이 등록되었습니다. (외부 교육기관 교육과정으로 승인대기 상태)');
+                }
                 
             } else if (modalTitle === '신규 교육과정 등록') {
-                // 새로운 교육과정 저장
+                // 새로운 교육과정 저장 (외부 교육기관 등록)
                 const newCourse = {
                     id: Math.max(...db.courses.map(c => c.id)) + 1,
                     name: data.name,
@@ -812,7 +1676,10 @@
                     endDate: data.endDate,
                     type: data.type,
                     hours: parseInt(data.hours),
-                    regDate: data.regDate
+                    regDate: data.regDate,
+                    dataSource: 'EXTERNAL',
+                    orgName: data.orgName,
+                    registrant: data.registrant
                 };
                 db.courses.push(newCourse);
                 showToast('교육과정이 등록되었습니다.');
@@ -829,9 +1696,54 @@
                         endDate: data.endDate,
                         type: data.type,
                         hours: parseInt(data.hours),
+                        registrant: data.registrant,
                         regDate: data.regDate
                     });
                     showToast('교육과정이 수정되었습니다.');
+                }
+            } else if (modalTitle === '이수 기록 수정') {
+                // 이수 기록 수정
+                const recordId = parseInt(data.recordId || data.id);
+                console.log('=== 이수 기록 수정 디버그 ===');
+                console.log('modalTitle:', modalTitle);
+                console.log('data:', data);
+                console.log('recordId:', recordId);
+                
+                // 모든 심사자에서 해당 기록을 찾아서 수정
+                let found = false;
+                for (const [name, auditor] of Object.entries(db.auditors)) {
+                    if (auditor.records) {
+                        const record = auditor.records.find(r => r.id === recordId);
+                        if (record) {
+                            console.log('찾은 기록:', record);
+                            console.log('수정 전:', JSON.stringify(record));
+                            
+                            // 파일명 추출
+                            const fileInput = document.getElementById('modal-file');
+                            const fileName = fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0].name : record.fileName;
+                            
+                            // 기록 수정
+                            Object.assign(record, {
+                                courseId: parseInt(data.courseId),
+                                date: data.date,
+                                notes: data.notes,
+                                fileName: fileName
+                            });
+                            
+                            console.log('수정 후:', JSON.stringify(record));
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (found) {
+                    console.log('이수 기록 수정 성공');
+                    showToast('이수 기록이 수정되었습니다.');
+                } else {
+                    console.error('수정할 이수 기록을 찾을 수 없습니다. ID:', recordId);
+                    console.log('사용 가능한 기록들:', Object.values(db.auditors).flatMap(a => a.records?.map(r => ({id: r.id, courseId: r.courseId})) || []));
+                    showToast('수정할 이수 기록을 찾을 수 없습니다.');
                 }
             }
             
@@ -856,13 +1768,50 @@
             e.preventDefault();
             const nameFilter = document.getElementById('courseNameInput').value.toLowerCase();
             const typeFilter = document.getElementById('courseTypeSelect').value;
-            renderCourseTable(c => 
-                c.name.toLowerCase().includes(nameFilter) && (typeFilter === '전체' || c.type === typeFilter)
-            );
+            const dataSourceFilter = document.getElementById('dataSourceSelect').value;
+            const startDateFilter = document.getElementById('startDateInput').value;
+            const endDateFilter = document.getElementById('endDateInput').value;
+            
+            renderCourseTable(c => {
+                // 교육명 필터
+                const nameMatch = c.name.toLowerCase().includes(nameFilter);
+                
+                // 필수여부 필터
+                const typeMatch = typeFilter === '전체' || c.type === typeFilter;
+                
+                // 데이터 소스 필터
+                const dataSourceMatch = dataSourceFilter === '전체' || c.dataSource === dataSourceFilter;
+                
+                // 교육기간 필터
+                let dateMatch = true;
+                if (startDateFilter) {
+                    dateMatch = dateMatch && c.startDate >= startDateFilter;
+                }
+                if (endDateFilter) {
+                    dateMatch = dateMatch && c.endDate <= endDateFilter;
+                }
+                
+                return nameMatch && typeMatch && dataSourceMatch && dateMatch;
+            });
         });
         document.getElementById('courseSearchForm').addEventListener('reset', () => setTimeout(renderCourseTable, 0));
         
+        // API 동기화 버튼
+        document.getElementById('sync-api-btn').addEventListener('click', () => {
+            syncWithAPI();
+        });
+
+        // 이수 기록 API 동기화 버튼
+        document.getElementById('sync-records-api-btn').addEventListener('click', () => {
+            syncRecordsWithAPI();
+        });
+
+        
         document.getElementById('add-course-btn').addEventListener('click', () => {
+            try {
+                // 현재 로그인한 사용자 정보 가져오기
+                const currentUser = getCurrentUser();
+                
             const formHtml = `
                 <div class="form-group"><label for="modal-name">교육명</label><input type="text" id="modal-name" name="name" required></div>
                 <div class="form-group"><label for="modal-desc">교육 정보</label><textarea id="modal-desc" name="desc" rows="3" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;"></textarea></div>
@@ -870,8 +1819,15 @@
                 <div class="form-group"><label for="modal-endDate">종료일</label><input type="date" id="modal-endDate" name="endDate" required></div>
                 <div class="form-group"><label for="modal-type">필수여부</label><select id="modal-type" name="type"><option>필수</option><option>선택</option></select></div>
                 <div class="form-group"><label for="modal-hours">인정시간</label><input type="number" id="modal-hours" name="hours" required></div>
+                    <div class="form-group"><label for="modal-orgName">교육기관</label><input type="text" id="modal-orgName" name="orgName" value="${currentUser.orgName}" readonly style="background-color: #f5f5f5;"></div>
+                    <div class="form-group"><label for="modal-registrant">등록자</label><input type="text" id="modal-registrant" name="registrant" value="${currentUser.userName}" readonly style="background-color: #f5f5f5;"></div>
                 <div class="form-group"><label for="modal-regDate">등록일</label><input type="date" id="modal-regDate" name="regDate" value="${new Date().toISOString().slice(0,10)}" required></div>`;
+                
             openModal('신규 교육과정 등록', formHtml);
+            } catch (error) {
+                console.error('신규 등록 버튼 오류:', error);
+                showToast('신규 등록 중 오류가 발생했습니다: ' + error.message);
+            }
         });
 
         document.querySelector('#courseTable tbody').addEventListener('click', e => {
@@ -889,6 +1845,7 @@
                     <div class="form-group"><label for="modal-endDate">종료일</label><input type="date" id="modal-endDate" name="endDate" required></div>
                     <div class="form-group"><label for="modal-type">필수여부</label><select id="modal-type" name="type"><option>필수</option><option>선택</option></select></div>
                     <div class="form-group"><label for="modal-hours">인정시간</label><input type="number" id="modal-hours" name="hours" required></div>
+                    <div class="form-group"><label for="modal-registrant">등록자</label><input type="text" id="modal-registrant" name="registrant" placeholder="등록자 이름을 입력하세요" required></div>
                     <div class="form-group"><label for="modal-regDate">등록일</label><input type="date" id="modal-regDate" name="regDate" required></div>`;
                 openModal('교육과정 수정', formHtml, course);
             } else if (btn.classList.contains('btn-delete-course')) {
@@ -910,118 +1867,627 @@
         });
 
         // 부서 선택 변경 시 자동 업데이트
-        document.getElementById('deptSelect').addEventListener('change', () => {
-            renderRecordTable();
-        });
+        const deptSelectElement = document.getElementById('deptSelect');
+        if (deptSelectElement) {
+            deptSelectElement.addEventListener('change', (e) => {
+                console.log('부서 선택 변경:', e.target.value);
+                renderRecordTable();
+            });
+            console.log('부서 선택 이벤트 리스너 등록 완료');
+        } else {
+            console.error('deptSelect 요소를 찾을 수 없습니다.');
+        }
 
         document.getElementById('add-record-btn').addEventListener('click', () => {
-            const auditorOptions = Object.entries(db.auditors).map(([name, auditor]) => 
-                `<option value="${name}">${name} (${auditor.info.dept} - ${auditor.info.rank})</option>`
-            ).join('');
-            const courseOptions = db.courses.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            try {
+                // 현재 로그인한 사용자 정보 가져오기
+                const currentUser = getCurrentUser();
+                
+                // 현재 사용자가 심사자 목록에 없으면 추가
+                if (!db.auditors[currentUser.userName]) {
+                    db.auditors[currentUser.userName] = {
+                        info: {
+                            name: currentUser.userName,
+                            dept: currentUser.orgName,
+                            rank: '심사원' // 기본값
+                        },
+                        records: []
+                    };
+                    saveData();
+                }
+                
+            const courseOptions = db.courses
+                .filter(c => c.dataSource === 'EXTERNAL')
+                .map(c => `<option value="${c.id}">${c.name}</option>`)
+                .join('');
             const formHtml = `
-                <div class="form-group"><label for="modal-auditorName">심사자</label><select id="modal-auditorName" name="auditorName" required>${auditorOptions}</select></div>
+                    <div class="form-group"><label for="modal-auditorName">심사자</label><input type="text" id="modal-auditorName" name="auditorName" value="${currentUser.userName}" readonly style="background-color: #f5f5f5;"></div>
                 <div class="form-group"><label for="modal-courseId">교육과정</label><select id="modal-courseId" name="courseId" required>${courseOptions}</select></div>
                 <div class="form-group"><label for="modal-date">이수일자</label><input type="date" id="modal-date" name="date" value="${new Date().toISOString().slice(0,10)}" required></div>
-                <div class="form-group"><label for="modal-file">증빙자료</label><input type="file" id="modal-file" name="file"></div>`;
-            openModal('신규 이수 기록 등록', formHtml);
+                    <div class="form-group"><label for="modal-file">증빙자료</label><input type="file" id="modal-file" name="file"></div>
+                    <div class="form-group"><label for="modal-notes">비고</label><textarea id="modal-notes" name="notes" rows="3" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;" placeholder="교육 내용 요약이나 특이사항을 입력하세요"></textarea></div>`;
+                openModal('내 이수 기록 등록', formHtml);
+            } catch (error) {
+                console.error('이수 기록 등록 버튼 오류:', error);
+                showToast('이수 기록 등록 중 오류가 발생했습니다: ' + error.message);
+            }
         });
 
         document.querySelector('#recordTable tbody').addEventListener('click', e => {
+            console.log('Table clicked, target:', e.target);
             const btn = e.target.closest('button');
-            if (!btn || !currentAuditor) return;
-            const id = btn.closest('tr').dataset.id;
+            const row = e.target.closest('tr');
+            console.log('Button found:', btn);
+            console.log('Row found:', row);
+            if (!row) {
+                console.log('No row found, returning');
+                return;
+            }
+            const id = row.dataset.id;
+            console.log('Row ID:', id);
+            
+            // 모든 row를 클릭했을 때 (버튼이 아닌 경우)
+            if (!btn) {
+                console.log('Row clicked, ID:', id);
+                console.log('Row dataset:', row.dataset);
+                
+                // 현재 표시된 기록에서 찾기 (원본 ID 사용)
+                const record = currentDisplayedRecords.find(r => r.id == id);
+                console.log('Current displayed records:', currentDisplayedRecords.length);
+                console.log('Looking for record with ID:', id);
+                console.log('Found record:', record);
+                
+                if (record) {
+                    console.log('Showing record details modal for record:', record);
+                    showRecordDetailsModal(record);
+                    return;
+                } else {
+                    console.log('Record not found in displayed records for ID:', id);
+                    console.log('Available displayed record IDs:', currentDisplayedRecords.map(r => r.id));
+                }
+            }
+            
+            if (!btn) return;
             
             if (btn.classList.contains('btn-edit-record')) {
-                const record = db.auditors[currentAuditor].records.find(r => r.id == id);
-                const options = db.courses.map(c => `<option value="${c.id}" ${c.id === record.courseId ? 'selected' : ''}>${c.name}</option>`).join('');
-                const formHtml = `
-                    <div class="form-group"><label for="modal-courseId">교육과정</label><select id="modal-courseId" name="courseId" required>${options}</select></div>
-                    <div class="form-group"><label for="modal-date">이수일자</label><input type="date" id="modal-date" name="date" required></div>
-                    <div class="form-group"><label for="modal-file">증빙자료</label><input type="file" id="modal-file" name="file"></div>`;
-                openModal('이수 기록 수정', formHtml, record);
+                console.log('=== 수정 버튼 클릭 디버그 ===');
+                console.log('클릭된 버튼:', btn);
+                console.log('찾고 있는 ID:', id);
+                
+                // 모든 심사자에서 해당 ID의 기록을 찾기
+                let record = null;
+                let auditorName = null;
+                
+                for (const [name, auditor] of Object.entries(db.auditors)) {
+                    if (auditor.records) {
+                        const foundRecord = auditor.records.find(r => r.id == id);
+                        if (foundRecord) {
+                            record = foundRecord;
+                            auditorName = name;
+                            console.log('기록 찾음:', foundRecord, '심사자:', name);
+                            break;
+                        }
+                    }
+                }
+                
+                if (record) {
+                    console.log('수정할 기록:', record);
+                    const options = db.courses
+                        .filter(c => c.dataSource === 'EXTERNAL')
+                        .map(c => `<option value="${c.id}" ${c.id === record.courseId ? 'selected' : ''}>${c.name}</option>`)
+                        .join('');
+                    const formHtml = `
+                        <input type="hidden" id="modal-recordId" name="recordId" value="${record.id}">
+                        <div class="form-group"><label for="modal-courseId">교육과정</label><select id="modal-courseId" name="courseId" required>${options}</select></div>
+                        <div class="form-group"><label for="modal-date">이수일자</label><input type="date" id="modal-date" name="date" value="${record.date || ''}" required></div>
+                        <div class="form-group"><label for="modal-file">증빙자료</label><input type="file" id="modal-file" name="file"></div>
+                        <div class="form-group"><label for="modal-notes">비고</label><textarea id="modal-notes" name="notes" rows="3" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;" placeholder="교육 내용 요약이나 특이사항을 입력하세요">${record.notes || ''}</textarea></div>`;
+                    console.log('수정 모달 열기');
+                    openModal('이수 기록 수정', formHtml, record);
+                } else {
+                    console.error('수정할 기록을 찾을 수 없습니다. ID:', id);
+                    showToast('수정할 기록을 찾을 수 없습니다.');
+                }
             } else if (btn.classList.contains('btn-delete-record')) {
                 const courseName = db.courses.find(c => c.id == btn.closest('tr').dataset.courseId).name;
                 if (confirm(`'${courseName}' 이수 기록을 삭제하시겠습니까?`)) {
-                    db.auditors[currentAuditor].records = db.auditors[currentAuditor].records.filter(r => r.id != id);
+                    // 모든 심사자에서 해당 ID의 기록을 찾아서 삭제
+                    for (const [name, auditor] of Object.entries(db.auditors)) {
+                        if (auditor.records) {
+                            const recordIndex = auditor.records.findIndex(r => r.id == id);
+                            if (recordIndex !== -1) {
+                                auditor.records.splice(recordIndex, 1);
+                                break;
+                            }
+                        }
+                    }
                     saveData();
                     renderAll();
                 }
             } else if (btn.classList.contains('btn-approve-record')) {
-                const record = db.auditors[currentAuditor].records.find(r => r.id == id);
+                // 현재 표시된 기록에서 찾기 (원본 ID 사용)
+                const record = currentDisplayedRecords.find(r => r.id == id);
+                console.log('Approve button clicked, found record:', record);
+                
                 if (record) {
-                    record.approve = '승인';
-                    saveData();
-                    renderAll();
+                    showApprovalModal(record, 'approve');
+                } else {
+                    console.error('Record not found for approve button');
+                    showToast('기록을 찾을 수 없습니다.');
                 }
             } else if (btn.classList.contains('btn-reject-record')) {
-                const record = db.auditors[currentAuditor].records.find(r => r.id == id);
+                // 현재 표시된 기록에서 찾기 (원본 ID 사용)
+                const record = currentDisplayedRecords.find(r => r.id == id);
+                console.log('Reject button clicked, found record:', record);
+                
                 if (record) {
-                    record.approve = '반려';
-                    saveData();
-                    renderAll();
+                    showApprovalModal(record, 'reject');
+                } else {
+                    console.error('Record not found for reject button');
+                    showToast('기록을 찾을 수 없습니다.');
                 }
             }
         });
 
-        // EDU-005 이벤트
-        const reportForm = document.getElementById('reportSearchForm');
-        reportForm.addEventListener('submit', e => {
-            e.preventDefault();
-            const startDate = document.getElementById('reportStartDate').value;
-            const endDate = document.getElementById('reportEndDate').value;
-            const deptFilter = document.getElementById('reportDeptSelect').value;
-            const nameFilter = document.getElementById('reportAuditorNameInput').value.toLowerCase();
-            renderReportTable(rec => 
-                (!startDate || rec.date >= startDate) && (!endDate || rec.date <= endDate) &&
-                (deptFilter === '' || rec.dept === deptFilter) && rec.auditor.toLowerCase().includes(nameFilter)
-            );
-        });
-        reportForm.addEventListener('reset', () => setTimeout(renderReportTable, 0));
-
-        // EDU-006 이벤트 (들어야 하는 교육 목록)
-        document.getElementById('myEducationSearchForm').addEventListener('submit', e => {
-            e.preventDefault();
-            renderRequiredEducationTable();
-        });
-        document.getElementById('myEducationSearchForm').addEventListener('reset', () => {
-            document.getElementById('myEducationInfo').style.display = 'none';
-            document.querySelector('#myEducationTable tbody').innerHTML = '<tr><td colspan="8">이름과 부서를 입력하고 조회해주세요.</td></tr>';
-        });
-
-        // 증빙자료 제출/보기 이벤트
-        document.querySelector('#myEducationTable tbody').addEventListener('click', e => {
-            const btn = e.target.closest('button');
-            if (!btn) return;
-            
-            const row = btn.closest('tr');
-            const courseName = row.cells[0].textContent;
-            const courseType = row.cells[2].querySelector('.status').textContent;
-            const courseHours = row.cells[3].textContent;
-            
-            if (btn.classList.contains('btn-submit-proof')) {
-                // 증빙자료 제출 모달
-                const formHtml = `
-                    <div class="form-group"><label for="modal-courseName">교육명</label><input type="text" id="modal-courseName" value="${courseName}" readonly></div>
-                    <div class="form-group"><label for="modal-courseType">교육구분</label><input type="text" id="modal-courseType" value="${courseType}" readonly></div>
-                    <div class="form-group"><label for="modal-courseHours">인정시간</label><input type="text" id="modal-courseHours" value="${courseHours}" readonly></div>
-                    <div class="form-group"><label for="modal-completionDate">이수완료일</label><input type="date" id="modal-completionDate" name="completionDate" required></div>
-                    <div class="form-group"><label for="modal-proofFile">증빙자료</label><input type="file" id="modal-proofFile" name="proofFile" required></div>
-                    <div class="form-group"><label for="modal-notes">비고</label><textarea id="modal-notes" name="notes" rows="3" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;" placeholder="교육 내용 요약이나 특이사항을 입력하세요"></textarea></div>`;
-                openModal('증빙자료 제출', formHtml);
+        // EDU-005 이벤트 - 보고서 유형 선택
+        document.querySelectorAll('input[name="reportType"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const personalReport = document.getElementById('personalReport');
+                const departmentReport = document.getElementById('departmentReport');
                 
-            } else if (btn.classList.contains('btn-view-proof')) {
-                // 증빙자료 보기 모달
-                const formHtml = `
-                    <div class="form-group"><label for="modal-courseName">교육명</label><input type="text" id="modal-courseName" value="${courseName}" readonly></div>
-                    <div class="form-group"><label for="modal-courseType">교육구분</label><input type="text" id="modal-courseType" value="${courseType}" readonly></div>
-                    <div class="form-group"><label for="modal-courseHours">인정시간</label><input type="text" id="modal-courseHours" value="${courseHours}" readonly></div>
-                    <div class="form-group"><label for="modal-completionDate">이수완료일</label><input type="text" id="modal-completionDate" readonly></div>
-                    <div class="form-group"><label for="modal-proofFile">증빙자료</label><input type="text" id="modal-proofFile" value="첨부된 파일명.pdf" readonly></div>
-                    <div class="form-group"><label for="modal-notes">비고</label><textarea id="modal-notes" rows="3" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;" readonly>교육 내용 요약이나 특이사항</textarea></div>`;
-                openModal('증빙자료 보기', formHtml);
-            }
+                if (e.target.value === 'personal') {
+                    personalReport.style.display = 'block';
+                    departmentReport.style.display = 'none';
+                } else {
+                    personalReport.style.display = 'none';
+                    departmentReport.style.display = 'block';
+                }
+            });
         });
+
+        // 개인별 보고서 이벤트
+        const personalReportForm = document.getElementById('personalReportForm');
+        personalReportForm.addEventListener('submit', e => {
+            e.preventDefault();
+            const startDate = document.getElementById('personalStartDate').value;
+            const endDate = document.getElementById('personalEndDate').value;
+            const auditorName = document.getElementById('personalAuditorInput').value.trim();
+            renderPersonalReport(startDate, endDate, auditorName);
+        });
+        personalReportForm.addEventListener('reset', () => {
+            document.getElementById('personalReportSummary').innerHTML = '';
+            document.querySelector('#reportTable tbody').innerHTML = '';
+        });
+
+        // 부서별 보고서 이벤트
+        const departmentReportForm = document.getElementById('departmentReportForm');
+        departmentReportForm.addEventListener('submit', e => {
+            e.preventDefault();
+            const startDate = document.getElementById('deptStartDate').value;
+            const endDate = document.getElementById('deptEndDate').value;
+            const deptFilter = document.getElementById('deptSelect').value;
+            const auditorName = document.getElementById('deptAuditorInput').value.trim();
+            renderDepartmentReport(startDate, endDate, deptFilter, auditorName);
+        });
+        departmentReportForm.addEventListener('reset', () => {
+            document.getElementById('departmentReportSummary').innerHTML = '';
+            document.querySelector('#reportTable tbody').innerHTML = '';
+        });
+
+        // 엑셀 다운로드 이벤트
+        document.getElementById('personalExcelBtn').addEventListener('click', () => {
+            downloadPersonalReportExcel();
+        });
+        document.getElementById('departmentExcelBtn').addEventListener('click', () => {
+            downloadDepartmentReportExcel();
+        });
+
+        // 인쇄 이벤트
+        document.getElementById('personalPrintBtn').addEventListener('click', () => {
+            printPersonalReport();
+        });
+        document.getElementById('departmentPrintBtn').addEventListener('click', () => {
+            printDepartmentReport();
+        });
+
+        // 엑셀 다운로드 함수들
+        const downloadPersonalReportExcel = () => {
+            const table = document.getElementById('reportTable');
+            const data = [];
+            
+            // 헤더 추가
+            const headers = ['부서', '성명', '교육과정', '이수일자', '인정시간', '상태', '데이터소스'];
+            data.push(headers);
+            
+            // 데이터 추가
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const rowData = [];
+                row.querySelectorAll('td').forEach(cell => {
+                    rowData.push(cell.textContent.trim());
+                });
+                data.push(rowData);
+            });
+            
+            // CSV 형식으로 변환
+            const csvContent = data.map(row => row.join(',')).join('\n');
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `개인별_교육실적보고서_${new Date().toISOString().slice(0,10)}.csv`;
+            link.click();
+            
+            showToast('개인별 교육실적 보고서가 다운로드되었습니다.');
+        };
+
+        const downloadDepartmentReportExcel = () => {
+            const table = document.getElementById('reportTable');
+            const data = [];
+            
+            // 헤더 추가
+            const headers = ['부서', '성명', '교육과정', '이수일자', '인정시간', '상태', '데이터소스'];
+            data.push(headers);
+            
+            // 데이터 추가
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const rowData = [];
+                row.querySelectorAll('td').forEach(cell => {
+                    rowData.push(cell.textContent.trim());
+                });
+                data.push(rowData);
+            });
+            
+            // CSV 형식으로 변환
+            const csvContent = data.map(row => row.join(',')).join('\n');
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `부서별_교육실적보고서_${new Date().toISOString().slice(0,10)}.csv`;
+            link.click();
+            
+            showToast('부서별 교육실적 보고서가 다운로드되었습니다.');
+        };
+
+        // 인쇄 함수들
+        const printPersonalReport = () => {
+            const printWindow = window.open('', '_blank');
+            const table = document.getElementById('reportTable');
+            const summary = document.getElementById('personalReportSummary').innerHTML;
+            
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>개인별 교육실적 보고서</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        h1 { color: #2c3e50; text-align: center; }
+                        .summary { background: #f8f9fa; padding: 15px; margin: 20px 0; border-radius: 5px; }
+                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; font-weight: bold; }
+                        .status { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+                        .status.ok { background: #d4edda; color: #155724; }
+                        .status.wait { background: #fff3cd; color: #856404; }
+                        .status.error { background: #f8d7da; color: #721c24; }
+                    </style>
+                </head>
+                <body>
+                    <h1>개인별 교육실적 보고서</h1>
+                    <div class="summary">${summary}</div>
+                    ${table.outerHTML}
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        };
+
+        const printDepartmentReport = () => {
+            const printWindow = window.open('', '_blank');
+            const table = document.getElementById('reportTable');
+            const summary = document.getElementById('departmentReportSummary').innerHTML;
+            
+            const htmlContent = '<html>' +
+                '<head>' +
+                    '<title>부서별 교육실적 보고서</title>' +
+                    '<style>' +
+                        'body { font-family: Arial, sans-serif; margin: 20px; }' +
+                        'h1 { color: #2c3e50; text-align: center; }' +
+                        '.summary { background: #f8f9fa; padding: 15px; margin: 20px 0; border-radius: 5px; }' +
+                        'table { width: 100%; border-collapse: collapse; margin: 20px 0; }' +
+                        'th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }' +
+                        'th { background-color: #f2f2f2; font-weight: bold; }' +
+                        '.status { padding: 4px 8px; border-radius: 4px; font-size: 12px; }' +
+                        '.status.ok { background: #d4edda; color: #155724; }' +
+                        '.status.wait { background: #fff3cd; color: #856404; }' +
+                        '.status.error { background: #f8d7da; color: #721c24; }' +
+                    '</style>' +
+                '</head>' +
+                '<body>' +
+                    '<h1>부서별 교육실적 보고서</h1>' +
+                    '<div class="summary">' + summary + '</div>' +
+                    table.outerHTML +
+                '</body>' +
+                '</html>';
+            
+            printWindow.document.write(htmlContent);
+            printWindow.document.close();
+            printWindow.print();
+        };
+
+        // --- 사용자 정보 관리 ---
+        const getCurrentUser = () => {
+            // 실제로는 세션 또는 토큰에서 사용자 정보를 가져와야 함
+            // 현재는 localStorage에서 사용자 정보를 가져오는 것으로 시뮬레이션
+            const userInfo = localStorage.getItem('currentUser');
+            if (userInfo) {
+                return JSON.parse(userInfo);
+            }
+            // 기본값 반환 (기존 데이터에 있는 심사자로 설정)
+            return {
+                orgName: "식약처",
+                userName: "홍길동"
+            };
+        };
+
+        const updateUserInfo = () => {
+            const currentUser = getCurrentUser();
+            const userInfoElement = document.getElementById('currentUserInfo');
+            if (userInfoElement) {
+                userInfoElement.textContent = `${currentUser.orgName} - ${currentUser.userName}`;
+            }
+        };
+
+
+        // --- API 동기화 ---
+        const syncWithAPI = async () => {
+            try {
+                showToast('API 동기화를 시작합니다...');
+                
+                // 실제 API 호출 시뮬레이션
+                // 평가원 교육관리시스템에서 등록한 실제 교육과정 데이터
+                const mockApiData = [
+                    {
+                        id: 30,
+                        name: "2025년 신규 의약품 심사 가이드라인",
+                        desc: "2025년도 신규 의약품 심사 기준 및 가이드라인",
+                        startDate: "2025-04-01",
+                        endDate: "2025-04-30",
+                        type: "필수",
+                        hours: 8,
+                        regDate: new Date().toISOString().slice(0,10),
+                        dataSource: "API",
+                        orgName: "평가원 교육관리시스템",
+                        registrant: "이평가"
+                    },
+                    {
+                        id: 31,
+                        name: "의약품 임상시험 데이터 분석",
+                        desc: "임상시험 데이터 분석 및 해석 방법론",
+                        startDate: "2025-05-15",
+                        endDate: "2025-05-25",
+                        type: "선택",
+                        hours: 12,
+                        regDate: new Date().toISOString().slice(0,10),
+                        dataSource: "API",
+                        orgName: "평가원 교육관리시스템",
+                        registrant: "박데이터"
+                    },
+                    {
+                        id: 32,
+                        name: "의약품 안전성 모니터링 실무",
+                        desc: "의약품 안전성 모니터링 및 부작용 관리 실무 교육",
+                        startDate: "2025-06-01",
+                        endDate: "2025-06-15",
+                        type: "필수",
+                        hours: 10,
+                        regDate: new Date().toISOString().slice(0,10),
+                        dataSource: "API",
+                        orgName: "평가원 교육관리시스템",
+                        registrant: "김안전"
+                    },
+                    {
+                        id: 33,
+                        name: "바이오의약품 심사 실무",
+                        desc: "바이오의약품 심사 기준 및 실무 교육",
+                        startDate: "2025-07-01",
+                        endDate: "2025-07-10",
+                        type: "필수",
+                        hours: 14,
+                        regDate: new Date().toISOString().slice(0,10),
+                        dataSource: "API",
+                        orgName: "평가원 교육관리시스템",
+                        registrant: "최바이오"
+                    },
+                    {
+                        id: 34,
+                        name: "의약품 품질관리 심화과정",
+                        desc: "의약품 품질관리 고급 실무 및 검사 방법론",
+                        startDate: "2025-08-01",
+                        endDate: "2025-08-20",
+                        type: "선택",
+                        hours: 16,
+                        regDate: new Date().toISOString().slice(0,10),
+                        dataSource: "API",
+                        orgName: "평가원 교육관리시스템",
+                        registrant: "강품질"
+                    }
+                ];
+                
+                // 중복되지 않는 새 데이터만 추가
+                const existingIds = new Set(db.courses.map(c => c.id));
+                const newCourses = mockApiData.filter(course => !existingIds.has(course.id));
+                
+                if (newCourses.length > 0) {
+                    db.courses.push(...newCourses);
+                    saveData();
+                    renderAll();
+                    showToast(`API 동기화가 완료되었습니다. ${newCourses.length}개의 새로운 교육과정이 추가되었습니다.`);
+                } else {
+                    showToast('API 동기화가 완료되었습니다. 추가할 새로운 교육과정이 없습니다.');
+                }
+                
+            } catch (error) {
+                showToast('API 동기화 중 오류가 발생했습니다.');
+                console.error('API 동기화 오류:', error);
+            }
+        };
+
+        // 이수 기록 API 동기화 함수
+        const syncRecordsWithAPI = async () => {
+            try {
+                showToast('이수 기록 API 동기화를 시작합니다...');
+                
+                // 실제 API 호출 시뮬레이션 - 평가원 교육관리시스템에서 이수 기록 가져오기
+                const mockRecordsApiData = [
+                    {
+                        id: 100,
+                        auditorName: '홍길동',
+                        dept: '신약심사부',
+                        rank: '심사원',
+                        courseId: 1,
+                        courseName: '개인정보보호 및 정보보안 교육',
+                        completionDate: '2025-02-15',
+                        status: '완료',
+                        dataSource: 'API',
+                        registrant: '홍길동'
+                    },
+                    {
+                        id: 101,
+                        auditorName: '김철수',
+                        dept: '허가총괄부',
+                        rank: '주무관',
+                        courseId: 2,
+                        courseName: '의약품 GMP 기본 과정',
+                        completionDate: '2025-04-20',
+                        status: '완료',
+                        dataSource: 'API',
+                        registrant: '김철수'
+                    },
+                    {
+                        id: 102,
+                        auditorName: '이영희',
+                        dept: '신약심사부',
+                        rank: '연구관',
+                        courseId: 3,
+                        courseName: '2025년 신약 허가·심사 워크숍',
+                        completionDate: '2025-07-16',
+                        status: '완료',
+                        dataSource: 'API',
+                        registrant: '이영희'
+                    },
+                    {
+                        id: 103,
+                        auditorName: '박선우',
+                        dept: '생물의약품부',
+                        rank: '선임연구관',
+                        courseId: 4,
+                        courseName: '바이오의약품 심사 가이드라인',
+                        completionDate: '2025-08-05',
+                        status: '완료',
+                        dataSource: 'API',
+                        registrant: '박선우'
+                    },
+                    {
+                        id: 104,
+                        auditorName: '최민준',
+                        dept: '신약심사부',
+                        rank: '심사원',
+                        courseId: 5,
+                        courseName: '의약품 통계 분석 심화',
+                        completionDate: '2025-10-21',
+                        status: '완료',
+                        dataSource: 'API',
+                        registrant: '최민준'
+                    },
+                    {
+                        id: 105,
+                        auditorName: '정수진',
+                        dept: '품질안전부',
+                        rank: '주무관',
+                        courseId: 6,
+                        courseName: '의약품 부작용 보고 시스템',
+                        completionDate: '2025-03-10',
+                        status: '완료',
+                        dataSource: 'API',
+                        registrant: '정수진'
+                    },
+                    {
+                        id: 106,
+                        auditorName: '한지민',
+                        dept: '품질안전부',
+                        rank: '심사원',
+                        courseId: 7,
+                        courseName: '임상시험 윤리 및 규정',
+                        completionDate: '2025-05-15',
+                        status: '완료',
+                        dataSource: 'API',
+                        registrant: '한지민'
+                    },
+                    {
+                        id: 107,
+                        auditorName: '송민호',
+                        dept: '임상정책부',
+                        rank: '연구관',
+                        courseId: 8,
+                        courseName: '의약품 품질관리 실무',
+                        completionDate: '2025-06-05',
+                        status: '완료',
+                        dataSource: 'API',
+                        registrant: '송민호'
+                    }
+                ];
+                
+                // 중복되지 않는 새 이수 기록만 추가
+                let addedCount = 0;
+                
+                mockRecordsApiData.forEach(record => {
+                    if (!db.auditors[record.auditorName]) {
+                        db.auditors[record.auditorName] = {
+                            info: {
+                                name: record.auditorName,
+                                dept: record.dept,
+                                rank: record.rank
+                            },
+                            records: []
+                        };
+                    }
+                    
+                    if (!db.auditors[record.auditorName].records) {
+                        db.auditors[record.auditorName].records = [];
+                    }
+                    
+                    // 중복 체크: 같은 ID의 기록이 이미 있는지 확인
+                    const existingRecord = db.auditors[record.auditorName].records.find(r => r.id === record.id);
+                    if (!existingRecord) {
+                        db.auditors[record.auditorName].records.push({
+                            id: record.id,
+                            courseId: record.courseId,
+                            date: record.completionDate,
+                            status: record.status,
+                            dataSource: record.dataSource,
+                            registrant: record.registrant,
+                            auditorName: record.auditorName, // 심사자 이름 추가
+                            approve: '승인' // API에서 가져온 데이터는 이미 승인된 것만
+                        });
+                        addedCount++;
+                    }
+                });
+                
+                if (addedCount > 0) {
+                    saveData();
+                    renderAll();
+                    showToast(`이수 기록 API 동기화가 완료되었습니다. ${addedCount}개의 새로운 이수 기록이 추가되었습니다. (자동 승인 처리됨)`);
+                } else {
+                    showToast('이수 기록 API 동기화가 완료되었습니다. 추가할 새로운 이수 기록이 없습니다.');
+                }
+                
+            } catch (error) {
+                console.error('이수 기록 API 동기화 오류:', error);
+                showToast('이수 기록 API 동기화 중 오류가 발생했습니다: ' + error.message);
+            }
+        };
 
         // --- 공통 유틸리티 ---
         const showToast = (message) => {
@@ -1076,8 +2542,14 @@
 
         // --- 앱 시작 ---
         initData();
+        updateUserInfo();
+        
+        // 초기 검색 결과 개수 표시
+        const searchResultInfo = document.getElementById('searchResultInfo');
+        if (searchResultInfo) {
+            searchResultInfo.textContent = `검색 결과: ${db.courses.length}건`;
+        }
     });
-    </script>
-
+</script>
 </body>
 </html>
