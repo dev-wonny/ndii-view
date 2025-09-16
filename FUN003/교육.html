@@ -54,18 +54,19 @@
         .action-area{text-align:right}
         
         .table-container{overflow-x:auto;margin-top:20px;border:1px solid var(--line);border-radius:8px}
-        table{width:100%;min-width:1200px;border-collapse:separate;border-spacing:0}
-        th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;font-size:14px;white-space:nowrap}
-        th:first-child,td:first-child{width:60px;min-width:60px}
-        th:nth-child(2),td:nth-child(2){width:200px;min-width:200px}
-        th:nth-child(3),td:nth-child(3){width:250px;min-width:250px;white-space:normal;word-wrap:break-word}
-        th:nth-child(4),td:nth-child(4){width:180px;min-width:180px}
-        th:nth-child(5),td:nth-child(5){width:80px;min-width:80px}
+        table{width:100%;min-width:1000px;border-collapse:separate;border-spacing:0}
+        th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left;font-size:13px;white-space:nowrap}
+        th:first-child,td:first-child{width:80px;min-width:80px}
+        th:nth-child(2),td:nth-child(2){width:120px;min-width:120px}
+        th:nth-child(3),td:nth-child(3){width:100px;min-width:100px}
+        th:nth-child(4),td:nth-child(4){width:200px;min-width:200px;white-space:normal;word-wrap:break-word}
+        th:nth-child(5),td:nth-child(5){width:100px;min-width:100px}
         th:nth-child(6),td:nth-child(6){width:80px;min-width:80px}
-        th:nth-child(7),td:nth-child(7){width:150px;min-width:150px}
-        th:nth-child(8),td:nth-child(8){width:100px;min-width:100px}
+        th:nth-child(7),td:nth-child(7){width:80px;min-width:80px}
+        th:nth-child(8),td:nth-child(8){width:120px;min-width:120px}
         th:nth-child(9),td:nth-child(9){width:100px;min-width:100px}
-        th:nth-child(10),td:nth-child(10){width:120px;min-width:120px}
+        th:nth-child(10),td:nth-child(10){width:100px;min-width:100px}
+        th:nth-child(11),td:nth-child(11){width:120px;min-width:120px}
         thead th{color:var(--muted);font-weight:600;background:#fafafa;position:sticky;top:0}
         thead th.sortable{cursor:pointer}
         thead th.sortable:hover{background:#f3f4f6}
@@ -83,6 +84,20 @@
         #recordTable td{vertical-align:middle;padding:8px 6px}
         #recordTable th{font-size:13px;padding:10px 6px}
         #recordTable .status{font-size:11px;padding:2px 6px}
+        
+        /* 교육명 컬럼 개선 */
+        #recordTable th:nth-child(4), #recordTable td:nth-child(4) {
+            max-width: 200px;
+            white-space: normal;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        /* 관리 버튼 컬럼 개선 */
+        #recordTable th:nth-child(11), #recordTable td:nth-child(11) {
+            text-align: center;
+            white-space: nowrap;
+        }
         
         /* Modal Styles */
         .modal-overlay{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;overflow:auto;background-color:rgba(0,0,0,0.5)}
@@ -106,6 +121,21 @@
         .status.wait{border-color:#fde68a;background:#fffbeb;color:#92400e}
         .status.bad{border-color:#fecaca;background:#fef2f2;color:#7f1d1d}
         
+        /* 처리 완료 상태 스타일 */
+        .status-info {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+        }
+        .status-info p {
+            margin: 8px 0;
+        }
+        .status-info em {
+            color: var(--muted);
+            font-style: italic;
+        }
+        
         /* Responsive */
         @media (max-width: 768px) {
             .container{padding:8px}
@@ -113,9 +143,18 @@
             .form-group{flex-direction:column;align-items:stretch}
             input[type="text"]{width:100%}
             .row.two{grid-template-columns:1fr}
-            .table-container{overflow-x:auto;margin-top:16px}
+            .table-container{overflow-x:auto;margin-top:16px;border-radius:6px}
+            table{min-width:900px}
+            th,td{padding:6px;font-size:11px}
+            .manage-buttons{flex-direction:column;gap:2px}
+            .manage-buttons .btn{font-size:10px;padding:4px 6px}
+        }
+        
+        @media (max-width: 480px) {
+            .table-container{overflow-x:scroll;margin-top:12px}
             table{min-width:800px}
-            th,td{padding:8px;font-size:12px}
+            th,td{padding:4px;font-size:10px}
+            .btn{font-size:11px;padding:6px 8px}
         }
 
         /* 승인/반려 모달 스타일 */
@@ -272,7 +311,7 @@
     <header>
         <h1>의약품통합정보시스템 - 교육 실적 관리</h1>
         <div id="userInfo" style="margin-left: auto; color: var(--muted); font-size: 14px;">
-            <span id="currentUserInfo">식약처 - 김관리자</span>
+            <span id="currentUserInfo">신약심사부 - 홍길동</span>
         </div>
     </header>
 
@@ -331,6 +370,7 @@
                      <form id="auditorSearchForm">
                         <div class="form-group"><label for="deptSelect">부서 선택</label><select id="deptSelect"><option value="전체">전체 부서</option><option value="신약심사부">신약심사부</option><option value="허가총괄부">허가총괄부</option><option value="생물의약품부">생물의약품부</option><option value="품질안전부">품질안전부</option><option value="임상정책부">임상정책부</option></select></div>
                         <div class="form-group"><label for="auditorNameInput">심사자 검색</label><input type="text" id="auditorNameInput" placeholder="예: 홍길동, 김철수, 이영희, 박선우, 최민준"></div>
+                        <div class="form-group"><label for="statusSelect">상태</label><select id="statusSelect"><option value="전체">전체 상태</option><option value="승인완료">승인완료</option><option value="승인대기">승인대기</option><option value="반려">반려</option><option value="자동승인">자동승인</option></select></div>
                         <button type="submit" class="btn btn-search">검색</button>
                     </form>
                 </div>
@@ -398,6 +438,20 @@
                         <span id="personalReportSummary"></span>
                         <div><button id="personalExcelBtn" class="btn btn-primary">엑셀 다운로드</button><button id="personalPrintBtn" class="btn btn-secondary">인쇄</button></div>
                     </div>
+                    <div class="table-container">
+                        <table id="personalReportTable">
+                            <thead><tr>
+                                <th>부서</th>
+                                <th>성명</th>
+                                <th>교육과정</th>
+                                <th>이수일자</th>
+                                <th>인정시간</th>
+                                <th>상태</th>
+                                <th>데이터소스</th>
+                            </tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <!-- 부서별 보고서 -->
@@ -406,7 +460,7 @@
                     <div class="search-area">
                         <form id="departmentReportForm">
                             <div class="form-group"><label>조회기간</label><input type="date" id="deptStartDate"> ~ <input type="date" id="deptEndDate"></div>
-                            <div class="form-group"><label for="deptSelect">부서</label><select id="deptSelect"><option value="">전체 부서</option><option value="신약심사부">신약심사부</option><option value="허가총괄부">허가총괄부</option><option value="생물의약품부">생물의약품부</option><option value="품질안전부">품질안전부</option><option value="임상정책부">임상정책부</option></select></div>
+                            <div class="form-group"><label for="deptReportSelect">부서</label><select id="deptReportSelect"><option value="">전체 부서</option><option value="신약심사부">신약심사부</option><option value="허가총괄부">허가총괄부</option><option value="생물의약품부">생물의약품부</option><option value="품질안전부">품질안전부</option><option value="임상정책부">임상정책부</option></select></div>
                             <div class="form-group"><label for="deptAuditorInput">심사자</label><input type="text" id="deptAuditorInput" placeholder="심사자 이름을 입력하세요 (예: 홍길동, 김철수)"></div>
                             <button type="submit" class="btn btn-search">조회</button><button type="reset" class="btn btn-secondary">초기화</button>
                         </form>
@@ -415,21 +469,21 @@
                         <span id="departmentReportSummary"></span>
                         <div><button id="departmentExcelBtn" class="btn btn-primary">엑셀 다운로드</button><button id="departmentPrintBtn" class="btn btn-secondary">인쇄</button></div>
                     </div>
+                    <div class="table-container">
+                        <table id="reportTable">
+                            <thead><tr>
+                                <th>부서</th>
+                                <th>성명</th>
+                                <th>교육과정</th>
+                                <th>이수일자</th>
+                                <th>인정시간</th>
+                                <th>상태</th>
+                                <th>데이터소스</th>
+                            </tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="table-container">
-                <table id="reportTable">
-                        <thead><tr>
-                            <th>부서</th>
-                            <th>성명</th>
-                            <th>교육과정</th>
-                            <th>이수일자</th>
-                            <th>인정시간</th>
-                            <th>상태</th>
-                            <th>데이터소스</th>
-                        </tr></thead>
-                        <tbody></tbody>
-                </table>
-            </div>
             </div>
         </section>
 
@@ -457,6 +511,7 @@
         // --- 데이터베이스 및 상태 관리 ---
         let db = {};
         let currentAuditor = null;
+        let currentStatus = null;
         let sortState = {};
 
         // localStorage에서 데이터 로드 또는 초기화
@@ -951,7 +1006,8 @@
         const renderRecordTable = () => {
             const dept = document.getElementById('deptSelect')?.value || '전체';
             const nameFilter = document.getElementById('auditorNameInput')?.value || '';
-            console.log('renderRecordTable 호출 - 부서:', dept, '이름 필터:', nameFilter);
+            const statusFilter = document.getElementById('statusSelect')?.value || '전체';
+            console.log('renderRecordTable 호출 - 부서:', dept, '이름 필터:', nameFilter, '상태 필터:', statusFilter);
             
             const tbody = document.querySelector('#recordTable tbody');
             tbody.innerHTML = '';
@@ -1022,6 +1078,22 @@
                         registrant: r.registrant || name
                     };
                 });
+                
+                // 상태 필터링 적용
+                if (statusFilter !== '전체') {
+                    recordsToDisplay = recordsToDisplay.filter(rec => {
+                        if (statusFilter === '승인완료') {
+                            return rec.approve === '승인';
+                        } else if (statusFilter === '승인대기') {
+                            return rec.approve === '승인대기';
+                        } else if (statusFilter === '반려') {
+                            return rec.approve === '반려';
+                        } else if (statusFilter === '자동승인') {
+                            return rec.approve === '승인' && rec.dataSource === 'API';
+                        }
+                        return true;
+                    });
+                }
                 
                 recordsToDisplay.forEach(rec => {
                     const row = tbody.insertRow();
@@ -1107,9 +1179,9 @@
             console.log('=== 개인별 보고서 렌더링 시작 ===');
             console.log('startDate:', startDate, 'endDate:', endDate, 'auditorName:', auditorName);
             
-            const tbody = document.querySelector('#reportTable tbody');
+            const tbody = document.querySelector('#personalReportTable tbody');
             if (!tbody) {
-                console.error('reportTable tbody를 찾을 수 없습니다');
+                console.error('personalReportTable tbody를 찾을 수 없습니다');
                 return;
             }
             tbody.innerHTML = '';
@@ -1169,6 +1241,7 @@
         const renderDepartmentReport = (startDate, endDate, deptFilter, auditorName) => {
             console.log('=== 부서별 보고서 렌더링 시작 ===');
             console.log('startDate:', startDate, 'endDate:', endDate, 'deptFilter:', deptFilter, 'auditorName:', auditorName);
+            console.log('deptFilter type:', typeof deptFilter, 'deptFilter === "":', deptFilter === '', 'deptFilter === "전체":', deptFilter === '전체');
             
             const tbody = document.querySelector('#reportTable tbody');
             if (!tbody) {
@@ -1183,10 +1256,12 @@
             const deptStats = {};
 
             Object.entries(db.auditors).forEach(([name, auditor]) => {
-                // 부서 필터링
-                const deptMatch = !deptFilter || auditor.info.dept === deptFilter;
+                // 부서 필터링 (전체 부서 또는 빈 값일 때는 모든 부서 포함)
+                const deptMatch = !deptFilter || deptFilter === '' || deptFilter === '전체' ? true : auditor.info.dept === deptFilter;
                 // 심사자 이름 필터링
-                const nameMatch = !auditorName || name.toLowerCase().includes(auditorName.toLowerCase());
+                const nameMatch = !auditorName || auditorName === '' ? true : name.toLowerCase().includes(auditorName.toLowerCase());
+                
+                console.log(`심사자 ${name}: 부서=${auditor.info.dept}, deptFilter=${deptFilter}, deptMatch=${deptMatch}, nameMatch=${nameMatch}, records=${auditor.records ? auditor.records.length : 0}`);
                 
                 if (auditor.records && deptMatch && nameMatch) {
                     if (!deptStats[auditor.info.dept]) {
@@ -1223,6 +1298,10 @@
                     });
                 }
             });
+
+            if (count === 0) {
+                tbody.innerHTML = '<tr><td colspan="7">검색 조건에 맞는 이수 기록이 없습니다.</td></tr>';
+            }
 
             let summaryText = `<strong>검색 결과:</strong> 총 ${count}건 | <strong>총 이수시간:</strong> ${totalHours}시간 | <strong>승인 완료:</strong> ${completedCount}건`;
             
@@ -1354,6 +1433,52 @@
                             </div>`;
                         }
                         
+                        // 승인 또는 반려가 완료된 경우 버튼을 숨김
+                        if (record.approve === '승인' || record.approve === '반려') {
+                            return `
+                                <div class="approval-actions">
+                                    <h4>처리 결과</h4>
+                                    <div class="status-info">
+                                        <p><strong>처리 상태:</strong> <span class="status ${record.approve === '승인' ? 'ok' : 'bad'}">${record.approve}</span></p>
+                                        <p><em>처리가 완료되어 추가 작업이 불가능합니다.</em></p>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        
+                        // 승인대기 상태인 경우 작성자만 수정 가능
+                        if (record.approve === '승인대기') {
+                            const currentUser = getCurrentUser();
+                            const isAuthor = record.auditorName === currentUser.userName || record.registrant === currentUser.userName;
+                            
+                            if (isAuthor) {
+                                return `
+                                    <div class="approval-actions">
+                                        <h4>처리 결과</h4>
+                                        <div class="action-buttons">
+                                            <button type="button" class="btn btn-primary" onclick="editRecord(${record.id})">
+                                                ✏️ 내용 수정
+                                            </button>
+                                        </div>
+                                        <div class="status-info" style="margin-top: 15px;">
+                                            <p><strong>처리 상태:</strong> <span class="status wait">승인대기</span></p>
+                                            <p><em>승인 대기 중입니다. 작성자는 내용을 수정할 수 있습니다.</em></p>
+                                        </div>
+                                    </div>
+                                `;
+                            } else {
+                                return `
+                                    <div class="approval-actions">
+                                        <h4>처리 결과</h4>
+                                        <div class="status-info">
+                                            <p><strong>처리 상태:</strong> <span class="status wait">승인대기</span></p>
+                                            <p><em>승인 대기 중입니다. 작성자만 수정할 수 있습니다.</em></p>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                        }
+                        
                         return `
                             <div class="approval-actions">
                                 <h4>처리 결과</h4>
@@ -1479,6 +1604,16 @@
                     closeModal();
                     showToast(`이수 기록이 ${action} 처리되었습니다.`);
                     
+                    // 처리된 기록의 상세보기를 다시 열어서 버튼이 숨겨진 상태로 표시
+                    setTimeout(() => {
+                        const updatedRecord = currentDisplayedRecords.find(r => r.id === recordId);
+                        if (updatedRecord) {
+                            // approve 상태 업데이트
+                            updatedRecord.approve = action;
+                            showRecordDetailsModal(updatedRecord);
+                        }
+                    }, 100);
+                    
                 } else {
                     console.error('Could not find original record to update');
                     console.log('Looking for courseId:', displayedRecord.courseId, 'auditorName:', displayedRecord.auditorName);
@@ -1491,6 +1626,53 @@
             }
         };
 
+
+        // 이수 기록 수정 함수 (승인대기 상태에서 작성자가 사용)
+        window.editRecord = (recordId) => {
+            console.log('editRecord called with recordId:', recordId);
+            
+            // 현재 표시된 기록에서 찾기
+            const displayedRecord = currentDisplayedRecords.find(r => r.id === recordId);
+            console.log('Found displayed record for edit:', displayedRecord);
+            
+            if (displayedRecord) {
+                // 교육과정 옵션 생성 (외부 교육기관만)
+                const courseOptions = db.courses
+                    .filter(c => c.dataSource === 'EXTERNAL')
+                    .map(c => `<option value="${c.id}" ${c.id === displayedRecord.courseId ? 'selected' : ''}>${c.name}</option>`)
+                    .join('');
+                
+                const formHtml = `
+                    <input type="hidden" id="modal-recordId" name="recordId" value="${displayedRecord.id}">
+                    <div class="form-group">
+                        <label for="modal-auditorName">심사자</label>
+                        <input type="text" id="modal-auditorName" name="auditorName" value="${displayedRecord.auditorName}" readonly style="background-color: #f5f5f5;">
+                    </div>
+                    <div class="form-group">
+                        <label for="modal-courseId">교육과정</label>
+                        <select id="modal-courseId" name="courseId" required>${courseOptions}</select>
+                    </div>
+                    <div class="form-group">
+                        <label for="modal-date">이수일자</label>
+                        <input type="date" id="modal-date" name="date" value="${displayedRecord.date}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="modal-file">증빙자료</label>
+                        <input type="file" id="modal-file" name="file">
+                        ${displayedRecord.fileName ? `<p style="font-size: 12px; color: var(--muted); margin-top: 5px;">현재 파일: ${displayedRecord.fileName}</p>` : ''}
+                    </div>
+                    <div class="form-group">
+                        <label for="modal-notes">비고</label>
+                        <textarea id="modal-notes" name="notes" rows="3" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;" placeholder="교육 내용 요약이나 특이사항을 입력하세요">${displayedRecord.notes || ''}</textarea>
+                    </div>
+                `;
+                
+                openModal('이수 기록 수정', formHtml);
+            } else {
+                console.error('Could not find displayed record for edit');
+                showToast('수정할 기록을 찾을 수 없습니다.');
+            }
+        };
 
         // 이수 기록 삭제 함수
         window.deleteRecord = (recordId) => {
@@ -1579,8 +1761,11 @@
                 modalBody.innerHTML = content;
             }
             
-            // 데이터 소스가 API인 경우 모달 푸터 숨기기
-            if (data && data.dataSource === 'API' && title === '이수 기록 상세 정보') {
+            // 데이터 소스가 API인 경우, 상세 정보 모달인 경우, 또는 승인/반려 처리 모달인 경우 모달 푸터 숨기기
+            if ((data && data.dataSource === 'API' && title === '이수 기록 상세 정보') || 
+                title === '이수 기록 상세 정보' || 
+                title === '승인 처리' || 
+                title === '반려 처리') {
                 if (modalFooter) {
                     modalFooter.style.display = 'none';
                 }
@@ -1659,12 +1844,16 @@
                 }
                 
                 db.auditors[data.auditorName].records.push(newRecord);
+                saveData();
+                renderRecordTable();
                 
                 if (isApiCourse) {
                     showToast('이수 기록이 등록되었습니다. (평가원 교육관리시스템 교육과정으로 자동 승인 처리됨)');
                 } else {
                     showToast('이수 기록이 등록되었습니다. (외부 교육기관 교육과정으로 승인대기 상태)');
                 }
+                
+                closeModal();
                 
             } else if (modalTitle === '신규 교육과정 등록') {
                 // 새로운 교육과정 저장 (외부 교육기관 등록)
@@ -1682,7 +1871,10 @@
                     registrant: data.registrant
                 };
                 db.courses.push(newCourse);
+                saveData();
+                renderAll();
                 showToast('교육과정이 등록되었습니다.');
+                closeModal();
                 
             } else if (modalTitle === '교육과정 수정') {
                 // 교육과정 수정
@@ -1699,7 +1891,10 @@
                         registrant: data.registrant,
                         regDate: data.regDate
                     });
+                    saveData();
+                    renderAll();
                     showToast('교육과정이 수정되었습니다.');
+                    closeModal();
                 }
             } else if (modalTitle === '이수 기록 수정') {
                 // 이수 기록 수정
@@ -1739,17 +1934,25 @@
                 
                 if (found) {
                     console.log('이수 기록 수정 성공');
+                    saveData();
+                    renderRecordTable();
                     showToast('이수 기록이 수정되었습니다.');
+                    closeModal();
+                    
+                    // 승인대기 상태인 경우 상세보기를 다시 열어서 수정된 내용 확인 가능
+                    setTimeout(() => {
+                        const updatedRecord = currentDisplayedRecords.find(r => r.id === recordId);
+                        if (updatedRecord && updatedRecord.approve === '승인대기') {
+                            showRecordDetailsModal(updatedRecord);
+                        }
+                    }, 100);
+                    
                 } else {
                     console.error('수정할 이수 기록을 찾을 수 없습니다. ID:', recordId);
                     console.log('사용 가능한 기록들:', Object.values(db.auditors).flatMap(a => a.records?.map(r => ({id: r.id, courseId: r.courseId})) || []));
                     showToast('수정할 이수 기록을 찾을 수 없습니다.');
                 }
             }
-            
-            saveData();
-            closeModal();
-            renderAll();
         });
         
         // 네비게이션 이벤트
@@ -1862,7 +2065,9 @@
             e.preventDefault();
             const dept = document.getElementById('deptSelect').value;
             const nameFilter = document.getElementById('auditorNameInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusSelect').value;
             currentAuditor = nameFilter; // 심사자 이름으로 설정
+            currentStatus = statusFilter; // 상태 필터 설정
             renderRecordTable();
         });
 
@@ -1876,6 +2081,18 @@
             console.log('부서 선택 이벤트 리스너 등록 완료');
         } else {
             console.error('deptSelect 요소를 찾을 수 없습니다.');
+        }
+
+        // 상태 선택 변경 시 자동 업데이트
+        const statusSelectElement = document.getElementById('statusSelect');
+        if (statusSelectElement) {
+            statusSelectElement.addEventListener('change', (e) => {
+                console.log('상태 선택 변경:', e.target.value);
+                renderRecordTable();
+            });
+            console.log('상태 선택 이벤트 리스너 등록 완료');
+        } else {
+            console.error('statusSelect 요소를 찾을 수 없습니다.');
         }
 
         document.getElementById('add-record-btn').addEventListener('click', () => {
@@ -2056,7 +2273,7 @@
         });
         personalReportForm.addEventListener('reset', () => {
             document.getElementById('personalReportSummary').innerHTML = '';
-            document.querySelector('#reportTable tbody').innerHTML = '';
+            document.querySelector('#personalReportTable tbody').innerHTML = '';
         });
 
         // 부서별 보고서 이벤트
@@ -2065,7 +2282,7 @@
             e.preventDefault();
             const startDate = document.getElementById('deptStartDate').value;
             const endDate = document.getElementById('deptEndDate').value;
-            const deptFilter = document.getElementById('deptSelect').value;
+            const deptFilter = document.getElementById('deptReportSelect').value;
             const auditorName = document.getElementById('deptAuditorInput').value.trim();
             renderDepartmentReport(startDate, endDate, deptFilter, auditorName);
         });
@@ -2092,7 +2309,7 @@
 
         // 엑셀 다운로드 함수들
         const downloadPersonalReportExcel = () => {
-            const table = document.getElementById('reportTable');
+            const table = document.getElementById('personalReportTable');
             const data = [];
             
             // 헤더 추가
@@ -2152,7 +2369,7 @@
         // 인쇄 함수들
         const printPersonalReport = () => {
             const printWindow = window.open('', '_blank');
-            const table = document.getElementById('reportTable');
+            const table = document.getElementById('personalReportTable');
             const summary = document.getElementById('personalReportSummary').innerHTML;
             
             printWindow.document.write(`
@@ -2226,7 +2443,7 @@
             }
             // 기본값 반환 (기존 데이터에 있는 심사자로 설정)
             return {
-                orgName: "식약처",
+                orgName: "신약심사부",
                 userName: "홍길동"
             };
         };
