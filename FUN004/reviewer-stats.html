@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>심사원별 월별 통계</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{--primary:#005aa0;--bg:#f6f7f9;--card:#fff;--bd:#dcdfe4;--muted:#6b7280;}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,'Noto Sans KR',sans-serif;}
+    header{background:var(--primary);color:#fff;padding:14px 18px;font-weight:700;display:flex;gap:10px;align-items:center}
+    header a{color:#fff;opacity:.95;text-decoration:none;border:1px solid rgba(255,255,255,.5);padding:4px 8px;border-radius:6px}
+    .wrap{max-width:1280px;margin:24px auto;padding:0 16px}
+    .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:18px}
+    h2{margin:0 0 12px;color:#222}
+    h3{margin:10px 0 6px}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+    select{padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:#fff}
+    button{padding:9px 14px;border:1px solid var(--primary);background:#fff;color:var(--primary);border-radius:8px;cursor:pointer}
+    button.primary{background:var(--primary);color:#fff}
+    table{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px}
+    th,td{border:1px solid var(--bd);padding:10px;text-align:center}
+    th{background:#f1f3f5}
+    .row{display:flex;gap:16px;align-items:stretch}
+    .col{flex:1}
+    .muted{color:var(--muted)}
+    .clickable{cursor:pointer}
+    tr.clickable:hover{background:#f8fbff}
+    .right{margin-left:auto;display:flex;gap:8px}
+    .inline{display:inline-flex;gap:6px;align-items:center}
+    .summary-stats{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+    .stat-box{background:#f8f9fa;border:1px solid var(--bd);border-radius:8px;padding:12px;text-align:center;min-width:120px}
+    .stat-box .number{font-size:18px;font-weight:700;color:var(--primary)}
+    .stat-box .label{font-size:12px;color:var(--muted);margin-top:4px}
+  </style>
+</head>
+<body>
+<header>
+  의약품통합정보시스템 · 심사원별 월별 통계
+  <span class="right">
+    <a href="index.html">← 민원 목록</a> 
+    <a href="review-stats.html">심사 집계 현황</a>
+  </span>
+</header>
+
+<div class="wrap">
+  <!-- 검색 및 필터 -->
+  <div class="card">
+    <h2>검색 및 필터</h2>
+    <div class="toolbar">
+      <label class="inline">
+        <span class="muted">부서 선택</span>
+        <select id="deptSelect">
+          <option value="">전체</option>
+        </select>
+      </label>
+
+      <label class="inline">
+        <span class="muted">심사원 선택</span>
+        <select id="reviewerSelect">
+          <option value="">전체</option>
+        </select>
+      </label>
+
+      <label class="inline">
+        <span class="muted">월 선택</span>
+        <select id="monthSelect">
+          <option value="">전체</option>
+        </select>
+      </label>
+
+      <select id="status">
+        <option value="">상태(전체)</option>
+        <option value="진행">진행</option>
+        <option value="완료">완료</option>
+        <option value="대기">대기</option>
+        <option value="지연">지연</option>
+      </select>
+
+      <button id="btnApply" class="primary">적용</button>
+      <button id="btnReset">초기화</button>
+      <button id="btnPreview" class="primary">보고서 출력</button>
+    </div>
+    <div class="muted">※ 부서별 심사원별 월별 총 심사 처리 건수 및 평균 소요 시간을 확인할 수 있습니다.</div>
+  </div>
+
+  <!-- 요약 통계 -->
+  <div class="card">
+    <h2>요약 통계</h2>
+    <div class="summary-stats" id="summaryStats">
+      <div class="stat-box">
+        <div class="number" id="totalReviewers">-</div>
+        <div class="label">총 심사원 수</div>
+      </div>
+      <div class="stat-box">
+        <div class="number" id="totalCases">-</div>
+        <div class="label">총 처리 건수</div>
+      </div>
+      <div class="stat-box">
+        <div class="number" id="avgDuration">-</div>
+        <div class="label">전체 평균 소요(일)</div>
+      </div>
+      <div class="stat-box">
+        <div class="number" id="activeMonths">-</div>
+        <div class="label">활동 월 수</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 메인 테이블 -->
+  <div class="card">
+    <h2>심사원별 월별 통계</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>심사원</th>
+          <th>부서</th>
+          <th>월(YYYY-MM)</th>
+          <th>총 처리 건수</th>
+          <th>완료 건수</th>
+          <th>평균 소요(일)</th>
+          <th>최대 소요(일)</th>
+          <th>최소 소요(일)</th>
+        </tr>
+      </thead>
+      <tbody id="tblReviewerStats"></tbody>
+    </table>
+  </div>
+
+  <!-- 월별 요약 -->
+  <div class="card">
+    <h2>월별 요약</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>월(YYYY-MM)</th>
+          <th>활동 심사원 수</th>
+          <th>총 처리 건수</th>
+          <th>평균 소요(일)</th>
+        </tr>
+      </thead>
+      <tbody id="tblMonthlySummary"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+/* === 예시 데이터 === */
+const CASES = [
+  {
+    id: "2024000047",
+    productName: "아모테스트정 (1213-1245)",
+    company: "한미약품(주)",
+    kind: "제조",
+    receivedAt: "2024-01-03",
+    approvedAt: "2024-04-05",
+    status: "심사 완료",
+    reviews: [
+      { dept:"품질", reviewer:"김철수", request:"2024-01-05", start:"2024-01-07", end:"2024-01-20", status:"완료" },
+      { dept:"품질", reviewer:"김은우", request:"2024-01-10", start:"2024-01-11", end:"2024-01-22", status:"완료" },
+      { dept:"안유", reviewer:"홍길동", request:"2024-01-05", start:"2024-01-06", end:"2024-01-15", status:"완료" },
+      { dept:"GCP", reviewer:"홍길동", request:"2024-01-16", start:"2024-01-17", end:"2024-01-21", status:"완료" },
+      { dept:"RMP", reviewer:"이영희", request:"2024-01-08", start:"2024-01-09", end:"2024-01-12", status:"완료" },
+      { dept:"RMP", reviewer:"이영희", request:"2024-01-14", start:"2024-01-15", end:"2024-01-18", status:"완료" },
+      { dept:"품질", reviewer:"이영희", request:"2024-01-19", start:"2024-01-19", end:"2024-01-20", status:"완료" },
+      { dept:"GMP", reviewer:"박민수", request:"2024-01-05", start:"2024-01-06", end:"2024-01-12", status:"완료" },
+      { dept:"GMP", reviewer:"박민수", request:"2024-01-14", start:"2024-01-15", end:"2024-01-25", status:"완료" }
+    ]
+  },
+  {
+    id: "2024000213",
+    productName: "로자탄정 50mg",
+    company: "동화약품",
+    kind: "수입",
+    receivedAt: "2025-02-12",
+    approvedAt: "",
+    status: "심사 중",
+    reviews: [
+      { dept:"안유", reviewer:"오지은", request:"2025-02-13", start:"2025-02-14", end:"2025-03-02", status:"완료" },
+      { dept:"안유", reviewer:"오지은", request:"2025-03-05", start:"2025-03-06", end:"", status:"진행" },
+      { dept:"품질", reviewer:"정해준", request:"2025-02-13", start:"", end:"", status:"대기" },
+      { dept:"GCP", reviewer:"최수진", request:"2025-03-01", start:"2025-03-02", end:"2025-03-12", status:"완료" },
+      { dept:"안유", reviewer:"최수진", request:"2025-03-14", start:"2025-03-15", end:"2025-03-18", status:"완료" },
+      { dept:"GMP", reviewer:"문성현", request:"2025-02-13", start:"2025-02-16", end:"2025-03-10", status:"완료" }
+    ]
+  },
+  {
+    id: "2025000301",
+    productName: "테라신시럽 100ml",
+    company: "녹십자",
+    kind: "제조",
+    receivedAt: "2025-03-01",
+    approvedAt: "2025-04-02",
+    status: "심사 완료",
+    reviews: [
+      { dept:"RMP", reviewer:"이영희", request:"2025-03-03", start:"2025-03-06", end:"2025-03-10", status:"완료" },
+      { dept:"RMP", reviewer:"이영희", request:"2025-03-15", start:"2025-03-16", end:"2025-03-18", status:"완료" },
+      { dept:"RMP", reviewer:"이영희", request:"2025-03-22", start:"2025-03-23", end:"2025-03-28", status:"완료" },
+      { dept:"품질", reviewer:"김철수", request:"2025-03-02", start:"2025-03-03", end:"2025-03-12", status:"완료" },
+      { dept:"품질", reviewer:"김은우", request:"2025-03-05", start:"2025-03-06", end:"2025-03-14", status:"완료" },
+      { dept:"GCP", reviewer:"최수진", request:"2025-03-05", start:"2025-03-05", end:"2025-03-20", status:"완료" }
+    ]
+  }
+];
+
+/* === Utils === */
+function days(a,b){ if(!a || !b) return ""; const d1=new Date(a), d2=new Date(b); return Math.max(0, Math.round((d2-d1)/86400000)); }
+function yyyymm(d){ const x=new Date(d); return isNaN(x)? "" : `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}`; }
+function flatRows(){
+  const out=[];
+  for(const c of CASES){
+    for(const r of (c.reviews||[])){
+      out.push({...r, caseId:c.id, productName:c.productName});
+    }
+  }
+  return out;
+}
+
+/* === DOM === */
+const $deptSelect = document.getElementById("deptSelect");
+const $reviewerSelect = document.getElementById("reviewerSelect");
+const $monthSelect = document.getElementById("monthSelect");
+const $status = document.getElementById("status");
+const $totalReviewers = document.getElementById("totalReviewers");
+const $totalCases = document.getElementById("totalCases");
+const $avgDuration = document.getElementById("avgDuration");
+const $activeMonths = document.getElementById("activeMonths");
+const $tblReviewerStats = document.getElementById("tblReviewerStats");
+const $tblMonthlySummary = document.getElementById("tblMonthlySummary");
+
+/* 이벤트 */
+document.getElementById("btnApply").onclick = ()=>{ render(); };
+document.getElementById("btnReset").onclick = ()=>{ 
+  $deptSelect.value=""; 
+  $reviewerSelect.value=""; 
+  $monthSelect.value=""; 
+  $status.value=""; 
+  render(); 
+};
+document.getElementById("btnPreview").onclick = onPreviewReport;
+
+// 부서 선택 시 심사원 목록 업데이트
+$deptSelect.addEventListener('change', updateReviewerOptions);
+
+/* === 필터 적용 === */
+function getFilteredRows(dept=$deptSelect.value, reviewer=$reviewerSelect.value, month=$monthSelect.value, st=$status.value){
+  const deptV = dept || "";
+  const reviewerV = reviewer || "";
+  const monthV = month || "";
+  const stV = st || "";
+  return flatRows().filter(r => {
+    // 부서 필터 적용
+    if(deptV && r.dept !== deptV) return false;
+    // 심사원 필터 적용
+    if(reviewerV && r.reviewer !== reviewerV) return false;
+    // 월 필터 적용
+    if(monthV && r.end) {
+      const rowMonth = yyyymm(r.end);
+      if(rowMonth !== monthV) return false;
+    }
+    // 상태 필터 적용
+    if(stV && r.status && !r.status.includes(stV)) return false;
+    return true;
+  });
+}
+
+/* === 부서 선택 셀렉트 구성 === */
+function populateDeptSelect(){
+  const rows = flatRows();
+  const deptSet = new Set(rows.map(r=>r.dept).filter(Boolean));
+  
+  $deptSelect.innerHTML = '<option value="">전체</option>';
+  Array.from(deptSet).sort().forEach(dept=>{
+    const option = document.createElement('option');
+    option.value = dept;
+    option.textContent = dept;
+    $deptSelect.appendChild(option);
+  });
+}
+
+/* === 심사원 선택 셀렉트 구성 === */
+function updateReviewerOptions(){
+  const selectedDept = $deptSelect.value;
+  const rows = flatRows();
+  
+  let reviewerSet;
+  if(selectedDept) {
+    // 선택된 부서의 심사원만 표시
+    reviewerSet = new Set(rows.filter(r=>r.dept === selectedDept).map(r=>r.reviewer).filter(Boolean));
+  } else {
+    // 모든 심사원 표시
+    reviewerSet = new Set(rows.map(r=>r.reviewer).filter(Boolean));
+  }
+  
+  $reviewerSelect.innerHTML = '<option value="">전체</option>';
+  Array.from(reviewerSet).sort().forEach(reviewer=>{
+    const option = document.createElement('option');
+    option.value = reviewer;
+    option.textContent = reviewer;
+    $reviewerSelect.appendChild(option);
+  });
+  
+  // 부서가 변경되면 심사원 선택 초기화
+  $reviewerSelect.value = "";
+}
+
+/* === 월 선택 셀렉트 구성 === */
+function populateMonthSelect(){
+  const rows = getFilteredRows();
+  const monthMap = {};
+  rows.filter(r=>r.end).forEach(r=>{
+    const ym = yyyymm(r.end);
+    if(ym) monthMap[ym] = true;
+  });
+  
+  $monthSelect.innerHTML = '<option value="">전체</option>';
+  Object.keys(monthMap).sort().forEach(ym=>{
+    const option = document.createElement('option');
+    option.value = ym;
+    option.textContent = ym.replace('-', '년 ') + '월';
+    $monthSelect.appendChild(option);
+  });
+}
+
+/* === 렌더 === */
+function render(){
+  const rows = getFilteredRows();
+  const done = rows.filter(r=>r.end);
+  
+  // 요약 통계 업데이트
+  const reviewers = [...new Set(rows.map(r=>r.reviewer))];
+  const months = [...new Set(done.map(r=>yyyymm(r.end)))];
+  const durations = done.map(r=>days(r.start,r.end)).filter(d=>d!=="" && !isNaN(d));
+  const avgDuration = durations.length ? (durations.reduce((a,b)=>a+b,0)/durations.length).toFixed(1) : "0";
+  
+  $totalReviewers.textContent = reviewers.length;
+  $totalCases.textContent = rows.length;
+  $avgDuration.textContent = avgDuration;
+  $activeMonths.textContent = months.length;
+
+  // 심사원별 월별 통계
+  const stats = {};
+  rows.forEach(r=>{
+    const key = `${r.reviewer}||${r.dept}||${r.end ? yyyymm(r.end) : '진행중'}`;
+    if(!stats[key]) {
+      stats[key] = {
+        reviewer: r.reviewer,
+        dept: r.dept,
+        month: r.end ? yyyymm(r.end) : '진행중',
+        total: 0,
+        completed: 0,
+        durations: []
+      };
+    }
+    stats[key].total++;
+    if(r.end) {
+      stats[key].completed++;
+      const dur = days(r.start, r.end);
+      if(dur !== "" && !isNaN(dur)) stats[key].durations.push(dur);
+    }
+  });
+
+  const statsArray = Object.values(stats).sort((a,b)=>{
+    if(a.reviewer !== b.reviewer) return a.reviewer.localeCompare(b.reviewer, "ko");
+    if(a.month !== b.month) return a.month.localeCompare(b.month);
+    return a.dept.localeCompare(b.dept, "ko");
+  });
+
+  $tblReviewerStats.innerHTML = statsArray.map(stat=>{
+    const avgDur = stat.durations.length ? (stat.durations.reduce((a,b)=>a+b,0)/stat.durations.length).toFixed(1) : "-";
+    const maxDur = stat.durations.length ? Math.max(...stat.durations) : "-";
+    const minDur = stat.durations.length ? Math.min(...stat.durations) : "-";
+    
+    return `<tr>
+      <td>${stat.reviewer}</td>
+      <td>${stat.dept}</td>
+      <td>${stat.month}</td>
+      <td>${stat.total}</td>
+      <td>${stat.completed}</td>
+      <td>${avgDur}</td>
+      <td>${maxDur}</td>
+      <td>${minDur}</td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="8">데이터 없음</td></tr>`;
+
+  // 월별 요약
+  const monthlyStats = {};
+  done.forEach(r=>{
+    const month = yyyymm(r.end);
+    if(!monthlyStats[month]) {
+      monthlyStats[month] = {
+        month,
+        reviewers: new Set(),
+        total: 0,
+        durations: []
+      };
+    }
+    monthlyStats[month].reviewers.add(r.reviewer);
+    monthlyStats[month].total++;
+    const dur = days(r.start, r.end);
+    if(dur !== "" && !isNaN(dur)) monthlyStats[month].durations.push(dur);
+  });
+
+  const monthlyArray = Object.values(monthlyStats).sort((a,b)=>a.month.localeCompare(b.month));
+  
+  $tblMonthlySummary.innerHTML = monthlyArray.map(stat=>{
+    const avgDur = stat.durations.length ? (stat.durations.reduce((a,b)=>a+b,0)/stat.durations.length).toFixed(1) : "-";
+    return `<tr>
+      <td>${stat.month}</td>
+      <td>${stat.reviewers.size}</td>
+      <td>${stat.total}</td>
+      <td>${avgDur}</td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="4">데이터 없음</td></tr>`;
+
+  // 선택 옵션 업데이트
+  populateDeptSelect();
+  updateReviewerOptions();
+  populateMonthSelect();
+}
+
+/* === 보고서 생성 === */
+function buildReport(){
+  const rows = getFilteredRows();
+  const done = rows.filter(r=>r.end);
+  
+  if(done.length===0){
+    return `<div>해당 조건에 데이터가 없습니다.</div>`;
+  }
+
+  // 심사원별 월별 통계
+  const stats = {};
+  rows.forEach(r=>{
+    const key = `${r.reviewer}||${r.dept}||${r.end ? yyyymm(r.end) : '진행중'}`;
+    if(!stats[key]) {
+      stats[key] = {
+        reviewer: r.reviewer,
+        dept: r.dept,
+        month: r.end ? yyyymm(r.end) : '진행중',
+        total: 0,
+        completed: 0,
+        durations: []
+      };
+    }
+    stats[key].total++;
+    if(r.end) {
+      stats[key].completed++;
+      const dur = days(r.start, r.end);
+      if(dur !== "" && !isNaN(dur)) stats[key].durations.push(dur);
+    }
+  });
+
+  const statsArray = Object.values(stats).sort((a,b)=>{
+    if(a.reviewer !== b.reviewer) return a.reviewer.localeCompare(b.reviewer, "ko");
+    if(a.month !== b.month) return a.month.localeCompare(b.month);
+    return a.dept.localeCompare(b.dept, "ko");
+  });
+
+  const statsTable = `
+  <table style="width:100%;border-collapse:collapse" border="1" cellpadding="6">
+    <thead>
+      <tr>
+        <th>심사원</th><th>부서</th><th>월(YYYY-MM)</th><th>총 처리 건수</th>
+        <th>완료 건수</th><th>평균 소요(일)</th><th>최대 소요(일)</th><th>최소 소요(일)</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${statsArray.map(stat=>{
+        const avgDur = stat.durations.length ? (stat.durations.reduce((a,b)=>a+b,0)/stat.durations.length).toFixed(1) : "-";
+        const maxDur = stat.durations.length ? Math.max(...stat.durations) : "-";
+        const minDur = stat.durations.length ? Math.min(...stat.durations) : "-";
+        return `<tr>
+          <td>${stat.reviewer}</td><td>${stat.dept}</td><td>${stat.month}</td><td>${stat.total}</td>
+          <td>${stat.completed}</td><td>${avgDur}</td><td>${maxDur}</td><td>${minDur}</td>
+        </tr>`;
+      }).join("")}
+    </tbody>
+  </table>`;
+
+  return `
+  <div style="margin-bottom:12px">
+    <div style="font-weight:800;font-size:18px">심사원별 월별 통계</div>
+    <div style="color:#6b7280">
+      부서: ${$deptSelect.value || "전체"}, 
+      심사원: ${$reviewerSelect.value || "전체"}, 
+      월: ${$monthSelect.value || "전체"}, 
+      상태: ${$status.value || "전체"}
+    </div>
+  </div>
+  ${statsTable}`;
+}
+
+/* === 인쇄 === */
+function openPrintWindow(html){
+  const w = window.open("", "_blank");
+  if(!w){ alert("팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요."); return; }
+  w.document.write(`
+    <!DOCTYPE html><html lang="ko"><head>
+      <meta charset="UTF-8">
+      <title>심사원별 월별 통계</title>
+      <style>
+        body{font-family:system-ui,-apple-system,'Noto Sans KR',sans-serif;padding:16px}
+        h1{margin:0 0 10px}
+        table{font-size:13px;border-color:#dcdfe4}
+        th,td{border-color:#dcdfe4}
+      </style>
+    </head><body>
+      <h1>심사원별 월별 통계</h1>
+      <div style="color:#6b7280;margin-bottom:12px">생성일: ${new Date().toISOString().slice(0,19).replace('T',' ')}</div>
+      ${html}
+      <script>window.focus(); setTimeout(()=>window.print(), 50);<\/script>
+    </body></html>
+  `);
+  w.document.close();
+}
+
+function onPreviewReport(){
+  openPrintWindow( buildReport() );
+}
+
+/* === 초기 렌더 === */
+render();
+</script>
+</body>
+</html>
