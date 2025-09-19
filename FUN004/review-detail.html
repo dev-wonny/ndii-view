@@ -26,6 +26,35 @@
     .detail-item{margin:2px 0;font-size:12px;line-height:1.4}
     .detail-reviewer{font-weight:600;color:#1f2937}
     .detail-dates{color:#6b7280;font-size:11px}
+    .clickable{cursor:pointer;transition:background-color 0.2s}
+    .clickable:hover{background:#f8fbff}
+    .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,0.5)}
+    .modal-content{background-color:#fff;margin:5% auto;padding:20px;border-radius:8px;width:80%;max-width:600px;max-height:80vh;overflow-y:auto}
+    .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #e5e7eb}
+    .modal-title{font-size:18px;font-weight:600;color:#1f2937}
+    .close{color:#aaa;font-size:28px;font-weight:bold;cursor:pointer;line-height:1}
+    .close:hover{color:#000}
+    .modal-body{line-height:1.6}
+    .info-row{display:flex;margin-bottom:8px}
+    .info-label{font-weight:600;color:#374151;min-width:120px}
+    .info-value{color:#1f2937;flex:1}
+    .status-badge{padding:4px 8px;border-radius:4px;font-size:12px;font-weight:500}
+    .status-completed{background:#d1fae5;color:#065f46}
+    .status-progress{background:#dbeafe;color:#1e40af}
+    .status-waiting{background:#fef3c7;color:#92400e}
+    .status-delayed{background:#fee2e2;color:#991b1b}
+    .opinion-section{margin-top:20px;padding:16px;background:#f8fafc;border-radius:8px;border-left:4px solid #3b82f6}
+    .opinion-title{font-weight:600;color:#1f2937;margin-bottom:8px;font-size:14px}
+    .opinion-content{color:#374151;line-height:1.6;white-space:pre-wrap}
+    .documents-section{margin-top:16px;padding:16px;background:#f0f9ff;border-radius:8px;border-left:4px solid #0ea5e9}
+    .documents-title{font-weight:600;color:#1e293b;margin-bottom:8px;font-size:14px}
+    .document-list{list-style:none;padding:0;margin:0}
+    .document-item{padding:8px 12px;margin:4px 0;background:#fff;border:1px solid #e2e8f0;border-radius:6px;display:flex;align-items:center;gap:8px}
+    .document-icon{color:#0ea5e9;font-size:16px}
+    .document-name{color:#1e293b;font-size:13px;flex:1}
+    .document-download{color:#0ea5e9;font-size:12px;text-decoration:none;padding:4px 8px;border:1px solid #0ea5e9;border-radius:4px;transition:all 0.2s}
+    .document-download:hover{background:#0ea5e9;color:#fff}
+    .no-data{color:#6b7280;font-style:italic;text-align:center;padding:20px}
   </style>
 </head>
 <body>
@@ -53,7 +82,7 @@
 
   <!-- 집계: 심사분야별 -->
   <div class="card">
-    <h2>집계 · 심사분야별</h2>
+    <h2>심사분야 - 담당부서별 집계</h2>
     <table>
       <thead>
         <tr>
@@ -100,6 +129,19 @@
       </div>
 </div>
 
+<!-- 심사 상세 모달 -->
+<div id="reviewModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">심사 상세 정보</h3>
+      <span class="close">&times;</span>
+    </div>
+    <div class="modal-body" id="modalBody">
+      <!-- 모달 내용이 여기에 동적으로 삽입됩니다 -->
+    </div>
+  </div>
+</div>
+
 <script>
 /* === 데이터베이스에서 데이터 가져오기 === */
 const CASES = JUDGMENT_CASES;
@@ -139,10 +181,10 @@ function render(){
 
   // 테이블
   $rows.innerHTML = "";
-  sortedRows.forEach(r=>{
+  sortedRows.forEach((r, index) => {
     const dur = JudgmentUtils.days(r.start, r.end);
     $rows.innerHTML += `
-      <tr>
+      <tr class="clickable" data-index="${index}">
         <td>${r.dept}</td>
         <td>${r.dept}</td>
         <td>${r.request || "-"}</td>
@@ -153,6 +195,14 @@ function render(){
         <td>${r.status}</td>
       </tr>
     `;
+  });
+
+  // 행 클릭 이벤트 추가
+  document.querySelectorAll("#rows tr.clickable").forEach(tr => {
+    tr.addEventListener('click', () => {
+      const index = parseInt(tr.dataset.index);
+      showReviewModal(sortedRows[index]);
+    });
   });
 
   // 요약
@@ -216,6 +266,141 @@ function render(){
   }).join("") || `<tr><td colspan="5">데이터 없음</td></tr>`;
 }
 render();
+
+/* === 모달 관련 함수들 === */
+function showReviewModal(reviewData) {
+  const modal = document.getElementById('reviewModal');
+  const modalBody = document.getElementById('modalBody');
+  
+  // 상태에 따른 배지 클래스 결정
+  const getStatusClass = (status) => {
+    if (status === '완료') return 'status-completed';
+    if (status === '진행') return 'status-progress';
+    if (status === '대기') return 'status-waiting';
+    if (status === '지연') return 'status-delayed';
+    return 'status-waiting';
+  };
+
+  // 소요일 계산
+  const duration = JudgmentUtils.days(reviewData.start, reviewData.end);
+  
+  // 모달 내용 생성
+  modalBody.innerHTML = `
+    <div class="info-row">
+      <div class="info-label">심사분야:</div>
+      <div class="info-value">${reviewData.dept}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">담당부서:</div>
+      <div class="info-value">${reviewData.dept}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">심사자:</div>
+      <div class="info-value">${reviewData.reviewer || "-"}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">협의 의뢰일:</div>
+      <div class="info-value">${reviewData.request || "-"}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">심사 시작일:</div>
+      <div class="info-value">${reviewData.start || "-"}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">심사 종료일:</div>
+      <div class="info-value">${reviewData.end || "-"}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">심사 소요일:</div>
+      <div class="info-value">${duration === "" ? "-" : duration + "일"}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">진행 상태:</div>
+      <div class="info-value">
+        <span class="status-badge ${getStatusClass(reviewData.status)}">${reviewData.status}</span>
+      </div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">민원 접수번호:</div>
+      <div class="info-value">${data.id}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">품목명:</div>
+      <div class="info-value">${data.productName}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">업체명:</div>
+      <div class="info-value">${data.company}</div>
+    </div>
+    
+    <!-- 심사 의견 섹션 -->
+    <div class="opinion-section">
+      <div class="opinion-title">📝 심사 의견</div>
+      <div class="opinion-content">${reviewData.opinion || "심사 의견이 없습니다."}</div>
+    </div>
+    
+    <!-- 심사 자료 섹션 -->
+    <div class="documents-section">
+      <div class="documents-title">📁 심사 자료</div>
+      ${reviewData.documents && reviewData.documents.length > 0 ? `
+        <ul class="document-list">
+          ${reviewData.documents.map(doc => `
+            <li class="document-item">
+              <span class="document-icon">📄</span>
+              <span class="document-name">${doc}</span>
+              <a href="#" class="document-download" onclick="downloadDocument('${doc}')">다운로드</a>
+            </li>
+          `).join('')}
+        </ul>
+      ` : `
+        <div class="no-data">제출된 자료가 없습니다.</div>
+      `}
+    </div>
+  `;
+  
+  modal.style.display = 'block';
+}
+
+function closeModal() {
+  const modal = document.getElementById('reviewModal');
+  modal.style.display = 'none';
+}
+
+// 자료 다운로드 함수 (시뮬레이션)
+function downloadDocument(filename) {
+  // 실제 환경에서는 서버에서 파일을 다운로드하지만, 
+  // 데모용으로는 알림만 표시합니다.
+  alert(`파일 다운로드: ${filename}\n\n실제 환경에서는 해당 파일이 다운로드됩니다.`);
+  
+  // 실제 구현 예시:
+  // const link = document.createElement('a');
+  // link.href = `/api/documents/${filename}`;
+  // link.download = filename;
+  // link.click();
+}
+
+// 모달 이벤트 리스너
+document.addEventListener('DOMContentLoaded', function() {
+  const modal = document.getElementById('reviewModal');
+  const closeBtn = document.querySelector('.close');
+  
+  // X 버튼 클릭으로 모달 닫기
+  closeBtn.addEventListener('click', closeModal);
+  
+  // 모달 외부 클릭으로 모달 닫기
+  modal.addEventListener('click', function(event) {
+    if (event.target === modal) {
+      closeModal();
+    }
+  });
+  
+  // ESC 키로 모달 닫기
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      closeModal();
+    }
+  });
+});
 
 /* === 엑셀 내보내기 (현재 화면 데이터 그대로) === */
 function exportRows(){
