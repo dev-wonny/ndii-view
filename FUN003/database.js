@@ -157,6 +157,7 @@ const EducationDatabase = {
             records: [
                 {
                     id: "rec001",
+                    uniqueId: "row_홍길동_rec001",
                     courseId: 1,
                     date: "2025-01-17",
                     approve: "승인",
@@ -165,7 +166,8 @@ const EducationDatabase = {
                     evidenceFile: "hong_course1_certificate.pdf"
                 },
                 {
-                    id: "rec002", 
+                    id: "rec002",
+                    uniqueId: "row_홍길동_rec002", 
                     courseId: 2,
                     date: "2025-02-03",
                     approve: "승인",
@@ -175,6 +177,7 @@ const EducationDatabase = {
                 },
                 {
                     id: "rec003",
+                    uniqueId: "row_홍길동_rec003",
                     courseId: 4,
                     date: "2025-03-01",
                     approve: "승인",
@@ -195,6 +198,7 @@ const EducationDatabase = {
             records: [
                 {
                     id: "rec004",
+                    uniqueId: "row_김철수_rec004",
                     courseId: 1,
                     date: "2025-01-17",
                     approve: "승인",
@@ -204,6 +208,7 @@ const EducationDatabase = {
                 },
                 {
                     id: "rec005",
+                    uniqueId: "row_김철수_rec005",
                     courseId: 3,
                     date: "2025-02-16",
                     approve: "승인",
@@ -213,6 +218,7 @@ const EducationDatabase = {
                 },
                 {
                     id: "rec006",
+                    uniqueId: "row_김철수_rec006",
                     courseId: 7,
                     date: "2025-04-07",
                     approve: "승인",
@@ -233,6 +239,7 @@ const EducationDatabase = {
             records: [
                 {
                     id: "rec007",
+                    uniqueId: "row_이영희_rec007",
                     courseId: 2,
                     date: "2025-02-03",
                     approve: "승인",
@@ -242,6 +249,7 @@ const EducationDatabase = {
                 },
                 {
                     id: "rec008",
+                    uniqueId: "row_이영희_rec008",
                     courseId: 5,
                     date: "2025-03-12",
                     approve: "승인",
@@ -251,6 +259,7 @@ const EducationDatabase = {
                 },
                 {
                     id: "rec009",
+                    uniqueId: "row_이영희_rec009",
                     courseId: 6,
                     date: "2025-03-21",
                     approve: "승인",
@@ -271,6 +280,7 @@ const EducationDatabase = {
             records: [
                 {
                     id: "rec010",
+                    uniqueId: "row_박선우_rec010",
                     courseId: 1,
                     date: "2025-01-17",
                     approve: "승인",
@@ -280,6 +290,7 @@ const EducationDatabase = {
                 },
                 {
                     id: "rec011",
+                    uniqueId: "row_박선우_rec011",
                     courseId: 5,
                     date: "2025-03-12",
                     approve: "승인",
@@ -289,6 +300,7 @@ const EducationDatabase = {
                 },
                 {
                     id: "rec012",
+                    uniqueId: "row_박선우_rec012",
                     courseId: 3,
                     date: "2025-02-16",
                     approve: "승인대기",
@@ -309,6 +321,7 @@ const EducationDatabase = {
             records: [
                 {
                     id: "rec013",
+                    uniqueId: "row_최민준_rec013",
                     courseId: 2,
                     date: "2025-02-03",
                     approve: "승인",
@@ -318,6 +331,7 @@ const EducationDatabase = {
                 },
                 {
                     id: "rec014",
+                    uniqueId: "row_최민준_rec014",
                     courseId: 6,
                     date: "2025-03-21",
                     approve: "승인",
@@ -327,6 +341,7 @@ const EducationDatabase = {
                 },
                 {
                     id: "rec015",
+                    uniqueId: "row_최민준_rec015",
                     courseId: 4,
                     date: "2025-03-01",
                     approve: "반려",
