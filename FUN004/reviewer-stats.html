@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>심사원별 월별 통계</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="judgmentDatabase.js"></script>
   <style>
     :root{--primary:#005aa0;--bg:#f6f7f9;--card:#fff;--bd:#dcdfe4;--muted:#6b7280;}
     *{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,'Noto Sans KR',sans-serif;}
@@ -144,76 +145,13 @@
 </div>
 
 <script>
-/* === 예시 데이터 === */
-const CASES = [
-  {
-    id: "2024000047",
-    productName: "아모테스트정 (1213-1245)",
-    company: "한미약품(주)",
-    kind: "제조",
-    receivedAt: "2024-01-03",
-    approvedAt: "2024-04-05",
-    status: "심사 완료",
-    reviews: [
-      { dept:"품질", reviewer:"김철수", request:"2024-01-05", start:"2024-01-07", end:"2024-01-20", status:"완료" },
-      { dept:"품질", reviewer:"김은우", request:"2024-01-10", start:"2024-01-11", end:"2024-01-22", status:"완료" },
-      { dept:"안유", reviewer:"홍길동", request:"2024-01-05", start:"2024-01-06", end:"2024-01-15", status:"완료" },
-      { dept:"GCP", reviewer:"홍길동", request:"2024-01-16", start:"2024-01-17", end:"2024-01-21", status:"완료" },
-      { dept:"RMP", reviewer:"이영희", request:"2024-01-08", start:"2024-01-09", end:"2024-01-12", status:"완료" },
-      { dept:"RMP", reviewer:"이영희", request:"2024-01-14", start:"2024-01-15", end:"2024-01-18", status:"완료" },
-      { dept:"품질", reviewer:"이영희", request:"2024-01-19", start:"2024-01-19", end:"2024-01-20", status:"완료" },
-      { dept:"GMP", reviewer:"박민수", request:"2024-01-05", start:"2024-01-06", end:"2024-01-12", status:"완료" },
-      { dept:"GMP", reviewer:"박민수", request:"2024-01-14", start:"2024-01-15", end:"2024-01-25", status:"완료" }
-    ]
-  },
-  {
-    id: "2024000213",
-    productName: "로자탄정 50mg",
-    company: "동화약품",
-    kind: "수입",
-    receivedAt: "2025-02-12",
-    approvedAt: "",
-    status: "심사 중",
-    reviews: [
-      { dept:"안유", reviewer:"오지은", request:"2025-02-13", start:"2025-02-14", end:"2025-03-02", status:"완료" },
-      { dept:"안유", reviewer:"오지은", request:"2025-03-05", start:"2025-03-06", end:"", status:"진행" },
-      { dept:"품질", reviewer:"정해준", request:"2025-02-13", start:"", end:"", status:"대기" },
-      { dept:"GCP", reviewer:"최수진", request:"2025-03-01", start:"2025-03-02", end:"2025-03-12", status:"완료" },
-      { dept:"안유", reviewer:"최수진", request:"2025-03-14", start:"2025-03-15", end:"2025-03-18", status:"완료" },
-      { dept:"GMP", reviewer:"문성현", request:"2025-02-13", start:"2025-02-16", end:"2025-03-10", status:"완료" }
-    ]
-  },
-  {
-    id: "2025000301",
-    productName: "테라신시럽 100ml",
-    company: "녹십자",
-    kind: "제조",
-    receivedAt: "2025-03-01",
-    approvedAt: "2025-04-02",
-    status: "심사 완료",
-    reviews: [
-      { dept:"RMP", reviewer:"이영희", request:"2025-03-03", start:"2025-03-06", end:"2025-03-10", status:"완료" },
-      { dept:"RMP", reviewer:"이영희", request:"2025-03-15", start:"2025-03-16", end:"2025-03-18", status:"완료" },
-      { dept:"RMP", reviewer:"이영희", request:"2025-03-22", start:"2025-03-23", end:"2025-03-28", status:"완료" },
-      { dept:"품질", reviewer:"김철수", request:"2025-03-02", start:"2025-03-03", end:"2025-03-12", status:"완료" },
-      { dept:"품질", reviewer:"김은우", request:"2025-03-05", start:"2025-03-06", end:"2025-03-14", status:"완료" },
-      { dept:"GCP", reviewer:"최수진", request:"2025-03-05", start:"2025-03-05", end:"2025-03-20", status:"완료" }
-    ]
-  }
-];
+/* === 데이터베이스에서 데이터 가져오기 === */
+const CASES = JUDGMENT_CASES;
 
 /* === Utils === */
-function days(a,b){ if(!a || !b) return ""; const d1=new Date(a), d2=new Date(b); return Math.max(0, Math.round((d2-d1)/86400000)); }
-function yyyymm(d){ const x=new Date(d); return isNaN(x)? "" : `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}`; }
-function flatRows(){
-  const out=[];
-  for(const c of CASES){
-    for(const r of (c.reviews||[])){
-      out.push({...r, caseId:c.id, productName:c.productName});
-    }
-  }
-  return out;
-}
+const days = JudgmentUtils.days;
+const yyyymm = JudgmentUtils.yyyymm;
+const flatRows = JudgmentUtils.flatRows;
 
 /* === DOM === */
 const $deptSelect = document.getElementById("deptSelect");
@@ -243,23 +181,11 @@ $deptSelect.addEventListener('change', updateReviewerOptions);
 
 /* === 필터 적용 === */
 function getFilteredRows(dept=$deptSelect.value, reviewer=$reviewerSelect.value, month=$monthSelect.value, st=$status.value){
-  const deptV = dept || "";
-  const reviewerV = reviewer || "";
-  const monthV = month || "";
-  const stV = st || "";
-  return flatRows().filter(r => {
-    // 부서 필터 적용
-    if(deptV && r.dept !== deptV) return false;
-    // 심사원 필터 적용
-    if(reviewerV && r.reviewer !== reviewerV) return false;
-    // 월 필터 적용
-    if(monthV && r.end) {
-      const rowMonth = yyyymm(r.end);
-      if(rowMonth !== monthV) return false;
-    }
-    // 상태 필터 적용
-    if(stV && r.status && !r.status.includes(stV)) return false;
-    return true;
+  return JudgmentUtils.getFilteredRows({
+    dept: dept,
+    reviewer: reviewer,
+    month: month,
+    reviewStatus: st
   });
 }
 
