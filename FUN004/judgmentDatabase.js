@@ -93,15 +93,57 @@ const JUDGMENT_CASES = [
       { dept:"RMP", reviewer:"이영희", request:"2025-03-22", start:"2025-03-23", end:"2025-03-28", status:"완료", 
         opinion:"최종 위험관리 검토 완료. 모든 기준을 충족합니다.", 
         documents:["최종위험관리보고서.pdf"] },
-      { dept:"품질", reviewer:"김철수", request:"2025-03-02", start:"2025-03-03", end:"2025-03-12", status:"완료", 
+      { dept:"안유", reviewer:"김철수", request:"2025-03-02", start:"2025-03-03", end:"2025-03-12", status:"완료", 
         opinion:"제출된 품질관리 자료가 기준에 적합하며, 제조공정이 GMP 기준을 충족함을 확인했습니다.", 
         documents:["품질관리계획서.pdf", "제조공정도.pdf", "시험성적서.pdf"] },
-      { dept:"품질", reviewer:"김은우", request:"2025-03-05", start:"2025-03-06", end:"2025-03-14", status:"완료", 
+      { dept:"안유", reviewer:"김은우", request:"2025-03-05", start:"2025-03-06", end:"2025-03-14", status:"완료", 
         opinion:"추가 제출된 안정성 시험 자료를 검토한 결과, 유효기간 설정이 적절함을 확인했습니다.", 
         documents:["안정성시험계획서.pdf", "시험결과보고서.pdf"] },
       { dept:"GCP", reviewer:"최수진", request:"2025-03-05", start:"2025-03-05", end:"2025-03-20", status:"완료", 
         opinion:"임상시험계획서가 국제기준에 부합하며, 윤리위원회 승인을 확인했습니다.", 
         documents:["임상시험계획서.pdf", "윤리위원회승인서.pdf", "연구자자격증명서.pdf"] }
+    ]
+  },
+  {
+    id: "2025000401",
+    productCode: "22222-004",
+    productName: "백신제제 A형",
+    company: "SK바이오사이언스",
+    kind: "제조",
+    receivedAt: "2025-04-01",
+    approvedAt: "",
+    status: "심사 중",
+    reviews: [
+      { dept:"시험법", reviewer:"박지영", request:"2025-04-02", start:"2025-04-03", end:"2025-04-15", status:"완료", 
+        opinion:"백신 검정법이 국제기준에 부합하며, 품질관리체계가 적절합니다.", 
+        documents:["백신검정계획서.pdf", "품질관리체계도.pdf"] },
+      { dept:"시험법", reviewer:"이민호", request:"2025-04-05", start:"2025-04-06", end:"", status:"진행", 
+        opinion:"추가 검정 자료 검토 중입니다.", 
+        documents:["추가검정자료.pdf"] },
+      { dept:"주사침", reviewer:"김수정", request:"2025-04-03", start:"2025-04-04", end:"2025-04-18", status:"완료", 
+        opinion:"주사침 안전성 평가 완료. 사용 가능합니다.", 
+        documents:["주사침안전성보고서.pdf", "사용성평가서.pdf"] },
+      { dept:"통계", reviewer:"정현우", request:"2025-04-01", start:"2025-04-02", end:"2025-04-20", status:"완료", 
+        opinion:"통계적 분석 계획이 적절하며, 샘플 크기 산정이 충분합니다.", 
+        documents:["통계분석계획서.pdf", "샘플크기산정서.pdf"] }
+    ]
+  },
+  {
+    id: "2025000501",
+    productCode: "33333-005",
+    productName: "의약외품 보조기",
+    company: "메디케어",
+    kind: "제조",
+    receivedAt: "2025-05-01",
+    approvedAt: "2025-06-15",
+    status: "심사 완료",
+    reviews: [
+      { dept:"의약외품", reviewer:"최은정", request:"2025-05-02", start:"2025-05-03", end:"2025-05-20", status:"완료", 
+        opinion:"의약외품 기준에 적합하며, 안전성과 유효성이 확인되었습니다.", 
+        documents:["의약외품신청서.pdf", "안전성유효성보고서.pdf"] },
+      { dept:"의약외품", reviewer:"최은정", request:"2025-05-25", start:"2025-05-26", end:"2025-06-10", status:"완료", 
+        opinion:"추가 제출 자료 검토 완료. 승인 가능합니다.", 
+        documents:["추가자료보고서.pdf", "최종평가서.pdf"] }
     ]
   }
 ];

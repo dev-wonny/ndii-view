@@ -179,14 +179,18 @@ function render(){
     return dateA - dateB;
   });
 
+  // 심사분야별 담당부서 매핑
+  const deptMapping = getDeptMapping();
+
   // 테이블
   $rows.innerHTML = "";
   sortedRows.forEach((r, index) => {
     const dur = JudgmentUtils.days(r.start, r.end);
+    const responsibleDept = deptMapping[r.dept] || r.dept;
     $rows.innerHTML += `
       <tr class="clickable" data-index="${index}">
         <td>${r.dept}</td>
-        <td>${r.dept}</td>
+        <td>${responsibleDept}</td>
         <td>${r.request || "-"}</td>
         <td>${r.reviewer || "-"}</td>
         <td>${r.start || "-"}</td>
@@ -243,6 +247,7 @@ function render(){
     const data = byDept[dept];
     const reviewerCount = data.reviewers.size;
     const totalDuration = data.totalDuration;
+    const responsibleDept = deptMapping[dept] || dept;
     
     // 상세 정보 생성 (각 심사인원별 소요시간)
     const detailsHtml = data.details.map(detail => 
@@ -254,7 +259,7 @@ function render(){
     
     return `<tr>
       <td>${dept}</td>
-      <td>${dept}</td>
+      <td>${responsibleDept}</td>
       <td>${reviewerCount}</td>
       <td>${totalDuration}</td>
       <td class="details-cell">
@@ -267,10 +272,28 @@ function render(){
 }
 render();
 
+/* === 공통 함수들 === */
+// 심사분야별 담당부서 매핑
+function getDeptMapping() {
+  return {
+    "안유": "생물제제과",
+    "RMP": "바이오 의약품 품질 관리과", 
+    "GMP": "바이오 의약품 품질 관리과",
+    "GCP": "임상정책과",
+    "시험법": "백신 검정과",
+    "주사침": "구강 소화기기과",
+    "의약외품": "화장품 심사과",
+    "통계": "사전상담과"
+  };
+}
+
 /* === 모달 관련 함수들 === */
 function showReviewModal(reviewData) {
   const modal = document.getElementById('reviewModal');
   const modalBody = document.getElementById('modalBody');
+  
+  // 심사분야별 담당부서 매핑
+  const deptMapping = getDeptMapping();
   
   // 상태에 따른 배지 클래스 결정
   const getStatusClass = (status) => {
@@ -283,6 +306,7 @@ function showReviewModal(reviewData) {
 
   // 소요일 계산
   const duration = JudgmentUtils.days(reviewData.start, reviewData.end);
+  const responsibleDept = deptMapping[reviewData.dept] || reviewData.dept;
   
   // 모달 내용 생성
   modalBody.innerHTML = `
@@ -292,7 +316,7 @@ function showReviewModal(reviewData) {
     </div>
     <div class="info-row">
       <div class="info-label">담당부서:</div>
-      <div class="info-value">${reviewData.dept}</div>
+      <div class="info-value">${responsibleDept}</div>
     </div>
     <div class="info-row">
       <div class="info-label">심사자:</div>
@@ -404,6 +428,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* === 엑셀 내보내기 (현재 화면 데이터 그대로) === */
 function exportRows(){
+  // 심사분야별 담당부서 매핑
+  const deptMapping = getDeptMapping();
+
   // 협의 의뢰일 기준으로 오름차순 정렬
   const sortedRows = data.reviews.sort((a, b) => {
     const dateA = a.request ? new Date(a.request) : new Date(0);
@@ -413,7 +440,8 @@ function exportRows(){
   
   return sortedRows.map(r=>{
     const dur = JudgmentUtils.days(r.start, r.end);
-    return [r.dept, r.dept, r.request||"", r.reviewer||"", r.start||"", r.end||"", (dur===""?"":dur), r.status||""];
+    const responsibleDept = deptMapping[r.dept] || r.dept;
+    return [r.dept, responsibleDept, r.request||"", r.reviewer||"", r.start||"", r.end||"", (dur===""?"":dur), r.status||""];
   });
 }
 
