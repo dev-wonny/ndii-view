@@ -15,6 +15,7 @@
     h2{margin:0 0 12px;color:#222}
     .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
     input[type="text"],input[type="date"],select{padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:#fff}
+    input[type="checkbox"]{width:16px;height:16px;cursor:pointer}
     button{padding:9px 14px;border:1px solid var(--primary);background:#fff;color:var(--primary);border-radius:8px;cursor:pointer}
     button.primary{background:var(--primary);color:#fff}
     table{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px}
@@ -40,7 +41,7 @@
   <div class="card">
     <h2>검색</h2>
     <div class="toolbar">
-      <input id="q" type="text" placeholder="제품명/업소명/접수번호 검색" style="min-width:280px">
+      <input id="q" type="text" placeholder="민원접수번호/품목기준코드/품목명/업체명 검색" style="min-width:320px">
       <select id="kind">
         <option value="">제조/수입(전체)</option>
         <option value="제조">제조</option>
@@ -55,6 +56,12 @@
         <option value="지연">지연</option>
       </select>
 
+      <!-- ✅ 심사 중 포함 체크박스 -->
+      <label style="display:flex;align-items:center;gap:6px;white-space:nowrap">
+        <input id="includeInProgress" type="checkbox">
+        <span>심사 중 포함</span>
+      </label>
+
       <!-- (옵션) 기간 필터가 필요하면 주석 해제해서 사용하세요
       <span class="muted">접수일</span>
       <input id="from" type="date"><span>~</span><input id="to" type="date">
@@ -67,7 +74,7 @@
         <button id="btnXls">XLS</button>
       </div>
     </div>
-    <div class="muted">※ 진행상태는 민원 단위의 최종 상태(예: 심사 완료/심사 중)를 기준으로 필터링합니다.</div>
+    <div class="muted">※ 기본적으로는 심사 완료된 민원만 표시됩니다. "심사 중 포함"을 체크하면 심사 중인 민원도 함께 표시됩니다.</div>
   </div>
 
   <!-- 목록 -->
@@ -76,13 +83,15 @@
     <table>
       <thead>
         <tr>
-          <th>접수번호</th>
-          <th>제품명</th>
-          <th>업소명</th>
+          <th>민원접수번호</th>
+          <th>품목기준코드</th>
+          <th>품목명</th>
+          <th>업체명</th>
           <th>제조/수입</th>
-          <th>민원 접수일자</th>
-          <th>민원 허가일자</th>
-          <th>진행 상태</th>
+          <th>민원접수일</th>
+          <th>허가완료일</th>
+          <th>총 기간(일)</th>
+          <th>진행상태</th>
         </tr>
       </thead>
       <tbody id="rows"></tbody>
@@ -98,6 +107,7 @@ const CASES = JUDGMENT_CASES;
 const $q = document.getElementById("q");
 const $kind = document.getElementById("kind");
 const $status = document.getElementById("status");
+const $includeInProgress = document.getElementById("includeInProgress");
 const $rows = document.getElementById("rows");
 // const $from = document.getElementById("from"); const $to = document.getElementById("to"); // (옵션)
 
@@ -106,6 +116,7 @@ function render(){
   const keyword = ($q.value || "").trim();
   const kind = $kind.value || "";
   const st = $status.value || "";
+  const includeInProgress = $includeInProgress.checked;
 
   // 데이터베이스 유틸리티를 사용한 필터링 (민원 케이스)
   let list = JudgmentUtils.getFilteredCases({
@@ -113,6 +124,11 @@ function render(){
     kind: kind,
     status: st
   });
+
+  // 기본적으로는 심사 완료된 민원만 표시, 체크박스가 체크되면 심사 중도 포함
+  if (!includeInProgress) {
+    list = list.filter(c => c.status === "심사 완료");
+  }
 
   // (옵션) 접수일 기간 필터가 필요하면 사용
   // const from = $from?.value || null; const to = $to?.value || null;
@@ -127,14 +143,16 @@ function render(){
   $rows.innerHTML = list.map(c=>`
     <tr class="clickable" data-id="${c.id}">
       <td>${c.id}</td>
+      <td>${c.productCode || "-"}</td>
       <td>${c.productName}</td>
       <td>${c.company}</td>
       <td>${c.kind}</td>
       <td>${c.receivedAt}</td>
       <td>${c.approvedAt || "-"}</td>
+      <td>${JudgmentUtils.calculateTotalPeriod(c.receivedAt, c.approvedAt)}</td>
       <td>${c.status}</td>
     </tr>
-  `).join("") || `<tr><td colspan="7">검색 결과가 없습니다.</td></tr>`;
+  `).join("") || `<tr><td colspan="9">검색 결과가 없습니다.</td></tr>`;
 
   // 클릭 이동
   document.querySelectorAll("tr.clickable").forEach(tr=>{
@@ -146,9 +164,10 @@ render();
 /* === 이벤트 === */
 document.getElementById("btnSearch").onclick = render;
 document.getElementById("btnReset").onclick = ()=>{
-  $q.value = ""; $kind.value = ""; $status.value = ""; /* if($from) $from.value=""; if($to) $to.value=""; */ render();
+  $q.value = ""; $kind.value = ""; $status.value = ""; $includeInProgress.checked = false; /* if($from) $from.value=""; if($to) $to.value=""; */ render();
 };
 $q.addEventListener("keydown", e=>{ if(e.key==="Enter") render(); });
+$includeInProgress.addEventListener("change", render);
 
 /* === 다운로드 (현재 화면의 표) === */
 function tableToRows(){
@@ -190,7 +209,7 @@ function toXlsXml(sheetName, header, bodyRows){
 </Workbook>`;
 }
 document.getElementById("btnCsv").onclick = ()=>{
-  const header = ["접수번호","제품명","업소명","제조/수입","민원 접수일자","민원 허가일자","진행 상태"];
+  const header = ["민원접수번호","품목기준코드","품목명","업체명","제조/수입","민원접수일","허가완료일","총 기간(일)","진행상태"];
   const rows = [header, ...tableToRows()];
   const blob = new Blob([toCsv(rows)], {type:"text/csv;charset=utf-8;"});
   const url = URL.createObjectURL(blob); const a = document.createElement("a");
@@ -198,7 +217,7 @@ document.getElementById("btnCsv").onclick = ()=>{
   document.body.appendChild(a); a.click(); URL.revokeObjectURL(url); a.remove();
 };
 document.getElementById("btnXls").onclick = ()=>{
-  const header = ["접수번호","제품명","업소명","제조/수입","민원 접수일자","민원 허가일자","진행 상태"];
+  const header = ["민원접수번호","품목기준코드","품목명","업체명","제조/수입","민원접수일","허가완료일","총 기간(일)","진행상태"];
   const body = tableToRows();
   const xml = toXlsXml("민원목록", header, body);
   const blob = new Blob([xml], {type:"application/vnd.ms-excel;charset=utf-8;"});

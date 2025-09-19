@@ -21,6 +21,11 @@
     .muted{color:#6b7280}
     .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:2px}
     button{padding:9px 14px;border:1px solid var(--primary);background:#fff;color:var(--primary);border-radius:8px;cursor:pointer}
+    .details-cell{text-align:left;max-width:300px;vertical-align:top}
+    .details-content{max-height:100px;overflow-y:auto;padding:4px;border:1px solid #e5e7eb;border-radius:4px;background:#f9fafb}
+    .detail-item{margin:2px 0;font-size:12px;line-height:1.4}
+    .detail-reviewer{font-weight:600;color:#1f2937}
+    .detail-dates{color:#6b7280;font-size:11px}
   </style>
 </head>
 <body>
@@ -46,18 +51,36 @@
     <div class="muted">※ 현재 화면에 표시된 모든 심사 실적 데이터를 그대로 다운로드합니다.</div>
   </div>
 
-  <!-- 심사 실적 -->
+  <!-- 집계: 심사분야별 -->
   <div class="card">
-    <h2>부서별 · 심사자별 실적 (결과회신일 포함)</h2>
+    <h2>집계 · 심사분야별</h2>
     <table>
       <thead>
         <tr>
-          <th>부서</th>
-          <th>심사자</th>
-          <th>심사 의뢰일(배정)</th>
+          <th>심사분야</th>
+          <th>담당부서</th>
+          <th>참여 심사인원 수</th>
+          <th>총 소요시간(일)</th>
+          <th>상세 정보</th>
+        </tr>
+      </thead>
+      <tbody id="aggDept"></tbody>
+    </table>
+  </div>
+
+  <!-- 심사 실적 -->
+  <div class="card">
+    <h2>협의 별 심사 이력</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>심사분야</th>
+          <th>담당부서</th>
+          <th>협의 의뢰일</th>
+          <th>심사자 이름</th>
           <th>심사 시작일</th>
-          <th>심사 종료일(결과 회신)</th>
-          <th>소요기간(일)</th>
+          <th>심사 종료일</th>
+          <th>심사 소요일</th>
           <th>진행 상태</th>
         </tr>
       </thead>
@@ -65,34 +88,16 @@
     </table>
   </div>
 
-  <!-- 요약 -->
-  <div class="card">
-    <h2>요약(현황)</h2>
-    <div class="summary">
-      <div>총 심사자 수: <span id="total"></span></div>
-      <div>평균 소요기간: <span id="avg"></span>일</div>
-      <div>지연 여부: <span id="delay"></span></div>
-      <div>부서 분포: <span id="deptSpread" class="pill"></span></div>
-      <div>결과회신 최종일: <span id="lastReply"></span></div>
-    </div>
-    <div class="muted" style="margin-top:8px">※ 소요기간 = 종료일 − 시작일 (종료일 미기입 시 진행중)</div>
-  </div>
-
-  <!-- 집계: 부서별 -->
-  <div class="card">
-    <h2>집계 · 부서별</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>부서</th>
-          <th>심사건수</th>
-          <th>완료건수</th>
-          <th>평균 소요기간(일)</th>
-        </tr>
-      </thead>
-      <tbody id="aggDept"></tbody>
-    </table>
-  </div>
+      <!-- 요약 -->
+      <div class="card">
+        <h2>요약(현황)</h2>
+        <div class="summary">
+          <div>총 심사자 수: <span id="total"></span></div>
+          <div>부서 분포: <span id="deptSpread" class="pill"></span></div>
+          <div>허가 완료일: <span id="lastReply"></span></div>
+        </div>
+        <div class="muted" style="margin-top:8px">※ 소요기간 = 허가완료일 − 민원접수일 (종료일 미기입 시 진행중)</div>
+      </div>
 </div>
 
 <script>
@@ -104,21 +109,20 @@ const params = new URLSearchParams(location.search);
 const id = params.get("id");
 const data = JudgmentUtils.findCaseById(id) || CASES[0];
 
-/* === 기본(결과회신 최종일 포함) === */
+/* === 기본 정보 === */
 const $base = document.querySelector("#base tbody");
-const lastReplyDate = data.reviews.map(r=>r.end).filter(Boolean).sort().slice(-1)[0] || "-";
+const totalPeriod = JudgmentUtils.calculateTotalPeriod(data.receivedAt, data.approvedAt);
 $base.innerHTML = `
-<tr><th>접수번호</th><td>${data.id}</td><th>제품명</th><td>${data.productName}</td></tr>
-<tr><th>업소명</th><td>${data.company}</td><th>제조/수입</th><td>${data.kind}</td></tr>
-<tr><th>민원 접수일자</th><td>${data.receivedAt}</td><th>민원 허가일자</th><td>${data.approvedAt || "-"}</td></tr>
-<tr><th>진행 상태</th><td>${data.status}</td><th>결과회신 최종일</th><td>${lastReplyDate}</td></tr>
+<tr><th>민원접수번호</th><td>${data.id}</td><th>품목기준코드</th><td>${data.productCode || "-"}</td></tr>
+<tr><th>품목명</th><td>${data.productName}</td><th>업체명</th><td>${data.company}</td></tr>
+<tr><th>제조/수입</th><td>${data.kind}</td><th>민원접수일</th><td>${data.receivedAt}</td></tr>
+<tr><th>허가완료일</th><td>${data.approvedAt || "-"}</td><th>총 기간(일)</th><td>${totalPeriod}</td></tr>
+<tr><th>진행상태</th><td colspan="3">${data.status}</td></tr>
 `;
 
 /* === 렌더 (전체 표시) === */
 const $rows = document.getElementById("rows");
 const $total = document.getElementById("total");
-const $avg = document.getElementById("avg");
-const $delay = document.getElementById("delay");
 const $deptSpread = document.getElementById("deptSpread");
 const $lastReply = document.getElementById("lastReply");
 const $aggDept = document.getElementById("aggDept");
@@ -126,17 +130,23 @@ const $aggDept = document.getElementById("aggDept");
 function render(){
   const rows = data.reviews;
 
+  // 협의 의뢰일 기준으로 오름차순 정렬
+  const sortedRows = rows.sort((a, b) => {
+    const dateA = a.request ? new Date(a.request) : new Date(0);
+    const dateB = b.request ? new Date(b.request) : new Date(0);
+    return dateA - dateB;
+  });
+
   // 테이블
   $rows.innerHTML = "";
-  let durations=[];
-  rows.forEach(r=>{
+  sortedRows.forEach(r=>{
     const dur = JudgmentUtils.days(r.start, r.end);
-    if(dur!=="" && !isNaN(dur)) durations.push(dur);
     $rows.innerHTML += `
       <tr>
         <td>${r.dept}</td>
-        <td>${r.reviewer}</td>
+        <td>${r.dept}</td>
         <td>${r.request || "-"}</td>
+        <td>${r.reviewer || "-"}</td>
         <td>${r.start || "-"}</td>
         <td>${r.end || "-"}</td>
         <td>${dur === "" ? "-" : dur}</td>
@@ -147,41 +157,84 @@ function render(){
 
   // 요약
   $total.textContent = rows.length;
-  $avg.textContent = durations.length ? (durations.reduce((a,b)=>a+b,0)/durations.length).toFixed(1) : "-";
-  $delay.textContent = rows.some(r=>r.status==="지연") ? "지연 있음" : "정상";
   $deptSpread.textContent = [...new Set(rows.map(r=>r.dept))].join(" · ") || "-";
-  const last = rows.map(r=>r.end).filter(Boolean).sort().slice(-1)[0] || "-";
-  $lastReply.textContent = last;
+  // 민원의 실제 허가완료일 사용 (기본 정보와 일치)
+  $lastReply.textContent = data.approvedAt || "-";
 
-  // 집계 · 부서별
+  // 집계 · 심사분야별
   const byDept = {};
   rows.forEach(r=>{
-    const d=r.dept;
-    byDept[d] = byDept[d] || {cnt:0, done:0, durations:[]};
-    byDept[d].cnt++;
-    if(r.end) byDept[d].done++;
-    const dur = JudgmentUtils.days(r.start, r.end);
-    if(dur!=="" && !isNaN(dur)) byDept[d].durations.push(dur);
+    const dept = r.dept;
+    if (!byDept[dept]) {
+      byDept[dept] = {
+        reviewers: new Set(),
+        totalDuration: 0,
+        details: []
+      };
+    }
+    
+    // 심사인원 추가
+    byDept[dept].reviewers.add(r.reviewer);
+    
+    // 소요시간 계산 및 추가
+    const duration = JudgmentUtils.days(r.start, r.end);
+    if (duration !== "" && !isNaN(duration)) {
+      byDept[dept].totalDuration += duration;
+      byDept[dept].details.push({
+        reviewer: r.reviewer,
+        duration: duration,
+        start: r.start,
+        end: r.end
+      });
+    }
   });
-  $aggDept.innerHTML = Object.keys(byDept).sort().map(d=>{
-    const x = byDept[d];
-    const avg = x.durations.length ? (x.durations.reduce((a,b)=>a+b,0)/x.durations.length).toFixed(1) : "-";
-    return `<tr><td>${d}</td><td>${x.cnt}</td><td>${x.done}</td><td>${avg}</td></tr>`;
-  }).join("") || `<tr><td colspan="4">데이터 없음</td></tr>`;
+
+  $aggDept.innerHTML = Object.keys(byDept).sort().map(dept => {
+    const data = byDept[dept];
+    const reviewerCount = data.reviewers.size;
+    const totalDuration = data.totalDuration;
+    
+    // 상세 정보 생성 (각 심사인원별 소요시간)
+    const detailsHtml = data.details.map(detail => 
+      `<div class="detail-item">
+        <span class="detail-reviewer">${detail.reviewer}</span>: ${detail.duration}일 
+        <span class="detail-dates">(${detail.start} ~ ${detail.end})</span>
+      </div>`
+    ).join('');
+    
+    return `<tr>
+      <td>${dept}</td>
+      <td>${dept}</td>
+      <td>${reviewerCount}</td>
+      <td>${totalDuration}</td>
+      <td class="details-cell">
+        <div class="details-content">
+          ${detailsHtml || '<span style="color: #999;">데이터 없음</span>'}
+        </div>
+      </td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="5">데이터 없음</td></tr>`;
 }
 render();
 
 /* === 엑셀 내보내기 (현재 화면 데이터 그대로) === */
 function exportRows(){
-  return data.reviews.map(r=>{
+  // 협의 의뢰일 기준으로 오름차순 정렬
+  const sortedRows = data.reviews.sort((a, b) => {
+    const dateA = a.request ? new Date(a.request) : new Date(0);
+    const dateB = b.request ? new Date(b.request) : new Date(0);
+    return dateA - dateB;
+  });
+  
+  return sortedRows.map(r=>{
     const dur = JudgmentUtils.days(r.start, r.end);
-    return [r.dept, r.reviewer, r.request||"", r.start||"", r.end||"", (dur===""?"":dur), r.status||""];
+    return [r.dept, r.dept, r.request||"", r.reviewer||"", r.start||"", r.end||"", (dur===""?"":dur), r.status||""];
   });
 }
 
 // 1) CSV (UTF-8 with BOM)
 document.getElementById("btnExcelCsv").onclick = ()=>{
-  const header = ["부서","심사자","심사의뢰일(배정)","심사시작일","결과회신일","소요기간(일)","진행상태"];
+  const header = ["심사분야","담당부서","협의 의뢰일","심사자 이름","심사 시작일","심사 종료일","심사 소요일","진행 상태"];
   const rows = exportRows();
   const csv = [header, ...rows].map(arr =>
     arr.map(v=>{
@@ -200,7 +253,7 @@ document.getElementById("btnExcelCsv").onclick = ()=>{
 
 // 2) XLS (Excel 2003 XML)
 document.getElementById("btnExcelXls").onclick = ()=>{
-  const header = ["부서","심사자","심사의뢰일(배정)","심사시작일","결과회신일","소요기간(일)","진행상태"];
+  const header = ["심사분야","담당부서","협의 의뢰일","심사자 이름","심사 시작일","심사 종료일","심사 소요일","진행 상태"];
   const rows = exportRows();
   const esc = (s)=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   const xmlRows = [

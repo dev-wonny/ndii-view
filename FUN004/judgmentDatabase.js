@@ -7,6 +7,7 @@
 const JUDGMENT_CASES = [
   {
     id: "2024000047",
+    productCode: "12345-001",
     productName: "아모테스트정 (1213-1245)",
     company: "한미약품(주)",
     kind: "제조",
@@ -27,6 +28,7 @@ const JUDGMENT_CASES = [
   },
   {
     id: "2024000213",
+    productCode: "67890-002",
     productName: "로자탄정 50mg",
     company: "동화약품",
     kind: "수입",
@@ -44,6 +46,7 @@ const JUDGMENT_CASES = [
   },
   {
     id: "2025000301",
+    productCode: "11111-003",
     productName: "테라신시럽 100ml",
     company: "녹십자",
     kind: "제조",
@@ -198,6 +201,22 @@ const JudgmentUtils = {
   },
 
   /**
+   * 총 기간 계산 (허가완료일 - 접수일)
+   * @param {string} receivedAt - 접수일
+   * @param {string} approvedAt - 허가완료일
+   * @returns {string} 총 기간(일) 또는 "-"
+   */
+  calculateTotalPeriod: function(receivedAt, approvedAt) {
+    if (!receivedAt || !approvedAt) return "-";
+    const start = new Date(receivedAt);
+    const end = new Date(approvedAt);
+    if (isNaN(start) || isNaN(end)) return "-";
+    const diffTime = end - start;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays >= 0 ? diffDays.toString() : "-";
+  },
+
+  /**
    * 필터링된 민원 케이스 가져오기 (민원 목록용)
    * @param {Object} filters - 필터 조건
    * @returns {Array} 필터링된 민원 케이스 배열
@@ -210,9 +229,9 @@ const JudgmentUtils = {
     } = filters;
 
     return JUDGMENT_CASES.filter(caseData => {
-      // 키워드 필터 (제품명, 업소명, 접수번호)
+      // 키워드 필터 (민원접수번호, 품목기준코드, 품목명, 업체명)
       if (keyword) {
-        const searchText = [caseData.id, caseData.productName, caseData.company].join(" ").toLowerCase();
+        const searchText = [caseData.id, caseData.productCode, caseData.productName, caseData.company].join(" ").toLowerCase();
         if (!searchText.includes(keyword.toLowerCase())) return false;
       }
 
