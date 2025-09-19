@@ -461,7 +461,107 @@ const EducationDatabase = {
         });
 
         return errors;
-    }
+    },
+    
+    // API 동기화용 이수 기록 데이터
+    apiRecords: [
+        {
+            id: 100,
+            auditorName: '홍길동',
+            dept: '신약심사부',
+            rank: '심사원',
+            courseId: 1,
+            courseName: '개인정보보호 및 정보보안 교육',
+            completionDate: '2025-02-15',
+            status: '완료',
+            dataSource: 'API',
+            registrant: '홍길동'
+        },
+        {
+            id: 101,
+            auditorName: '김철수',
+            dept: '허가총괄부',
+            rank: '주무관',
+            courseId: 2,
+            courseName: '의약품 GMP 기본 과정',
+            completionDate: '2025-04-20',
+            status: '완료',
+            dataSource: 'API',
+            registrant: '김철수'
+        },
+        {
+            id: 102,
+            auditorName: '이영희',
+            dept: '신약심사부',
+            rank: '연구관',
+            courseId: 3,
+            courseName: '2025년 신약 허가·심사 워크숍',
+            completionDate: '2025-07-16',
+            status: '완료',
+            dataSource: 'API',
+            registrant: '이영희'
+        },
+        {
+            id: 103,
+            auditorName: '박선우',
+            dept: '생물의약품부',
+            rank: '선임연구관',
+            courseId: 4,
+            courseName: '바이오의약품 심사 가이드라인',
+            completionDate: '2025-08-05',
+            status: '완료',
+            dataSource: 'API',
+            registrant: '박선우'
+        },
+        {
+            id: 104,
+            auditorName: '최민준',
+            dept: '신약심사부',
+            rank: '심사원',
+            courseId: 5,
+            courseName: '의약품 통계 분석 심화',
+            completionDate: '2025-10-21',
+            status: '완료',
+            dataSource: 'API',
+            registrant: '최민준'
+        },
+        {
+            id: 105,
+            auditorName: '정수진',
+            dept: '품질안전부',
+            rank: '주무관',
+            courseId: 6,
+            courseName: '의약품 부작용 보고 시스템',
+            completionDate: '2025-03-10',
+            status: '완료',
+            dataSource: 'API',
+            registrant: '정수진'
+        },
+        {
+            id: 106,
+            auditorName: '한지민',
+            dept: '품질안전부',
+            rank: '심사원',
+            courseId: 7,
+            courseName: '임상시험 윤리 및 규정',
+            completionDate: '2025-05-15',
+            status: '완료',
+            dataSource: 'API',
+            registrant: '한지민'
+        },
+        {
+            id: 107,
+            auditorName: '송민호',
+            dept: '임상정책부',
+            rank: '연구관',
+            courseId: 8,
+            courseName: '의약품 품질관리 실무',
+            completionDate: '2025-06-05',
+            status: '완료',
+            dataSource: 'API',
+            registrant: '송민호'
+        }
+    ]
 };
 
 // 데이터베이스 내보내기 (Node.js 환경에서 사용)

@@ -367,7 +367,7 @@
                 <div class="table-container">
                 <table id="courseTable">
                     <thead><tr>
-                        <th class="sortable" data-sort="id">No <span class="sort-arrow">↕</span></th>
+                        <th class="sortable" data-sort="id">교육ID <span class="sort-arrow">↕</span></th>
                         <th class="sortable" data-sort="name">교육사업명 <span class="sort-arrow">↕</span></th>
                         <th>세부과정(프로그램)명</th>
                         <th class="sortable" data-sort="startDate">교육기간 <span class="sort-arrow">↕</span></th>
@@ -395,6 +395,8 @@
                         <div class="form-group"><label for="courseDescSearchInput">세부과정명</label><input type="text" id="courseDescSearchInput" placeholder="세부과정명을 입력하세요"></div>
                         <div class="form-group date-range"><label for="coursePeriodStartInput">교육기간</label><input type="date" id="coursePeriodStartInput" placeholder="시작일"> ~ <input type="date" id="coursePeriodEndInput" placeholder="종료일"></div>
                         <div class="form-group date-range"><label for="completionStartInput">이수일</label><input type="date" id="completionStartInput" placeholder="시작일"> ~ <input type="date" id="completionEndInput" placeholder="종료일"></div>
+                        <div class="form-group"><label for="courseTypeSearchSelect">필수여부</label><select id="courseTypeSearchSelect"><option value="전체">전체</option><option value="필수">필수</option><option value="선택">선택</option></select></div>
+                        <div class="form-group"><label for="dataSourceSearchSelect">데이터 소스</label><select id="dataSourceSearchSelect"><option value="전체">전체</option><option value="API">평가원 교육관리시스템</option><option value="EXTERNAL">외부 교육기관</option></select></div>
                         <div class="form-group"><label for="statusSelect">상태</label><select id="statusSelect"><option value="전체">전체 상태</option><option value="승인완료">승인완료</option><option value="승인대기">승인대기</option><option value="반려">반려</option><option value="자동승인">자동승인</option></select></div>
                         <button type="submit" class="btn btn-search">검색</button>
                     </form>
@@ -404,6 +406,7 @@
                     <div>
                         <button id="sync-records-api-btn" class="btn btn-primary">API 동기화</button>
                         <button class="btn btn-primary" id="add-record-btn">이수 기록 등록</button>
+                        <button id="bulk-insert-records-btn" class="btn btn-secondary" style="display: none;">이수 기록 대량 등록</button>
                     </div>
                 </div>
                 <div class="table-container">
@@ -647,8 +650,10 @@
             const coursePeriodEnd = document.getElementById('coursePeriodEndInput')?.value || '';
             const completionStart = document.getElementById('completionStartInput')?.value || '';
             const completionEnd = document.getElementById('completionEndInput')?.value || '';
+            const courseTypeFilter = document.getElementById('courseTypeSearchSelect')?.value || '전체';
+            const dataSourceFilter = document.getElementById('dataSourceSearchSelect')?.value || '전체';
             const statusFilter = document.getElementById('statusSelect')?.value || '전체';
-            console.log('renderRecordTable 호출 - 부서:', dept, '이름 필터:', nameFilter, '교육사업명 필터:', courseNameFilter, '세부과정명 필터:', courseDescFilter, '교육기간:', coursePeriodStart, '~', coursePeriodEnd, '이수일:', completionStart, '~', completionEnd, '상태 필터:', statusFilter);
+            console.log('renderRecordTable 호출 - 부서:', dept, '이름 필터:', nameFilter, '교육사업명 필터:', courseNameFilter, '세부과정명 필터:', courseDescFilter, '교육기간:', coursePeriodStart, '~', coursePeriodEnd, '이수일:', completionStart, '~', completionEnd, '필수여부:', courseTypeFilter, '데이터소스:', dataSourceFilter, '상태 필터:', statusFilter);
             
             const tbody = document.querySelector('#recordTable tbody');
             tbody.innerHTML = '';
@@ -706,7 +711,7 @@
                             return result;
                         })(),
                         auditorName: name, 
-                        auditorDept: auditor.info.dept,
+                        auditorDept: auditor.info.dept, 
                         // 승인대기 상태면 항상 EXTERNAL로 표시, 아니면 원본 dataSource 사용
                         dataSource: (() => {
                             const originalApprove = r.approve;
@@ -776,6 +781,20 @@
                         
                         return true;
                     });
+                }
+                
+                // 필수여부 필터링
+                if (courseTypeFilter !== '전체') {
+                    recordsToDisplay = recordsToDisplay.filter(rec => 
+                        rec.courseType === courseTypeFilter
+                    );
+                }
+                
+                // 데이터 소스 필터링
+                if (dataSourceFilter !== '전체') {
+                    recordsToDisplay = recordsToDisplay.filter(rec => 
+                        rec.dataSource === dataSourceFilter
+                    );
                 }
                 
                 recordsToDisplay.forEach(rec => {
@@ -884,7 +903,7 @@
                 console.log(`심사자 ${name}: 부서=${auditor.info.dept}, deptFilter=${deptFilter}, deptMatch=${deptMatch}, nameMatch=${nameMatch}`);
                 
                 if (auditor.records && deptMatch && nameMatch) {
-                    auditor.records.forEach(record => {
+            auditor.records.forEach(record => {
                 const course = db.courses.find(c => c.id === record.courseId);
                 if (course) {
                     const recordDate = record.date;
@@ -979,8 +998,8 @@
                                 totalHours += course.hours;
                                 deptStats[auditor.info.dept].total++;
                                 deptStats[auditor.info.dept].hours += course.hours;
-                                completedCount++;
-                                deptStats[auditor.info.dept].completed++;
+                                    completedCount++;
+                                    deptStats[auditor.info.dept].completed++;
                             }
                         }
                     });
@@ -1754,7 +1773,7 @@
         document.getElementById('switchUserBtn').addEventListener('click', () => {
             switchUserRole();
         });
-
+        
         document.getElementById('add-course-btn').addEventListener('click', () => {
             try {
                 // 현재 로그인한 사용자 정보 가져오기
@@ -1816,6 +1835,8 @@
             const coursePeriodEnd = document.getElementById('coursePeriodEndInput').value;
             const completionStart = document.getElementById('completionStartInput').value;
             const completionEnd = document.getElementById('completionEndInput').value;
+            const courseTypeFilter = document.getElementById('courseTypeSearchSelect').value;
+            const dataSourceFilter = document.getElementById('dataSourceSearchSelect').value;
             const statusFilter = document.getElementById('statusSelect').value;
             currentAuditor = nameFilter; // 심사자 이름으로 설정
             currentStatus = statusFilter; // 상태 필터 설정
@@ -1879,6 +1900,11 @@
                 console.error('이수 기록 등록 버튼 오류:', error);
                 showToast('이수 기록 등록 중 오류가 발생했습니다: ' + error.message);
             }
+        });
+
+        // 이수 기록 대량 등록 버튼 이벤트
+        document.getElementById('bulk-insert-records-btn').addEventListener('click', () => {
+            showBulkInsertRecordsModal();
         });
 
         document.querySelector('#recordTable tbody').addEventListener('click', e => {
@@ -2322,105 +2348,8 @@
             try {
                 showToast('이수 기록 API 동기화를 시작합니다...');
                 
-                // 실제 API 호출 시뮬레이션 - 평가원 교육관리시스템에서 이수 기록 가져오기
-                const mockRecordsApiData = [
-                    {
-                        id: 100,
-                        auditorName: '홍길동',
-                        dept: '신약심사부',
-                        rank: '심사원',
-                        courseId: 1,
-                        courseName: '개인정보보호 및 정보보안 교육',
-                        completionDate: '2025-02-15',
-                        status: '완료',
-                        dataSource: 'API',
-                        registrant: '홍길동'
-                    },
-                    {
-                        id: 101,
-                        auditorName: '김철수',
-                        dept: '허가총괄부',
-                        rank: '주무관',
-                        courseId: 2,
-                        courseName: '의약품 GMP 기본 과정',
-                        completionDate: '2025-04-20',
-                        status: '완료',
-                        dataSource: 'API',
-                        registrant: '김철수'
-                    },
-                    {
-                        id: 102,
-                        auditorName: '이영희',
-                        dept: '신약심사부',
-                        rank: '연구관',
-                        courseId: 3,
-                        courseName: '2025년 신약 허가·심사 워크숍',
-                        completionDate: '2025-07-16',
-                        status: '완료',
-                        dataSource: 'API',
-                        registrant: '이영희'
-                    },
-                    {
-                        id: 103,
-                        auditorName: '박선우',
-                        dept: '생물의약품부',
-                        rank: '선임연구관',
-                        courseId: 4,
-                        courseName: '바이오의약품 심사 가이드라인',
-                        completionDate: '2025-08-05',
-                        status: '완료',
-                        dataSource: 'API',
-                        registrant: '박선우'
-                    },
-                    {
-                        id: 104,
-                        auditorName: '최민준',
-                        dept: '신약심사부',
-                        rank: '심사원',
-                        courseId: 5,
-                        courseName: '의약품 통계 분석 심화',
-                        completionDate: '2025-10-21',
-                        status: '완료',
-                        dataSource: 'API',
-                        registrant: '최민준'
-                    },
-                    {
-                        id: 105,
-                        auditorName: '정수진',
-                        dept: '품질안전부',
-                        rank: '주무관',
-                        courseId: 6,
-                        courseName: '의약품 부작용 보고 시스템',
-                        completionDate: '2025-03-10',
-                        status: '완료',
-                        dataSource: 'API',
-                        registrant: '정수진'
-                    },
-                    {
-                        id: 106,
-                        auditorName: '한지민',
-                        dept: '품질안전부',
-                        rank: '심사원',
-                        courseId: 7,
-                        courseName: '임상시험 윤리 및 규정',
-                        completionDate: '2025-05-15',
-                        status: '완료',
-                        dataSource: 'API',
-                        registrant: '한지민'
-                    },
-                    {
-                        id: 107,
-                        auditorName: '송민호',
-                        dept: '임상정책부',
-                        rank: '연구관',
-                        courseId: 8,
-                        courseName: '의약품 품질관리 실무',
-                        completionDate: '2025-06-05',
-                        status: '완료',
-                        dataSource: 'API',
-                        registrant: '송민호'
-                    }
-                ];
+                // database.js에서 API 동기화용 이수 기록 데이터 가져오기
+                const mockRecordsApiData = EducationDatabase.apiRecords;
                 
                 // 중복되지 않는 새 이수 기록만 추가
                 let addedCount = 0;
@@ -2535,6 +2464,25 @@
             const popup = window.open('bulk-insert.html', 'bulkInsertPopup', 'width=900,height=700,scrollbars=yes,resizable=yes');
         };
 
+        // --- 이수 기록 Bulk Insert 기능 ---
+        const showBulkInsertRecordsModal = () => {
+            if (!isEducationManager()) {
+                alert('교육 관리 권한이 필요합니다.');
+                return;
+            }
+
+            // 별도 HTML 파일을 팝업으로 열기
+            const popup = window.open('bulk-insert-records.html', 'bulkInsertRecordsPopup', 'width=1000,height=800,scrollbars=yes,resizable=yes');
+            
+            // 팝업이 로드된 후 교육과정 데이터 전송
+            popup.addEventListener('load', () => {
+                popup.postMessage({
+                    type: 'COURSE_DATABASE',
+                    courses: db.courses
+                }, '*');
+            });
+        };
+
         // 팝업에서 전달받은 데이터 처리
         const handleBulkInsertData = (coursesData) => {
             if (!isEducationManager()) {
@@ -2569,17 +2517,97 @@
             renderAll();
         };
 
+        // 이수 기록 대량 등록 데이터 처리
+        const handleBulkInsertRecordsData = (recordsData) => {
+            if (!isEducationManager()) {
+                alert('교육 관리 권한이 필요합니다.');
+                return;
+            }
+
+            if (recordsData.length === 0) {
+                alert('등록할 이수 기록이 없습니다.');
+                return;
+            }
+
+            let successCount = 0;
+            let errorCount = 0;
+
+            recordsData.forEach(record => {
+                try {
+                    // 심사자가 존재하지 않으면 생성
+                    if (!db.auditors[record.auditorName]) {
+                        db.auditors[record.auditorName] = {
+                            info: {
+                                name: record.auditorName,
+                                dept: record.dept,
+                                rank: '심사원' // 기본값
+                            },
+                            records: []
+                        };
+                    }
+
+                    // 교육과정 정보 확인
+                    const course = db.courses.find(c => c.id == record.courseId);
+                    if (!course) {
+                        console.error('교육과정을 찾을 수 없습니다:', record.courseId);
+                        errorCount++;
+                        return;
+                    }
+
+                    // 이수 기록 생성
+                    const newRecord = {
+                        id: Date.now() + Math.random(), // 고유 ID 생성
+                        courseId: parseInt(record.courseId),
+                        date: record.completionDate,
+                        status: 'completed',
+                        dataSource: course.dataSource === 'API' ? 'API' : 'EXTERNAL',
+                        registrant: record.auditorName,
+                        auditorName: record.auditorName,
+                        approve: record.approval,
+                        notes: '',
+                        fileName: ''
+                    };
+
+                    // 이수 기록 추가
+                    db.auditors[record.auditorName].records.push(newRecord);
+                    successCount++;
+
+                } catch (error) {
+                    console.error('이수 기록 등록 오류:', error, record);
+                    errorCount++;
+                }
+            });
+
+            if (successCount > 0) {
+                saveData();
+                renderAll();
+            }
+
+            let message = `${successCount}개의 이수 기록이 성공적으로 등록되었습니다.`;
+            if (errorCount > 0) {
+                message += `\n${errorCount}개의 기록은 등록에 실패했습니다.`;
+            }
+            alert(message);
+        };
+
         // 권한에 따른 UI 업데이트
         const updateUIByPermission = () => {
             const bulkInsertBtn = document.getElementById('bulk-insert-btn');
+            const bulkInsertRecordsBtn = document.getElementById('bulk-insert-records-btn');
             
             if (isEducationManager()) {
                 if (bulkInsertBtn) {
                     bulkInsertBtn.style.display = 'inline-block';
                 }
+                if (bulkInsertRecordsBtn) {
+                    bulkInsertRecordsBtn.style.display = 'inline-block';
+                }
             } else {
                 if (bulkInsertBtn) {
                     bulkInsertBtn.style.display = 'none';
+                }
+                if (bulkInsertRecordsBtn) {
+                    bulkInsertRecordsBtn.style.display = 'none';
                 }
             }
         };
@@ -2618,6 +2646,14 @@
         window.addEventListener('message', (event) => {
             if (event.data.type === 'bulkInsertCourses') {
                 handleBulkInsertData(event.data.data);
+            } else if (event.data.type === 'bulkInsertRecords') {
+                handleBulkInsertRecordsData(event.data.data);
+            } else if (event.data.type === 'REQUEST_COURSE_DATABASE') {
+                // 이수 기록 대량 등록 팝업에서 교육과정 데이터 요청 시 응답
+                event.source.postMessage({
+                    type: 'COURSE_DATABASE',
+                    courses: db.courses
+                }, '*');
             }
         });
 

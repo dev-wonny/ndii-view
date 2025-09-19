@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이수 기록 대량 등록</title>
+    <!-- SheetJS 라이브러리 추가 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --bg: #f7f8fa;
+            --card: #ffffff;
+            --line: #e5e7eb;
+            --text: #111827;
+            --muted: #6b7280;
+            --primary: #2563eb;
+            --danger: #dc2626;
+            --ok: #059669;
+            --warn: #d97706;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Apple SD Gothic Neo, Noto Sans KR, sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: var(--primary);
+            margin-bottom: 24px;
+            font-size: 24px;
+            border-bottom: 2px solid var(--line);
+            padding-bottom: 12px;
+        }
+        
+        .section {
+            margin-bottom: 24px;
+            padding: 16px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        
+        .section h3 {
+            margin: 0 0 16px 0;
+            color: var(--text);
+            font-size: 18px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text);
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .file-upload {
+            border: 2px dashed var(--line);
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .file-upload:hover {
+            border-color: var(--primary);
+            background: #f0f9ff;
+        }
+        
+        .file-upload.dragover {
+            border-color: var(--primary);
+            background: #f0f9ff;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text);
+            font-family: inherit;
+            transition: all 0.2s;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .btn:hover {
+            background: var(--bg);
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+        
+        .btn-secondary {
+            background: var(--muted);
+            color: white;
+            border-color: var(--muted);
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+        
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+        
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            font-size: 12px;
+        }
+        
+        .preview-table th,
+        .preview-table td {
+            border: 1px solid var(--line);
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .preview-table th {
+            background: #f3f4f6;
+            font-weight: 600;
+        }
+        
+        .preview-table tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        
+        .error {
+            color: var(--danger);
+            font-weight: 600;
+        }
+        
+        .success {
+            color: var(--ok);
+            font-weight: 600;
+        }
+        
+        .warning {
+            color: var(--warn);
+            font-weight: 600;
+        }
+        
+        .info {
+            background: #e0f2fe;
+            border: 1px solid #81d4fa;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .info h4 {
+            margin: 0 0 8px 0;
+            color: #0277bd;
+        }
+        
+        .info ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .info li {
+            margin-bottom: 4px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .status-valid {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-invalid {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        
+        .status-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>이수 기록 대량 등록</h1>
+        
+        <div class="info">
+            <h4>📋 등록 가이드</h4>
+            <ul>
+                <li><strong>파일 형식:</strong> Excel 파일(.xlsx)만 지원됩니다</li>
+                <li><strong>필수 컬럼:</strong> 이수한 부서, 이수한 심사자 이름, 교육아이디, 승인여부</li>
+                <li><strong>승인여부:</strong> 승인, 승인대기, 반려 중 하나를 입력하세요</li>
+                <li><strong>교육아이디:</strong> 교육과정 관리에 등록된 교육과정의 ID를 사용하세요</li>
+                <li><strong>이수일:</strong> 입력하지 않으면 오늘 날짜로 자동 설정됩니다</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h3>1. 템플릿 다운로드</h3>
+            <p>아래 버튼을 클릭하여 등록용 템플릿을 다운로드하세요.</p>
+            <button class="btn btn-primary" onclick="downloadTemplate()">📥 템플릿 다운로드</button>
+        </div>
+        
+        <div class="section">
+            <h3>2. 파일 업로드</h3>
+            <div class="file-upload" id="fileUploadArea">
+                <p>📁 Excel 파일을 여기에 드래그하거나 클릭하여 선택하세요</p>
+                <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
+            </div>
+            <div id="fileInfo" class="hidden" style="margin-top: 12px;">
+                <p><strong>선택된 파일:</strong> <span id="fileName"></span></p>
+                <button class="btn btn-danger" onclick="clearFile()">파일 제거</button>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h3>3. 데이터 미리보기</h3>
+            <div id="previewArea" class="hidden">
+                <p><strong>총 <span id="recordCount">0</span>건의 이수 기록이 발견되었습니다.</strong></p>
+                <div style="max-height: 300px; overflow-y: auto; border: 1px solid var(--line); border-radius: 6px;">
+                    <table class="preview-table" id="previewTable">
+                        <thead>
+                            <tr>
+                                <th>이수한 부서</th>
+                                <th>이수한 심사자 이름</th>
+                                <th>교육아이디</th>
+                                <th>교육사업명</th>
+                                <th>승인여부</th>
+                                <th>이수일</th>
+                                <th>상태</th>
+                            </tr>
+                        </thead>
+                        <tbody id="previewTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 16px;">
+                    <button class="btn btn-primary" onclick="confirmUpload()">✅ 등록 확인</button>
+                    <button class="btn btn-secondary" onclick="clearFile()">❌ 취소</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h3>4. 등록 결과</h3>
+            <div id="resultArea" class="hidden">
+                <p id="resultMessage"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let uploadedData = [];
+        let courseDatabase = null;
+        
+        // 부서 목록
+        const departments = ['신약심사부', '허가총괄부', '생물의약품부', '품질안전부', '임상정책부'];
+        
+        // 승인여부 목록
+        const approvalStatuses = ['승인', '승인대기', '반려'];
+        
+        // 부모 창에서 교육과정 데이터 받기
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'COURSE_DATABASE') {
+                courseDatabase = event.data.courses;
+                console.log('교육과정 데이터를 받았습니다:', courseDatabase);
+            }
+        });
+        
+        // 부모 창에 교육과정 데이터 요청
+        window.opener.postMessage({
+            type: 'REQUEST_COURSE_DATABASE'
+        }, '*');
+        
+        // 파일 업로드 영역 이벤트
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const fileInput = document.getElementById('fileInput');
+        
+        fileUploadArea.addEventListener('click', () => fileInput.click());
+        fileUploadArea.addEventListener('dragover', handleDragOver);
+        fileUploadArea.addEventListener('dragleave', handleDragLeave);
+        fileUploadArea.addEventListener('drop', handleDrop);
+        
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        function handleDragOver(e) {
+            e.preventDefault();
+            fileUploadArea.classList.add('dragover');
+        }
+        
+        function handleDragLeave(e) {
+            e.preventDefault();
+            fileUploadArea.classList.remove('dragover');
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            fileUploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                processFile(files[0]);
+            }
+        }
+        
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                processFile(file);
+            }
+        }
+        
+        function processFile(file) {
+            if (!file.name.match(/\.(xlsx|xls)$/)) {
+                alert('Excel 파일(.xlsx, .xls)만 업로드 가능합니다.');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    if (jsonData.length < 2) {
+                        alert('파일에 데이터가 없습니다. 헤더와 최소 1개의 데이터 행이 필요합니다.');
+                        return;
+                    }
+                    
+                    // 헤더 확인
+                    const headers = jsonData[0];
+                    const requiredHeaders = ['이수한 부서', '이수한 심사자 이름', '교육아이디', '승인여부'];
+                    
+                    for (const required of requiredHeaders) {
+                        if (!headers.includes(required)) {
+                            alert(`필수 컬럼이 누락되었습니다: ${required}`);
+                            return;
+                        }
+                    }
+                    
+                    // 데이터 처리
+                    const records = [];
+                    for (let i = 1; i < jsonData.length; i++) {
+                        const row = jsonData[i];
+                        if (row.every(cell => cell === undefined || cell === '')) continue; // 빈 행 건너뛰기
+                        
+                        const record = {
+                            dept: row[headers.indexOf('이수한 부서')] || '',
+                            auditorName: row[headers.indexOf('이수한 심사자 이름')] || '',
+                            courseId: row[headers.indexOf('교육아이디')] || '',
+                            approval: row[headers.indexOf('승인여부')] || '',
+                            completionDate: row[headers.indexOf('이수일')] || new Date().toISOString().slice(0, 10)
+                        };
+                        
+                        records.push(record);
+                    }
+                    
+                    uploadedData = records;
+                    displayFileInfo(file.name);
+                    showPreview();
+                    
+                } catch (error) {
+                    console.error('파일 처리 오류:', error);
+                    alert('파일을 읽는 중 오류가 발생했습니다: ' + error.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function displayFileInfo(fileName) {
+            document.getElementById('fileName').textContent = fileName;
+            document.getElementById('fileInfo').classList.remove('hidden');
+        }
+        
+        function showPreview() {
+            const previewArea = document.getElementById('previewArea');
+            const previewTableBody = document.getElementById('previewTableBody');
+            const recordCount = document.getElementById('recordCount');
+            
+            previewTableBody.innerHTML = '';
+            recordCount.textContent = uploadedData.length;
+            
+            uploadedData.forEach((record, index) => {
+                const row = document.createElement('tr');
+                
+                // 교육과정 정보 찾기
+                const course = courseDatabase ? courseDatabase.find(c => c.id == record.courseId) : null;
+                const courseName = course ? course.name : '교육과정을 찾을 수 없음';
+                
+                // 유효성 검사
+                const validation = validateRecord(record, course);
+                
+                row.innerHTML = `
+                    <td>${record.dept}</td>
+                    <td>${record.auditorName}</td>
+                    <td>${record.courseId}</td>
+                    <td>${courseName}</td>
+                    <td>${record.approval}</td>
+                    <td>${record.completionDate}</td>
+                    <td><span class="status-badge ${validation.isValid ? 'status-valid' : 'status-invalid'}">${validation.message}</span></td>
+                `;
+                
+                previewTableBody.appendChild(row);
+            });
+            
+            previewArea.classList.remove('hidden');
+        }
+        
+        function validateRecord(record, course) {
+            const errors = [];
+            
+            if (!record.dept || !departments.includes(record.dept)) {
+                errors.push('유효하지 않은 부서');
+            }
+            
+            if (!record.auditorName || record.auditorName.trim() === '') {
+                errors.push('심사자 이름 누락');
+            }
+            
+            if (!record.courseId || isNaN(record.courseId)) {
+                errors.push('유효하지 않은 교육아이디');
+            } else if (!course) {
+                errors.push('존재하지 않는 교육과정');
+            }
+            
+            if (!record.approval || !approvalStatuses.includes(record.approval)) {
+                errors.push('유효하지 않은 승인여부');
+            }
+            
+            if (record.completionDate && !isValidDate(record.completionDate)) {
+                errors.push('유효하지 않은 이수일');
+            }
+            
+            return {
+                isValid: errors.length === 0,
+                message: errors.length === 0 ? '유효함' : errors.join(', ')
+            };
+        }
+        
+        function isValidDate(dateString) {
+            const date = new Date(dateString);
+            return date instanceof Date && !isNaN(date);
+        }
+        
+        function confirmUpload() {
+            if (uploadedData.length === 0) {
+                alert('등록할 데이터가 없습니다.');
+                return;
+            }
+            
+            // 유효성 검사
+            const validRecords = [];
+            const invalidRecords = [];
+            
+            uploadedData.forEach(record => {
+                const course = courseDatabase ? courseDatabase.find(c => c.id == record.courseId) : null;
+                const validation = validateRecord(record, course);
+                
+                if (validation.isValid) {
+                    validRecords.push(record);
+                } else {
+                    invalidRecords.push(record);
+                }
+            });
+            
+            if (invalidRecords.length > 0) {
+                const confirmMessage = `유효하지 않은 데이터가 ${invalidRecords.length}건 있습니다.\n유효한 ${validRecords.length}건만 등록하시겠습니까?`;
+                if (!confirm(confirmMessage)) {
+                    return;
+                }
+            }
+            
+            // 부모 창에 데이터 전송
+            window.opener.postMessage({
+                type: 'bulkInsertRecords',
+                data: validRecords
+            }, '*');
+            
+            showResult(validRecords.length, invalidRecords.length);
+        }
+        
+        function showResult(successCount, errorCount) {
+            const resultArea = document.getElementById('resultArea');
+            const resultMessage = document.getElementById('resultMessage');
+            
+            let message = `<div class="success">✅ 성공적으로 등록되었습니다!</div>`;
+            message += `<p><strong>등록된 이수 기록:</strong> ${successCount}건</p>`;
+            
+            if (errorCount > 0) {
+                message += `<p class="error"><strong>등록 실패:</strong> ${errorCount}건 (유효하지 않은 데이터)</p>`;
+            }
+            
+            resultMessage.innerHTML = message;
+            resultArea.classList.remove('hidden');
+            
+            // 3초 후 창 닫기
+            setTimeout(() => {
+                window.close();
+            }, 3000);
+        }
+        
+        function clearFile() {
+            fileInput.value = '';
+            uploadedData = [];
+            document.getElementById('fileInfo').classList.add('hidden');
+            document.getElementById('previewArea').classList.add('hidden');
+            document.getElementById('resultArea').classList.add('hidden');
+        }
+        
+        function downloadTemplate() {
+            const templateData = [
+                ['이수한 부서', '이수한 심사자 이름', '교육아이디', '승인여부', '이수일'],
+                ['신약심사부', '홍길동', '1', '승인', '2025-01-15'],
+                ['허가총괄부', '김철수', '2', '승인대기', '2025-01-16'],
+                ['생물의약품부', '이영희', '3', '승인', '2025-01-17']
+            ];
+            
+            const ws = XLSX.utils.aoa_to_sheet(templateData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '이수기록');
+            
+            XLSX.writeFile(wb, '이수기록_대량등록_템플릿.xlsx');
+        }
+    </script>
+</body>
+</html>
