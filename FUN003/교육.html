@@ -347,9 +347,10 @@
                 <div class="search-area">
                     <form id="courseSearchForm">
                          <div class="form-group"><label for="courseNameInput">교육사업명</label><input type="text" id="courseNameInput"></div>
+                         <div class="form-group"><label for="courseDescInput">세부과정(프로그램)명</label><input type="text" id="courseDescInput"></div>
+                         <div class="form-group date-range"><label for="startDateInput">교육기간</label><input type="date" id="startDateInput" placeholder="시작일"> ~ <input type="date" id="endDateInput" placeholder="종료일"></div>
                          <div class="form-group"><label for="courseTypeSelect">필수여부</label><select id="courseTypeSelect"><option value="전체">전체</option><option value="필수">필수</option><option value="선택">선택</option></select></div>
                          <div class="form-group"><label for="dataSourceSelect">데이터 소스</label><select id="dataSourceSelect"><option value="전체">전체</option><option value="API">평가원 교육관리시스템</option><option value="EXTERNAL">외부 교육기관</option></select></div>
-                         <div class="form-group date-range"><label for="startDateInput">교육기간</label><input type="date" id="startDateInput" placeholder="시작일"> ~ <input type="date" id="endDateInput" placeholder="종료일"></div>
                          <button type="submit" class="btn btn-search">조회</button><button type="reset" class="btn btn-secondary">초기화</button>
                     </form>
                     <div style="margin-top: 12px;">
@@ -536,6 +537,7 @@
 
     <div id="toast-container"></div>
 
+    <script src="database.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         // --- 데이터베이스 및 상태 관리 ---
@@ -544,423 +546,25 @@
         let currentStatus = null;
         let sortState = {};
 
-        // localStorage에서 데이터 로드 또는 초기화
+        // 데이터베이스에서 데이터 로드
         const initData = () => {
-            // localStorage 초기화 (디버깅용) - 주석 처리
-            // localStorage.removeItem('eduDb');
-            // localStorage.removeItem('currentUser');
+            // 별도 데이터베이스 파일에서 데이터 로드
+            db = {
+                courses: EducationDatabase.courses,
+                auditors: EducationDatabase.auditors
+            };
             
-            const savedDb = localStorage.getItem('eduDb');
-            if (savedDb) {
-                db = JSON.parse(savedDb);
-                // 기존 교육과정에 데이터 소스 정보가 없으면 추가
-                db.courses.forEach(course => {
-                    if (!course.dataSource) {
-                        course.dataSource = "API";
-                        course.orgName = "평가원 교육관리시스템";
-                    }
-                    if (!course.registrant) {
-                        course.registrant = course.dataSource === "API" ? "평가원 관리자" : "외부 등록자";
-                    }
-                });
-                
-                // 기존 이수 기록에 누락된 필드 추가
-                if (db.auditors) {
-                    Object.keys(db.auditors).forEach(auditorName => {
-                        if (db.auditors[auditorName] && db.auditors[auditorName].records) {
-                            db.auditors[auditorName].records.forEach(record => {
-                                if (!record.dataSource) {
-                                    record.dataSource = "API";
-                                }
-                                if (!record.registrant) {
-                                    record.registrant = auditorName;
-                                }
-                                if (!record.status) {
-                                    record.status = "완료";
-                                }
-                            });
-                        }
-                    });
-                }
-                
-                // 업데이트된 데이터 저장
-                saveData();
+            // 현재 사용자 설정
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
             } else {
-                db = {
-                    courses: [
-                        { id: 1, name: "개인정보보호 및 정보보안 교육", desc: "개인정보 처리 및 정보보안 관련 필수 교육", startDate: "2025-02-01", endDate: "2025-02-28", type: "필수", hours: 2, regDate: "2025-01-10", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "김보안" },
-                        { id: 2, name: "의약품 GMP 기본 과정", desc: "의약품 제조 및 품질관리 표준 교육", startDate: "2025-04-01", endDate: "2025-04-30", type: "선택", hours: 8, regDate: "2025-03-10", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "이품질" },
-                        { id: 3, name: "2025년 신약 허가·심사 워크숍", desc: "신약 개발 및 심사 관련 최신 동향 및 실무 교육", startDate: "2025-07-15", endDate: "2025-07-16", type: "필수", hours: 16, regDate: "2025-06-01", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "박신약" },
-                        { id: 4, name: "바이오의약품 심사 가이드라인", desc: "바이오의약품 심사 기준 및 절차 교육", startDate: "2025-08-01", endDate: "2025-08-10", type: "필수", hours: 8, regDate: "2025-07-15", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "최바이오" },
-                        { id: 5, name: "의약품 통계 분석 심화", desc: "임상시험 데이터 분석 및 통계적 해석 교육", startDate: "2025-10-20", endDate: "2025-10-21", type: "선택", hours: 16, regDate: "2025-09-01", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "정통계" },
-                        { id: 6, name: "의약품 부작용 보고 시스템", desc: "의약품 안전성 모니터링 및 부작용 보고 절차", startDate: "2025-03-01", endDate: "2025-03-15", type: "필수", hours: 4, regDate: "2025-02-15", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "한안전" },
-                        { id: 7, name: "임상시험 윤리 및 규정", desc: "임상시험 관련 윤리적 고려사항 및 규정 준수", startDate: "2025-05-10", endDate: "2025-05-20", type: "필수", hours: 6, regDate: "2025-04-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "윤윤리" },
-                        { id: 8, name: "의약품 품질관리 실무", desc: "의약품 품질관리 실무 및 검사 방법론", startDate: "2025-06-01", endDate: "2025-06-10", type: "선택", hours: 12, regDate: "2025-05-15", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "강품질" },
-                        { id: 9, name: "신약 개발 프로세스", desc: "신약 개발 단계별 프로세스 및 심사 포인트", startDate: "2025-09-01", endDate: "2025-09-15", type: "필수", hours: 10, regDate: "2025-08-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "조개발" },
-                        { id: 10, name: "의약품 허가 후 관리", desc: "의약품 허가 후 안전성 및 효능성 모니터링", startDate: "2025-11-01", endDate: "2025-11-10", type: "선택", hours: 8, regDate: "2025-10-15", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "서관리" },
-                        { id: 11, name: "생물학적 제제 심사", desc: "생물학적 제제의 특성 및 심사 기준", startDate: "2025-12-01", endDate: "2025-12-10", type: "필수", hours: 14, regDate: "2025-11-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "임생물" },
-                        { id: 12, name: "의약품 경제성 평가", desc: "의약품 경제성 평가 방법론 및 적용 사례", startDate: "2026-01-15", endDate: "2026-01-20", type: "선택", hours: 12, regDate: "2025-12-25", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "노경제" },
-                        { id: 13, name: "2026년 신약 심사 가이드라인 업데이트", desc: "2026년도 신약 심사 기준 및 가이드라인 변경사항", startDate: "2026-02-01", endDate: "2026-02-15", type: "필수", hours: 8, regDate: "2026-01-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "오가이드" },
-                        { id: 14, name: "디지털 헬스케어 의약품 심사", desc: "디지털 기술을 활용한 의약품 및 의료기기 심사 기준", startDate: "2026-03-01", endDate: "2026-03-10", type: "필수", hours: 12, regDate: "2026-02-15", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "김디지털" },
-                        { id: 15, name: "희귀질환 의약품 심사 특론", desc: "희귀질환 의약품의 특별 심사 기준 및 절차", startDate: "2026-04-01", endDate: "2026-04-15", type: "선택", hours: 16, regDate: "2026-03-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "이희귀" },
-                        { id: 16, name: "의약품 임상시험 설계 고급과정", desc: "임상시험 설계의 고급 기법 및 통계적 고려사항", startDate: "2026-05-01", endDate: "2026-05-10", type: "선택", hours: 20, regDate: "2026-04-15", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "박임상" },
-                        { id: 17, name: "의약품 안전성 관리 시스템", desc: "의약품 안전성 모니터링 및 리스크 관리 체계", startDate: "2026-06-01", endDate: "2026-06-15", type: "필수", hours: 10, regDate: "2026-05-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "안리스크" },
-                        { id: 18, name: "바이오시밀러 심사 실무", desc: "바이오시밀러의 심사 기준 및 품질 평가 방법", startDate: "2026-07-01", endDate: "2026-07-10", type: "필수", hours: 14, regDate: "2026-06-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "신시밀러" },
-                        { id: 19, name: "의약품 품질 표준 및 규정", desc: "국제 의약품 품질 표준 및 국내 규정 비교", startDate: "2026-08-01", endDate: "2026-08-15", type: "선택", hours: 12, regDate: "2026-07-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "표표준" },
-                        { id: 20, name: "의약품 허가 후 변경사항 심사", desc: "의약품 허가 후 변경사항 심사 기준 및 절차", startDate: "2026-09-01", endDate: "2026-09-10", type: "필수", hours: 8, regDate: "2026-08-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "변변경" },
-                        { id: 21, name: "의약품 임상시험 윤리 심화", desc: "임상시험 윤리 위원회 운영 및 윤리적 고려사항", startDate: "2026-10-01", endDate: "2026-10-15", type: "필수", hours: 10, regDate: "2026-09-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "심윤리" },
-                        { id: 22, name: "의약품 데이터 무결성", desc: "의약품 개발 및 심사 과정의 데이터 무결성 보장", startDate: "2026-11-01", endDate: "2026-11-10", type: "선택", hours: 16, regDate: "2026-10-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "무무결" },
-                        { id: 23, name: "의약품 글로벌 규제 동향", desc: "주요 국가별 의약품 규제 동향 및 협력 방안", startDate: "2026-12-01", endDate: "2026-12-15", type: "선택", hours: 18, regDate: "2026-11-20", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "글로벌" },
-                        { id: 24, name: "의약품 심사 품질 관리", desc: "의약품 심사 과정의 품질 관리 및 개선 방안", startDate: "2027-01-15", endDate: "2027-01-25", type: "필수", hours: 12, regDate: "2026-12-25", dataSource: "API", orgName: "평가원 교육관리시스템", registrant: "품품질" },
-                        // 외부 교육기관 등록 교육과정
-                        { id: 25, name: "의약품 안전성 모니터링", desc: "의약품 안전성 모니터링 및 부작용 관리 실무", startDate: "2025-03-15", endDate: "2025-03-20", type: "필수", hours: 6, regDate: "2025-03-01", dataSource: "EXTERNAL", orgName: "외부 교육기관", registrant: "김안전" },
-                        { id: 26, name: "의약품 품질관리 전문가 과정", desc: "의약품 품질관리 전문가 양성을 위한 심화 과정", startDate: "2025-05-01", endDate: "2025-05-15", type: "선택", hours: 20, regDate: "2025-04-15", dataSource: "EXTERNAL", orgName: "외부 교육기관", registrant: "이품질" },
-                        { id: 27, name: "의약품 임상시험 윤리 심화", desc: "임상시험 윤리 위원회 운영 및 윤리적 고려사항", startDate: "2025-06-01", endDate: "2025-06-10", type: "필수", hours: 8, regDate: "2025-05-20", dataSource: "EXTERNAL", orgName: "외부 교육기관", registrant: "박윤리" },
-                        { id: 28, name: "의약품 데이터 무결성 관리", desc: "의약품 개발 및 심사 과정의 데이터 무결성 보장", startDate: "2025-08-01", endDate: "2025-08-15", type: "선택", hours: 12, regDate: "2025-07-20", dataSource: "EXTERNAL", orgName: "외부 교육기관", registrant: "최데이터" },
-                        { id: 29, name: "의약품 글로벌 규제 동향", desc: "주요 국가별 의약품 규제 동향 및 협력 방안", startDate: "2025-10-01", endDate: "2025-10-15", type: "선택", hours: 16, regDate: "2025-09-20", dataSource: "EXTERNAL", orgName: "외부 교육기관", registrant: "정글로벌" },
-                    ],
-                    // 심사자 정보 및 이수 기록
-                    auditors: {
-                        '홍길동': { info: { name: '홍길동', dept: '신약심사부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 2, date: '2025-04-20', status: '완료', dataSource: 'API', registrant: '홍길동', approve: '승인' },
-                            { id: 2, courseId: 1, date: '2025-02-15', status: '완료', dataSource: 'API', registrant: '홍길동', approve: '승인' },
-                            { id: 3, courseId: 25, date: '2025-03-18', status: '완료', dataSource: 'EXTERNAL', registrant: '홍길동', approve: '승인대기', auditorName: '홍길동', notes: '의약품 안전성 모니터링 교육을 수료했습니다. 수료증 첨부합니다.', fileName: '수료증_홍길동.pdf' },
-                        ]},
-                        '김철수': { info: { name: '김철수', dept: '허가총괄부', rank: '주무관' }, records: [
-                            { id: 1, courseId: 4, date: '2025-08-10', status: '완료', dataSource: 'API', registrant: '김철수', approve: '승인' },
-                            { id: 2, courseId: 1, date: '2025-02-18', status: '완료', dataSource: 'API', registrant: '김철수', approve: '승인' },
-                            { id: 4, courseId: 26, date: '2025-05-10', status: '완료', dataSource: 'EXTERNAL', registrant: '김철수', approve: '승인', auditorName: '김철수', notes: '의약품 품질관리 전문가 과정을 수료했습니다. 실무 경험을 바탕으로 교육을 이수했습니다.', fileName: '품질관리_수료증.pdf' },
-                        ]},
-                        '이영희': { info: { name: '이영희', dept: '신약심사부', rank: '연구관' }, records: [
-                             { id: 1, courseId: 5, date: '2025-10-21', status: '완료', dataSource: 'API', registrant: '이영희', approve: '승인' },
-                             { id: 2, courseId: 3, date: '2025-07-16', status: '완료', dataSource: 'API', registrant: '이영희', approve: '승인' },
-                             { id: 3, courseId: 1, date: '2025-02-20', status: '완료', dataSource: 'API', registrant: '이영희', approve: '승인' },
-                             { id: 4, courseId: 27, date: '2025-06-05', status: '완료', dataSource: 'EXTERNAL', registrant: '이영희', approve: '승인대기', auditorName: '이영희', notes: '의약품 임상시험 윤리 심화 교육을 수료했습니다. 수료증 첨부합니다.', fileName: '임상시험윤리_수료증_이영희.pdf' },
-                        ]},
-                        '박선우': { info: { name: '박선우', dept: '생물의약품부', rank: '선임연구관' }, records: [
-                             { id: 1, courseId: 1, date: '2025-02-11', status: '완료', dataSource: 'API', registrant: '박선우', approve: '승인' },
-                             { id: 2, courseId: 4, date: '2025-08-05', status: '완료', dataSource: 'API', registrant: '박선우', approve: '승인' },
-                             { id: 5, courseId: 28, date: '2025-08-10', status: '완료', dataSource: 'EXTERNAL', registrant: '박선우', approve: '반려', auditorName: '박선우', notes: '의약품 데이터 무결성 관리 교육을 수료했습니다. 수료증 첨부합니다.', fileName: '데이터무결성_수료증_박선우.pdf' },
-                        ]},
-                        '최민준': { info: { name: '최민준', dept: '신약심사부', rank: '심사원' }, records: [
-                             { id: 1, courseId: 1, date: '2025-09-05', status: '완료', dataSource: 'API', registrant: '최민준', approve: '승인' },
-                             { id: 6, courseId: 29, date: '2025-10-15', status: '완료', dataSource: 'EXTERNAL', registrant: '최민준', approve: '승인', auditorName: '최민준', notes: '의약품 글로벌 규제 동향 교육을 수료했습니다. 수료증 첨부합니다.', fileName: '글로벌규제_수료증_최민준.pdf' },
-                        ]},
-                        '정수진': { info: { name: '정수진', dept: '품질안전부', rank: '주무관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-25', status: '완료', dataSource: 'API', registrant: '정수진' },
-                            { id: 2, courseId: 3, date: '2025-07-20', status: '완료', dataSource: 'API', registrant: '정수진' },
-                        ]},
-                        '한지민': { info: { name: '한지민', dept: '품질안전부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 2, date: '2025-04-15', status: '완료', dataSource: 'API', registrant: '한지민' },
-                        ]},
-                        '송민호': { info: { name: '송민호', dept: '임상정책부', rank: '연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-28', status: '완료', dataSource: 'API', registrant: '송민호', approve: '승인' },
-                            { id: 2, courseId: 5, date: '2025-10-25', status: '완료', dataSource: 'API', registrant: '송민호', approve: '승인' },
-                            { id: 7, courseId: 25, date: '2025-03-20', status: '완료', dataSource: 'EXTERNAL', registrant: '송민호', approve: '승인대기', auditorName: '송민호', notes: '의약품 안전성 모니터링 교육을 수료했습니다. 수료증 첨부합니다.', fileName: '안전성모니터링_수료증_송민호.pdf' },
-                        ]},
-                        '윤서연': { info: { name: '윤서연', dept: '허가총괄부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 4, date: '2025-08-15', status: '완료', dataSource: 'API', registrant: '윤서연', approve: '승인' },
-                            { id: 8, courseId: 26, date: '2025-05-15', status: '완료', dataSource: 'EXTERNAL', registrant: '윤서연', approve: '승인', auditorName: '윤서연', notes: '의약품 품질관리 전문가 과정을 수료했습니다. 수료증 첨부합니다.', fileName: '품질관리전문가_수료증_윤서연.pdf' },
-                        ]},
-                        '임동현': { info: { name: '임동현', dept: '생물의약품부', rank: '주무관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-03-01', status: '완료', dataSource: 'API', registrant: '임동현', approve: '승인' },
-                            { id: 2, courseId: 2, date: '2025-04-10', status: '완료', dataSource: 'API', registrant: '임동현', approve: '승인' },
-                            { id: 9, courseId: 27, date: '2025-06-08', status: '완료', dataSource: 'EXTERNAL', registrant: '임동현', approve: '반려', auditorName: '임동현', notes: '의약품 임상시험 윤리 심화 교육을 수료했습니다. 수료증 첨부합니다.', fileName: '임상시험윤리_수료증_임동현.pdf' },
-                        ]},
-                        '김미영': { info: { name: '김미영', dept: '신약심사부', rank: '선임연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '김미영' },
-                            { id: 2, courseId: 3, date: '2025-07-20', approve: '승인', status: '완료', dataSource: 'API', registrant: '김미영' },
-                            { id: 3, courseId: 6, date: '2025-03-10', approve: '승인', status: '완료', dataSource: 'API', registrant: '김미영' },
-                            { id: 4, courseId: 7, date: '2025-05-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '김미영' },
-                            { id: 5, courseId: 9, date: '2025-09-10', approve: '승인', status: '완료', dataSource: 'API', registrant: '김미영' },
-                        ]},
-                        '박준호': { info: { name: '박준호', dept: '허가총괄부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-20', approve: '승인', status: '완료', dataSource: 'API', registrant: '박준호' },
-                            { id: 2, courseId: 4, date: '2025-08-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '박준호' },
-                            { id: 3, courseId: 6, date: '2025-03-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '박준호' },
-                        ]},
-                        '이수진': { info: { name: '이수진', dept: '품질안전부', rank: '연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '이수진' },
-                            { id: 2, courseId: 2, date: '2025-04-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '이수진' },
-                            { id: 3, courseId: 6, date: '2025-03-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '이수진' },
-                            { id: 4, courseId: 8, date: '2025-06-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '이수진' },
-                        ]},
-                        '최영수': { info: { name: '최영수', dept: '임상정책부', rank: '주무관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '최영수' },
-                            { id: 2, courseId: 7, date: '2025-05-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '최영수' },
-                        ]},
-                        '정다은': { info: { name: '정다은', dept: '생물의약품부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '정다은' },
-                            { id: 2, courseId: 4, date: '2025-08-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '정다은' },
-                            { id: 3, courseId: 11, date: '2025-12-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '정다은' },
-                        ]},
-                        '한승우': { info: { name: '한승우', dept: '신약심사부', rank: '연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '한승우' },
-                            { id: 2, courseId: 3, date: '2025-07-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '한승우' },
-                            { id: 3, courseId: 5, date: '2025-10-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '한승우' },
-                            { id: 4, courseId: 6, date: '2025-03-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '한승우' },
-                            { id: 5, courseId: 7, date: '2025-05-20', approve: '승인', status: '완료', dataSource: 'API', registrant: '한승우' },
-                            { id: 6, courseId: 9, date: '2025-09-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '한승우' },
-                        ]},
-                        '윤지현': { info: { name: '윤지현', dept: '허가총괄부', rank: '선임연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-10', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤지현' },
-                            { id: 2, courseId: 2, date: '2025-04-20', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤지현' },
-                            { id: 3, courseId: 6, date: '2025-03-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤지현' },
-                            { id: 4, courseId: 8, date: '2025-06-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤지현' },
-                            { id: 5, courseId: 10, date: '2025-11-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤지현' },
-                        ]},
-                        '강민석': { info: { name: '강민석', dept: '품질안전부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '강민석' },
-                            { id: 2, courseId: 6, date: '2025-03-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '강민석' },
-                        ]},
-                        '조현아': { info: { name: '조현아', dept: '임상정책부', rank: '연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-16', approve: '승인', status: '완료', dataSource: 'API', registrant: '조현아' },
-                            { id: 2, courseId: 7, date: '2025-05-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '조현아' },
-                            { id: 3, courseId: 12, date: '2026-01-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '조현아' },
-                        ]},
-                        '서동현': { info: { name: '서동현', dept: '신약심사부', rank: '주무관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-14', approve: '승인', status: '완료', dataSource: 'API', registrant: '서동현' },
-                            { id: 2, courseId: 6, date: '2025-03-20', approve: '승인', status: '완료', dataSource: 'API', registrant: '서동현' },
-                            { id: 3, courseId: 7, date: '2025-05-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '서동현' },
-                        ]},
-                        '김태영': { info: { name: '김태영', dept: '허가총괄부', rank: '연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-19', approve: '승인', status: '완료', dataSource: 'API', registrant: '김태영' },
-                            { id: 2, courseId: 4, date: '2025-08-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '김태영' },
-                            { id: 3, courseId: 6, date: '2025-03-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '김태영' },
-                            { id: 4, courseId: 8, date: '2025-06-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '김태영' },
-                        ]},
-                        '박소연': { info: { name: '박소연', dept: '생물의약품부', rank: '선임연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-11', approve: '승인', status: '완료', dataSource: 'API', registrant: '박소연' },
-                            { id: 2, courseId: 3, date: '2025-07-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '박소연' },
-                            { id: 3, courseId: 4, date: '2025-08-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '박소연' },
-                            { id: 4, courseId: 6, date: '2025-03-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '박소연' },
-                            { id: 5, courseId: 7, date: '2025-05-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '박소연' },
-                            { id: 6, courseId: 9, date: '2025-09-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '박소연' },
-                            { id: 7, courseId: 11, date: '2025-12-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '박소연' },
-                        ]},
-                        '이준호': { info: { name: '이준호', dept: '품질안전부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-13', approve: '승인', status: '완료', dataSource: 'API', registrant: '이준호' },
-                            { id: 2, courseId: 6, date: '2025-03-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '이준호' },
-                        ]},
-                        '최수진': { info: { name: '최수진', dept: '임상정책부', rank: '주무관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-17', approve: '승인', status: '완료', dataSource: 'API', registrant: '최수진' },
-                            { id: 2, courseId: 7, date: '2025-05-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '최수진' },
-                            { id: 3, courseId: 12, date: '2026-01-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '최수진' },
-                        ]},
-                        '정민수': { info: { name: '정민수', dept: '신약심사부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-21', approve: '승인', status: '완료', dataSource: 'API', registrant: '정민수' },
-                            { id: 2, courseId: 6, date: '2025-03-30', approve: '승인', status: '완료', dataSource: 'API', registrant: '정민수' },
-                            { id: 3, courseId: 7, date: '2025-05-30', approve: '승인', status: '완료', dataSource: 'API', registrant: '정민수' },
-                            { id: 4, courseId: 9, date: '2025-09-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '정민수' },
-                        ]},
-                        '한지훈': { info: { name: '한지훈', dept: '허가총괄부', rank: '연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '한지훈' },
-                            { id: 2, courseId: 2, date: '2025-04-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '한지훈' },
-                            { id: 3, courseId: 4, date: '2025-08-20', approve: '승인', status: '완료', dataSource: 'API', registrant: '한지훈' },
-                            { id: 4, courseId: 6, date: '2025-04-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '한지훈' },
-                            { id: 5, courseId: 8, date: '2025-06-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '한지훈' },
-                        ]},
-                        '김하늘': { info: { name: '김하늘', dept: '생물의약품부', rank: '주무관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-23', approve: '승인', status: '완료', dataSource: 'API', registrant: '김하늘' },
-                            { id: 2, courseId: 3, date: '2025-07-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '김하늘' },
-                            { id: 3, courseId: 4, date: '2025-08-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '김하늘' },
-                            { id: 4, courseId: 6, date: '2025-04-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '김하늘' },
-                        ]},
-                        '박성민': { info: { name: '박성민', dept: '품질안전부', rank: '선임연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-24', approve: '승인', status: '완료', dataSource: 'API', registrant: '박성민' },
-                            { id: 2, courseId: 2, date: '2025-04-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '박성민' },
-                            { id: 3, courseId: 5, date: '2025-10-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '박성민' },
-                            { id: 4, courseId: 6, date: '2025-04-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '박성민' },
-                            { id: 5, courseId: 7, date: '2025-06-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '박성민' },
-                            { id: 6, courseId: 8, date: '2025-06-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '박성민' },
-                            { id: 7, courseId: 9, date: '2025-09-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '박성민' },
-                        ]},
-                        '이서연': { info: { name: '이서연', dept: '임상정책부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '이서연' },
-                            { id: 2, courseId: 7, date: '2025-06-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '이서연' },
-                            { id: 3, courseId: 12, date: '2026-01-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '이서연' },
-                        ]},
-                        '한미영': { info: { name: '한미영', dept: '허가총괄부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-23', approve: '승인', status: '완료', dataSource: 'API', registrant: '한미영' },
-                            { id: 2, courseId: 2, date: '2025-04-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '한미영' },
-                            { id: 3, courseId: 6, date: '2025-04-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '한미영' },
-                        ]},
-                        '최동현': { info: { name: '최동현', dept: '신약심사부', rank: '연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-26', approve: '승인', status: '완료', dataSource: 'API', registrant: '최동현' },
-                            { id: 2, courseId: 2, date: '2025-05-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '최동현' },
-                            { id: 3, courseId: 3, date: '2025-07-30', approve: '승인', status: '완료', dataSource: 'API', registrant: '최동현' },
-                            { id: 4, courseId: 4, date: '2025-08-30', approve: '승인', status: '완료', dataSource: 'API', registrant: '최동현' },
-                            { id: 5, courseId: 6, date: '2025-04-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '최동현' },
-                        ]},
-                        '강예린': { info: { name: '강예린', dept: '허가총괄부', rank: '주무관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-27', approve: '승인', status: '완료', dataSource: 'API', registrant: '강예린' },
-                            { id: 2, courseId: 2, date: '2025-05-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '강예린' },
-                            { id: 3, courseId: 4, date: '2025-09-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '강예린' },
-                            { id: 4, courseId: 6, date: '2025-04-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '강예린' },
-                            { id: 5, courseId: 8, date: '2025-06-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '강예린' },
-                        ]},
-                        '윤태준': { info: { name: '윤태준', dept: '생물의약품부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤태준' },
-                            { id: 2, courseId: 3, date: '2025-08-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤태준' },
-                            { id: 3, courseId: 4, date: '2025-09-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤태준' },
-                            { id: 4, courseId: 6, date: '2025-04-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤태준' },
-                        ]},
-                        '조민지': { info: { name: '조민지', dept: '품질안전부', rank: '연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-03-01', approve: '승인', status: '완료', dataSource: 'API', registrant: '조민지' },
-                            { id: 2, courseId: 2, date: '2025-05-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '조민지' },
-                            { id: 3, courseId: 5, date: '2025-10-30', approve: '승인', status: '완료', dataSource: 'API', registrant: '조민지' },
-                            { id: 4, courseId: 6, date: '2025-04-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '조민지' },
-                            { id: 5, courseId: 7, date: '2025-06-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '조민지' },
-                            { id: 6, courseId: 8, date: '2025-06-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '조민지' },
-                        ]},
-                        '서준호': { info: { name: '서준호', dept: '임상정책부', rank: '선임연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-03-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '서준호' },
-                            { id: 2, courseId: 3, date: '2025-08-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '서준호' },
-                            { id: 3, courseId: 4, date: '2025-09-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '서준호' },
-                            { id: 4, courseId: 6, date: '2025-04-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '서준호' },
-                            { id: 5, courseId: 7, date: '2025-06-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '서준호' },
-                            { id: 6, courseId: 9, date: '2025-09-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '서준호' },
-                            { id: 7, courseId: 11, date: '2025-12-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '서준호' },
-                        ]},
-                        '김다은': { info: { name: '김다은', dept: '신약심사부', rank: '주무관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-03-03', approve: '승인', status: '완료', dataSource: 'API', registrant: '김다은' },
-                            { id: 2, courseId: 2, date: '2025-05-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '김다은' },
-                            { id: 3, courseId: 6, date: '2025-04-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '김다은' },
-                            { id: 4, courseId: 7, date: '2025-06-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '김다은' },
-                        ]},
-                        '박지훈': { info: { name: '박지훈', dept: '허가총괄부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 1, date: '2025-03-04', approve: '승인', status: '완료', dataSource: 'API', registrant: '박지훈' },
-                            { id: 2, courseId: 2, date: '2025-05-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '박지훈' },
-                            { id: 3, courseId: 4, date: '2025-09-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '박지훈' },
-                            { id: 4, courseId: 6, date: '2025-05-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '박지훈' },
-                            { id: 5, courseId: 8, date: '2025-06-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '박지훈' },
-                        ]},
-                        '이하늘': { info: { name: '이하늘', dept: '생물의약품부', rank: '연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-03-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '이하늘' },
-                            { id: 2, courseId: 3, date: '2025-08-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '이하늘' },
-                            { id: 3, courseId: 4, date: '2025-09-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '이하늘' },
-                            { id: 4, courseId: 6, date: '2025-05-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '이하늘' },
-                            { id: 5, courseId: 7, date: '2025-06-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '이하늘' },
-                        ]},
-                        '최서윤': { info: { name: '최서윤', dept: '품질안전부', rank: '선임연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-03-06', approve: '승인', status: '완료', dataSource: 'API', registrant: '최서윤' },
-                            { id: 2, courseId: 2, date: '2025-05-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '최서윤' },
-                            { id: 3, courseId: 5, date: '2025-11-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '최서윤' },
-                            { id: 4, courseId: 6, date: '2025-05-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '최서윤' },
-                            { id: 5, courseId: 7, date: '2025-06-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '최서윤' },
-                            { id: 6, courseId: 8, date: '2025-07-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '최서윤' },
-                            { id: 7, courseId: 9, date: '2025-09-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '최서윤' },
-                            { id: 8, courseId: 11, date: '2025-12-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '최서윤' },
-                        ]},
-                        '윤성민': { info: { name: '윤성민', dept: '생물의약품부', rank: '연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-26', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤성민' },
-                            { id: 2, courseId: 4, date: '2025-08-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤성민' },
-                            { id: 3, courseId: 6, date: '2025-04-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤성민' },
-                            { id: 5, courseId: 10, date: '2025-11-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤성민' },
-                        ]},
-                        '강민재': { info: { name: '강민재', dept: '임상정책부', rank: '주무관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-03-07', approve: '승인', status: '완료', dataSource: 'API', registrant: '강민재' },
-                            { id: 2, courseId: 7, date: '2025-06-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '강민재' },
-                            { id: 3, courseId: 12, date: '2026-01-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '강민재' },
-                        ]},
-                        '윤서준': { info: { name: '윤서준', dept: '신약심사부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 1, date: '2025-03-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤서준' },
-                            { id: 2, courseId: 2, date: '2025-05-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤서준' },
-                            { id: 3, courseId: 3, date: '2025-08-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤서준' },
-                            { id: 4, courseId: 6, date: '2025-05-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤서준' },
-                            { id: 5, courseId: 7, date: '2025-06-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '윤서준' },
-                        ]},
-                        '조하린': { info: { name: '조하린', dept: '허가총괄부', rank: '연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-03-09', approve: '승인', status: '완료', dataSource: 'API', registrant: '조하린' },
-                            { id: 2, courseId: 2, date: '2025-05-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '조하린' },
-                            { id: 3, courseId: 4, date: '2025-09-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '조하린' },
-                            { id: 4, courseId: 6, date: '2025-05-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '조하린' },
-                            { id: 5, courseId: 8, date: '2025-07-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '조하린' },
-                        ]},
-                        '서지민': { info: { name: '서지민', dept: '생물의약품부', rank: '선임연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-03-10', approve: '승인', status: '완료', dataSource: 'API', registrant: '서지민' },
-                            { id: 2, courseId: 3, date: '2025-08-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '서지민' },
-                            { id: 3, courseId: 4, date: '2025-09-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '서지민' },
-                            { id: 4, courseId: 6, date: '2025-05-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '서지민' },
-                            { id: 5, courseId: 7, date: '2025-07-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '서지민' },
-                            { id: 6, courseId: 9, date: '2025-10-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '서지민' },
-                        ]},
-                        '김도현': { info: { name: '김도현', dept: '품질안전부', rank: '주무관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-03-11', approve: '승인', status: '완료', dataSource: 'API', registrant: '김도현' },
-                            { id: 2, courseId: 2, date: '2025-05-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '김도현' },
-                            { id: 3, courseId: 5, date: '2025-11-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '김도현' },
-                            { id: 4, courseId: 6, date: '2025-05-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '김도현' },
-                            { id: 5, courseId: 7, date: '2025-07-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '김도현' },
-                        ]},
-                        '박서연': { info: { name: '박서연', dept: '임상정책부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 1, date: '2025-03-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '박서연' },
-                            { id: 2, courseId: 7, date: '2025-07-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '박서연' },
-                            { id: 3, courseId: 12, date: '2026-02-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '박서연' },
-                        ]},
-                        '이준서': { info: { name: '이준서', dept: '신약심사부', rank: '연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-03-13', approve: '승인', status: '완료', dataSource: 'API', registrant: '이준서' },
-                            { id: 2, courseId: 2, date: '2025-06-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '이준서' },
-                            { id: 3, courseId: 3, date: '2025-08-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '이준서' },
-                            { id: 4, courseId: 4, date: '2025-09-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '이준서' },
-                            { id: 5, courseId: 6, date: '2025-05-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '이준서' },
-                        ]},
-                        '최민지': { info: { name: '최민지', dept: '허가총괄부', rank: '선임연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-03-14', approve: '승인', status: '완료', dataSource: 'API', registrant: '최민지' },
-                            { id: 2, courseId: 2, date: '2025-06-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '최민지' },
-                            { id: 3, courseId: 4, date: '2025-09-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '최민지' },
-                            { id: 4, courseId: 6, date: '2025-05-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '최민지' },
-                            { id: 5, courseId: 7, date: '2025-07-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '최민지' },
-                            { id: 6, courseId: 8, date: '2025-07-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '최민지' },
-                            { id: 7, courseId: 9, date: '2025-10-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '최민지' },
-                            { id: 8, courseId: 11, date: '2025-12-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '최민지' },
-                        ]},
-                        '정하늘': { info: { name: '정하늘', dept: '생물의약품부', rank: '주무관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-03-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '정하늘' },
-                            { id: 2, courseId: 3, date: '2025-08-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '정하늘' },
-                            { id: 3, courseId: 4, date: '2025-10-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '정하늘' },
-                            { id: 4, courseId: 6, date: '2025-06-02', approve: '승인', status: '완료', dataSource: 'API', registrant: '정하늘' },
-                        ]},
-                        '한서준': { info: { name: '한서준', dept: '품질안전부', rank: '심사원' }, records: [
-                            { id: 1, courseId: 1, date: '2025-03-16', approve: '승인', status: '완료', dataSource: 'API', registrant: '한서준' },
-                            { id: 2, courseId: 2, date: '2025-06-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '한서준' },
-                            { id: 3, courseId: 5, date: '2025-11-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '한서준' },
-                            { id: 4, courseId: 6, date: '2025-06-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '한서준' },
-                            { id: 5, courseId: 7, date: '2025-07-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '한서준' },
-                        ]},
-                        '김지우': { info: { name: '김지우', dept: '임상정책부', rank: '연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-03-17', approve: '승인', status: '완료', dataSource: 'API', registrant: '김지우' },
-                            { id: 2, courseId: 7, date: '2025-07-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '김지우' },
-                            { id: 3, courseId: 9, date: '2025-10-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '김지우' },
-                            { id: 4, courseId: 12, date: '2026-02-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '김지우' },
-                        ]},
-                        '박민수': { info: { name: '박민수', dept: '신약심사부', rank: '선임연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-03-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '박민수' },
-                            { id: 2, courseId: 2, date: '2025-06-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '박민수' },
-                            { id: 3, courseId: 3, date: '2025-08-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '박민수' },
-                            { id: 4, courseId: 4, date: '2025-10-05', approve: '승인', status: '완료', dataSource: 'API', registrant: '박민수' },
-                            { id: 5, courseId: 6, date: '2025-06-08', approve: '승인', status: '완료', dataSource: 'API', registrant: '박민수' },
-                            { id: 6, courseId: 7, date: '2025-07-18', approve: '승인', status: '완료', dataSource: 'API', registrant: '박민수' },
-                            { id: 7, courseId: 8, date: '2025-07-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '박민수' },
-                            { id: 8, courseId: 9, date: '2025-10-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '박민수' },
-                        ]},
-                        '강지은': { info: { name: '강지은', dept: '품질안전부', rank: '선임연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-09', approve: '승인', status: '완료', dataSource: 'API', registrant: '강지은' },
-                            { id: 2, courseId: 2, date: '2025-04-22', approve: '승인', status: '완료', dataSource: 'API', registrant: '강지은' },
-                            { id: 3, courseId: 6, date: '2025-03-28', approve: '승인', status: '완료', dataSource: 'API', registrant: '강지은' },
-                            { id: 4, courseId: 8, date: '2025-06-15', approve: '승인', status: '완료', dataSource: 'API', registrant: '강지은' },
-                            { id: 5, courseId: 10, date: '2025-11-12', approve: '승인', status: '완료', dataSource: 'API', registrant: '강지은' },
-                        ]},
-                        '조현우': { info: { name: '조현우', dept: '임상정책부', rank: '연구관' }, records: [
-                            { id: 1, courseId: 1, date: '2025-02-24', approve: '승인', status: '완료', dataSource: 'API', registrant: '조현우' },
-                            { id: 2, courseId: 7, date: '2025-05-26', approve: '승인', status: '완료', dataSource: 'API', registrant: '조현우' },
-                            { id: 3, courseId: 12, date: '2026-01-25', approve: '승인', status: '완료', dataSource: 'API', registrant: '조현우' },
-                        ]}
-                    }
-                    // ===================================
-                };
+                currentUser = EducationDatabase.users["홍길동"];
             }
-            renderAll();
         };
+                
+        
+        
 
         const saveData = () => {
             localStorage.setItem('eduDb', JSON.stringify(db));
@@ -1852,6 +1456,7 @@
             // 데이터 소스가 API인 경우, 상세 정보 모달인 경우, 또는 승인/반려 처리 모달인 경우 모달 푸터 숨기기
             if ((data && data.dataSource === 'API' && title === '이수 기록 상세 정보') || 
                 title === '이수 기록 상세 정보' || 
+                title === '교육과정 상세보기' ||
                 title === '승인 처리' || 
                 title === '반려 처리') {
                 if (modalFooter) {
@@ -2058,6 +1663,7 @@
         document.getElementById('courseSearchForm').addEventListener('submit', e => {
             e.preventDefault();
             const nameFilter = document.getElementById('courseNameInput').value.toLowerCase();
+            const descFilter = document.getElementById('courseDescInput').value.toLowerCase();
             const typeFilter = document.getElementById('courseTypeSelect').value;
             const dataSourceFilter = document.getElementById('dataSourceSelect').value;
             const startDateFilter = document.getElementById('startDateInput').value;
@@ -2066,6 +1672,9 @@
             renderCourseTable(c => {
                 // 교육사업명 필터
                 const nameMatch = !nameFilter || c.name.toLowerCase().includes(nameFilter);
+                
+                // 세부과정(프로그램)명 필터
+                const descMatch = !descFilter || (c.desc && c.desc.toLowerCase().includes(descFilter));
                 
                 // 필수여부 필터
                 const typeMatch = typeFilter === '전체' || c.type === typeFilter;
@@ -2082,32 +1691,44 @@
                     dateMatch = dateMatch && c.endDate <= endDateFilter;
                 }
                 
-                return nameMatch && typeMatch && dataSourceMatch && dateMatch;
+                return nameMatch && descMatch && typeMatch && dataSourceMatch && dateMatch;
             });
         });
         document.getElementById('courseSearchForm').addEventListener('reset', () => setTimeout(renderCourseTable, 0));
         
-        // 교육과정 테이블 행 클릭 이벤트
+        // 교육과정 테이블 행 클릭 이벤트 - 교육과정 상세보기 모달 열기
         document.addEventListener('click', function(e) {
             const courseTable = document.getElementById('courseTable');
             if (courseTable && courseTable.contains(e.target)) {
                 const row = e.target.closest('tr');
                 if (row && row.dataset.id && !e.target.closest('.manage-buttons')) {
+                    // 클릭된 행의 교육과정 데이터 가져오기
                     const courseId = row.dataset.id;
-                    console.log('교육과정 행 클릭됨, ID:', courseId, '타입:', typeof courseId);
-                    console.log('db.courses 전체:', db.courses);
-                    console.log('db.courses ID들:', db.courses.map(c => ({ id: c.id, type: typeof c.id })));
+                    const course = db.courses.find(c => c.id == courseId);
                     
-                    const course = db.courses.find(c => c.id == courseId); // == 사용 (타입 변환)
                     if (course) {
-                        console.log('교육과정 데이터 찾음:', course);
-                        showCourseDetailPopup(course);
+                        // 교육과정 상세보기 모달 열기
+                        try {
+                            const formHtml = `
+                                <div class="form-group"><label for="modal-name">교육사업명</label><input type="text" id="modal-name" name="name" value="${course.name || ''}" readonly style="background-color: #f5f5f5;"></div>
+                                <div class="form-group"><label for="modal-desc">세부과정(프로그램)명</label><textarea id="modal-desc" name="desc" rows="3" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;background-color: #f5f5f5;" readonly>${course.desc || ''}</textarea></div>
+                                <div class="form-group"><label for="modal-startDate">시작일</label><input type="date" id="modal-startDate" name="startDate" value="${course.startDate || ''}" readonly style="background-color: #f5f5f5;"></div>
+                                <div class="form-group"><label for="modal-endDate">종료일</label><input type="date" id="modal-endDate" name="endDate" value="${course.endDate || ''}" readonly style="background-color: #f5f5f5;"></div>
+                                <div class="form-group"><label for="modal-type">필수여부</label><select id="modal-type" name="type" disabled style="background-color: #f5f5f5;"><option value="필수" ${course.type === '필수' ? 'selected' : ''}>필수</option><option value="선택" ${course.type === '선택' ? 'selected' : ''}>선택</option></select></div>
+                                <div class="form-group"><label for="modal-hours">인정시간</label><input type="number" id="modal-hours" name="hours" value="${course.hours || ''}" readonly style="background-color: #f5f5f5;"></div>
+                                <div class="form-group"><label for="modal-orgName">교육기관</label><input type="text" id="modal-orgName" name="orgName" value="${course.orgName || ''}" readonly style="background-color: #f5f5f5;"></div>
+                                <div class="form-group"><label for="modal-registrant">등록자</label><input type="text" id="modal-registrant" name="registrant" value="${course.registrant || ''}" readonly style="background-color: #f5f5f5;"></div>
+                                <div class="form-group"><label for="modal-regDate">등록일</label><input type="date" id="modal-regDate" name="regDate" value="${course.regDate || ''}" readonly style="background-color: #f5f5f5;"></div>
+                                <div class="form-group"><label for="modal-dataSource">데이터 소스</label><input type="text" id="modal-dataSource" name="dataSource" value="${course.dataSource === 'API' ? '평가원 교육관리시스템' : '외부 교육기관'}" readonly style="background-color: #f5f5f5;"></div>`;
+                                
+                            openModal('교육과정 상세보기', formHtml);
+                        } catch (error) {
+                            console.error('교육과정 상세보기 모달 열기 오류:', error);
+                            showToast('교육과정 상세보기 모달을 여는 중 오류가 발생했습니다: ' + error.message);
+                        }
                     } else {
-                        console.log('교육과정 데이터를 찾을 수 없음');
-                        // 모든 교육과정 ID와 비교해보기
-                        db.courses.forEach(c => {
-                            console.log(`비교: ${c.id} (${typeof c.id}) == ${courseId} (${typeof courseId}) = ${c.id == courseId}`);
-                        });
+                        console.error('교육과정 데이터를 찾을 수 없습니다. ID:', courseId);
+                        showToast('교육과정 데이터를 찾을 수 없습니다.');
                     }
                 }
             }
@@ -2902,36 +2523,6 @@
             });
         });
 
-        // --- 교육과정 상세 정보 팝업 ---
-        const showCourseDetailPopup = (course) => {
-            console.log('showCourseDetailPopup 호출됨, course:', course);
-            // 별도 HTML 파일을 팝업으로 열기
-            const popup = window.open('course-detail.html', 'courseDetailPopup', 'width=900,height=700,scrollbars=yes,resizable=yes');
-            
-            if (!popup) {
-                console.error('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
-                alert('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
-                return;
-            }
-            
-            // 팝업이 로드된 후 데이터 전송
-            popup.addEventListener('load', () => {
-                console.log('팝업 로드 완료, 데이터 전송 중...');
-                popup.postMessage({
-                    type: 'COURSE_DETAIL',
-                    course: course
-                }, '*');
-            });
-            
-            // 팝업 로드 실패 시 처리
-            setTimeout(() => {
-                if (popup.closed) {
-                    console.log('팝업이 닫혔습니다.');
-                } else {
-                    console.log('팝업이 열렸습니다.');
-                }
-            }, 1000);
-        };
 
         // --- Bulk Insert 기능 (엑셀 파일 처리) ---
         const showBulkInsertModal = () => {
@@ -2975,7 +2566,7 @@
             localStorage.setItem('eduDb', JSON.stringify(db));
             
             alert(`${newCourses.length}개의 교육과정이 성공적으로 등록되었습니다.`);
-            loadCourses();
+            renderAll();
         };
 
         // 권한에 따른 UI 업데이트
@@ -3020,20 +2611,13 @@
             
             updateUserInfo();
             updateUIByPermission();
-            loadCourses(); // 테이블 새로고침
+            renderAll(); // 테이블 새로고침
         };
 
         // 팝업 메시지 리스너
         window.addEventListener('message', (event) => {
             if (event.data.type === 'bulkInsertCourses') {
                 handleBulkInsertData(event.data.data);
-            } else if (event.data.type === 'EDIT_COURSE') {
-                // 교육과정 수정 요청 처리
-                const course = event.data.course;
-                if (course) {
-                    // 기존 수정 모달 열기 로직 사용
-                    showModal('교육과정 수정', 'course', course);
-                }
             }
         });
 
