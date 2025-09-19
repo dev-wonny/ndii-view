@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>의약품통합정보시스템 - 교육 실적 관리</title>
+    <!-- SheetJS 라이브러리 추가 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root{
             --bg:#f7f8fa; --card:#ffffff; --line:#e5e7eb; --text:#111827; --muted:#6b7280; --primary:#2563eb; --danger:#dc2626; --ok:#059669; --warn:#d97706;
@@ -85,16 +87,32 @@
         #recordTable th{font-size:13px;padding:10px 6px}
         #recordTable .status{font-size:11px;padding:2px 6px}
         
-        /* 교육명 컬럼 개선 */
-        #recordTable th:nth-child(4), #recordTable td:nth-child(4) {
+        /* 교육사업명 컬럼 개선 */
+        #recordTable th:nth-child(3), #recordTable td:nth-child(3) {
             max-width: 200px;
             white-space: normal;
             word-wrap: break-word;
             overflow-wrap: break-word;
         }
         
+        /* 세부과정(프로그램)명 컬럼 개선 */
+        #recordTable th:nth-child(4), #recordTable td:nth-child(4) {
+            max-width: 250px;
+            white-space: normal;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        /* 교육기간 컬럼 개선 */
+        #recordTable th:nth-child(5), #recordTable td:nth-child(5) {
+            max-width: 180px;
+            white-space: normal;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        
         /* 관리 버튼 컬럼 개선 */
-        #recordTable th:nth-child(11), #recordTable td:nth-child(11) {
+        #recordTable th:nth-child(12), #recordTable td:nth-child(12) {
             text-align: center;
             white-space: nowrap;
         }
@@ -312,6 +330,7 @@
         <h1>의약품통합정보시스템 - 교육 실적 관리</h1>
         <div id="userInfo" style="margin-left: auto; color: var(--muted); font-size: 14px;">
             <span id="currentUserInfo">신약심사부 - 홍길동</span>
+            <button id="switchUserBtn" style="margin-left: 10px; padding: 4px 8px; font-size: 12px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer;">권한 전환</button>
         </div>
     </header>
 
@@ -327,7 +346,7 @@
                 <h2>교육과정 관리</h2>
                 <div class="search-area">
                     <form id="courseSearchForm">
-                         <div class="form-group"><label for="courseNameInput">교육명</label><input type="text" id="courseNameInput"></div>
+                         <div class="form-group"><label for="courseNameInput">교육사업명</label><input type="text" id="courseNameInput"></div>
                          <div class="form-group"><label for="courseTypeSelect">필수여부</label><select id="courseTypeSelect"><option value="전체">전체</option><option value="필수">필수</option><option value="선택">선택</option></select></div>
                          <div class="form-group"><label for="dataSourceSelect">데이터 소스</label><select id="dataSourceSelect"><option value="전체">전체</option><option value="API">평가원 교육관리시스템</option><option value="EXTERNAL">외부 교육기관</option></select></div>
                          <div class="form-group date-range"><label for="startDateInput">교육기간</label><input type="date" id="startDateInput" placeholder="시작일"> ~ <input type="date" id="endDateInput" placeholder="종료일"></div>
@@ -341,14 +360,15 @@
                     <div>
                         <button id="sync-api-btn" class="btn btn-primary">API 동기화</button>
                         <button id="add-course-btn" class="btn btn-primary">신규 등록</button>
+                        <button id="bulk-insert-btn" class="btn btn-secondary" style="display: none;">대량 등록</button>
                     </div>
                 </div>
                 <div class="table-container">
                 <table id="courseTable">
                     <thead><tr>
                         <th class="sortable" data-sort="id">No <span class="sort-arrow">↕</span></th>
-                        <th class="sortable" data-sort="name">교육명 <span class="sort-arrow">↕</span></th>
-                        <th>교육 정보</th>
+                        <th class="sortable" data-sort="name">교육사업명 <span class="sort-arrow">↕</span></th>
+                        <th>세부과정(프로그램)명</th>
                         <th class="sortable" data-sort="startDate">교육기간 <span class="sort-arrow">↕</span></th>
                         <th class="sortable" data-sort="type">필수여부 <span class="sort-arrow">↕</span></th>
                         <th class="sortable" data-sort="hours">인정시간 <span class="sort-arrow">↕</span></th>
@@ -370,6 +390,10 @@
                      <form id="auditorSearchForm">
                         <div class="form-group"><label for="deptSelect">부서 선택</label><select id="deptSelect"><option value="전체">전체 부서</option><option value="신약심사부">신약심사부</option><option value="허가총괄부">허가총괄부</option><option value="생물의약품부">생물의약품부</option><option value="품질안전부">품질안전부</option><option value="임상정책부">임상정책부</option></select></div>
                         <div class="form-group"><label for="auditorNameInput">심사자 검색</label><input type="text" id="auditorNameInput" placeholder="예: 홍길동, 김철수, 이영희, 박선우, 최민준"></div>
+                        <div class="form-group"><label for="courseNameSearchInput">교육사업명</label><input type="text" id="courseNameSearchInput" placeholder="교육사업명을 입력하세요"></div>
+                        <div class="form-group"><label for="courseDescSearchInput">세부과정명</label><input type="text" id="courseDescSearchInput" placeholder="세부과정명을 입력하세요"></div>
+                        <div class="form-group date-range"><label for="coursePeriodStartInput">교육기간</label><input type="date" id="coursePeriodStartInput" placeholder="시작일"> ~ <input type="date" id="coursePeriodEndInput" placeholder="종료일"></div>
+                        <div class="form-group date-range"><label for="completionStartInput">이수일</label><input type="date" id="completionStartInput" placeholder="시작일"> ~ <input type="date" id="completionEndInput" placeholder="종료일"></div>
                         <div class="form-group"><label for="statusSelect">상태</label><select id="statusSelect"><option value="전체">전체 상태</option><option value="승인완료">승인완료</option><option value="승인대기">승인대기</option><option value="반려">반려</option><option value="자동승인">자동승인</option></select></div>
                         <button type="submit" class="btn btn-search">검색</button>
                     </form>
@@ -387,10 +411,11 @@
                 </div>
                 <table id="recordTable">
                     <thead><tr>
-                        <th>심사자명</th>
                         <th>부서</th>
-                        <th>직급</th>
-                        <th>교육명</th>
+                        <th>성명</th>
+                        <th>교육사업명</th>
+                        <th>세부과정(프로그램)명</th>
+                        <th>교육기간</th>
                         <th>이수일</th>
                         <th>필수여부</th>
                         <th>인정시간</th>
@@ -430,6 +455,7 @@
                     <div class="search-area">
                         <form id="personalReportForm">
                             <div class="form-group"><label>조회기간</label><input type="date" id="personalStartDate"> ~ <input type="date" id="personalEndDate"></div>
+                            <div class="form-group"><label for="personalDeptSelect">부서</label><select id="personalDeptSelect"><option value="">전체 부서</option><option value="신약심사부">신약심사부</option><option value="허가총괄부">허가총괄부</option><option value="생물의약품부">생물의약품부</option><option value="품질안전부">품질안전부</option><option value="임상정책부">임상정책부</option></select></div>
                             <div class="form-group"><label for="personalAuditorInput">심사자</label><input type="text" id="personalAuditorInput" placeholder="심사자 이름을 입력하세요 (예: 홍길동, 김철수)"></div>
                             <button type="submit" class="btn btn-search">조회</button><button type="reset" class="btn btn-secondary">초기화</button>
                         </form>
@@ -443,7 +469,9 @@
                             <thead><tr>
                                 <th>부서</th>
                                 <th>성명</th>
-                                <th>교육과정</th>
+                                <th>교육사업명</th>
+                                <th>세부과정(프로그램)명</th>
+                                <th>교육기간</th>
                                 <th>이수일자</th>
                                 <th>인정시간</th>
                                 <th>상태</th>
@@ -474,7 +502,9 @@
                             <thead><tr>
                                 <th>부서</th>
                                 <th>성명</th>
-                                <th>교육과정</th>
+                                <th>교육사업명</th>
+                                <th>세부과정(프로그램)명</th>
+                                <th>교육기간</th>
                                 <th>이수일자</th>
                                 <th>인정시간</th>
                                 <th>상태</th>
@@ -516,9 +546,9 @@
 
         // localStorage에서 데이터 로드 또는 초기화
         const initData = () => {
-            // localStorage 초기화 (디버깅용)
-            localStorage.removeItem('eduDb');
-            localStorage.removeItem('currentUser');
+            // localStorage 초기화 (디버깅용) - 주석 처리
+            // localStorage.removeItem('eduDb');
+            // localStorage.removeItem('currentUser');
             
             const savedDb = localStorage.getItem('eduDb');
             if (savedDb) {
@@ -963,6 +993,7 @@
             filteredCourses.forEach(c => {
                 const row = tbody.insertRow();
                 row.dataset.id = c.id;
+                row.style.cursor = 'pointer';
                 
                 // 데이터 소스 표시
                 let dataSourceDisplay = '';
@@ -1006,8 +1037,14 @@
         const renderRecordTable = () => {
             const dept = document.getElementById('deptSelect')?.value || '전체';
             const nameFilter = document.getElementById('auditorNameInput')?.value || '';
+            const courseNameFilter = document.getElementById('courseNameSearchInput')?.value || '';
+            const courseDescFilter = document.getElementById('courseDescSearchInput')?.value || '';
+            const coursePeriodStart = document.getElementById('coursePeriodStartInput')?.value || '';
+            const coursePeriodEnd = document.getElementById('coursePeriodEndInput')?.value || '';
+            const completionStart = document.getElementById('completionStartInput')?.value || '';
+            const completionEnd = document.getElementById('completionEndInput')?.value || '';
             const statusFilter = document.getElementById('statusSelect')?.value || '전체';
-            console.log('renderRecordTable 호출 - 부서:', dept, '이름 필터:', nameFilter, '상태 필터:', statusFilter);
+            console.log('renderRecordTable 호출 - 부서:', dept, '이름 필터:', nameFilter, '교육사업명 필터:', courseNameFilter, '세부과정명 필터:', courseDescFilter, '교육기간:', coursePeriodStart, '~', coursePeriodEnd, '이수일:', completionStart, '~', completionEnd, '상태 필터:', statusFilter);
             
             const tbody = document.querySelector('#recordTable tbody');
             tbody.innerHTML = '';
@@ -1065,8 +1102,7 @@
                             return result;
                         })(),
                         auditorName: name, 
-                        auditorDept: auditor.info.dept, 
-                        auditorRank: auditor.info.rank,
+                        auditorDept: auditor.info.dept,
                         // 승인대기 상태면 항상 EXTERNAL로 표시, 아니면 원본 dataSource 사용
                         dataSource: (() => {
                             const originalApprove = r.approve;
@@ -1091,6 +1127,49 @@
                         } else if (statusFilter === '자동승인') {
                             return rec.approve === '승인' && rec.dataSource === 'API';
                         }
+                        return true;
+                    });
+                }
+                
+                // 교육사업명 필터링
+                if (courseNameFilter) {
+                    recordsToDisplay = recordsToDisplay.filter(rec => 
+                        rec.courseName && rec.courseName.toLowerCase().includes(courseNameFilter.toLowerCase())
+                    );
+                }
+                
+                // 세부과정명 필터링
+                if (courseDescFilter) {
+                    recordsToDisplay = recordsToDisplay.filter(rec => 
+                        rec.courseDesc && rec.courseDesc.toLowerCase().includes(courseDescFilter.toLowerCase())
+                    );
+                }
+                
+                // 교육기간 필터링
+                if (coursePeriodStart || coursePeriodEnd) {
+                    recordsToDisplay = recordsToDisplay.filter(rec => {
+                        if (!rec.courseStartDate && !rec.courseEndDate) return false;
+                        
+                        const courseStart = rec.courseStartDate;
+                        const courseEnd = rec.courseEndDate;
+                        
+                        if (coursePeriodStart && courseEnd && courseEnd < coursePeriodStart) return false;
+                        if (coursePeriodEnd && courseStart && courseStart > coursePeriodEnd) return false;
+                        
+                        return true;
+                    });
+                }
+                
+                // 이수일 필터링
+                if (completionStart || completionEnd) {
+                    recordsToDisplay = recordsToDisplay.filter(rec => {
+                        if (!rec.date) return false;
+                        
+                        const completionDate = rec.date;
+                        
+                        if (completionStart && completionDate < completionStart) return false;
+                        if (completionEnd && completionDate > completionEnd) return false;
+                        
                         return true;
                     });
                 }
@@ -1159,10 +1238,11 @@
                     }
                     
                     row.innerHTML = `
-                        <td>${rec.auditorName || '-'}</td>
                         <td>${rec.auditorDept || '-'}</td>
-                        <td>${rec.auditorRank || '-'}</td>
+                        <td>${rec.auditorName || '-'}</td>
                         <td>${rec.courseName || '-'}</td>
+                        <td>${rec.courseDesc || '-'}</td>
+                        <td>${rec.courseStartDate ? `${rec.courseStartDate} ~ ${rec.courseEndDate}` : '-'}</td>
                         <td>${rec.date || '-'}</td>
                         <td><span class="status ${rec.courseType === '필수' ? 'ok' : 'wait'}">${rec.courseType || '-'}</span></td>
                         <td>${rec.courseHours || 0}</td>
@@ -1175,9 +1255,9 @@
         };
 
         // 개인별 보고서 렌더링
-        const renderPersonalReport = (startDate, endDate, auditorName) => {
+        const renderPersonalReport = (startDate, endDate, deptFilter, auditorName) => {
             console.log('=== 개인별 보고서 렌더링 시작 ===');
-            console.log('startDate:', startDate, 'endDate:', endDate, 'auditorName:', auditorName);
+            console.log('startDate:', startDate, 'endDate:', endDate, 'deptFilter:', deptFilter, 'auditorName:', auditorName);
             
             const tbody = document.querySelector('#personalReportTable tbody');
             if (!tbody) {
@@ -1186,38 +1266,35 @@
             }
             tbody.innerHTML = '';
 
-            const currentUser = getCurrentUser();
-            console.log('현재 사용자:', currentUser);
-            
-            const targetAuditor = auditorName || currentUser.userName;
-            console.log('대상 심사자:', targetAuditor);
-            
-            const auditor = db.auditors[targetAuditor];
-            console.log('찾은 심사자 데이터:', auditor);
-            
-            if (!auditor || !auditor.records) {
-                console.log('심사자 데이터가 없습니다');
-                tbody.innerHTML = '<tr><td colspan="7">해당 심사자의 이수 기록이 없습니다.</td></tr>';
-                document.getElementById('personalReportSummary').innerHTML = '<strong>검색 결과:</strong> 0건';
-                return;
-            }
-
             let count = 0;
             let totalHours = 0;
             let completedCount = 0;
 
-            auditor.records.forEach(record => {
+            // 부서별로 모든 심사자 검색
+            Object.entries(db.auditors).forEach(([name, auditor]) => {
+                // 부서 필터링
+                const deptMatch = !deptFilter || deptFilter === '' ? true : auditor.info.dept === deptFilter;
+                // 심사자 이름 필터링
+                const nameMatch = !auditorName || auditorName === '' ? true : name.toLowerCase().includes(auditorName.toLowerCase());
+                
+                console.log(`심사자 ${name}: 부서=${auditor.info.dept}, deptFilter=${deptFilter}, deptMatch=${deptMatch}, nameMatch=${nameMatch}`);
+                
+                if (auditor.records && deptMatch && nameMatch) {
+                    auditor.records.forEach(record => {
                 const course = db.courses.find(c => c.id === record.courseId);
                 if (course) {
                     const recordDate = record.date;
                     const isInRange = (!startDate || recordDate >= startDate) && (!endDate || recordDate <= endDate);
+                    const isApproved = record.approve === '승인';
                     
-                    if (isInRange) {
+                    if (isInRange && isApproved) {
                         const row = tbody.insertRow();
                         row.innerHTML = `
                             <td>${auditor.info.dept}</td>
-                            <td>${targetAuditor}</td>
+                            <td>${name}</td>
                             <td>${course.name}</td>
+                            <td>${course.desc || '-'}</td>
+                            <td>${course.startDate ? `${course.startDate} ~ ${course.endDate}` : '-'}</td>
                             <td>${recordDate}</td>
                             <td>${course.hours}시간</td>
                             <td><span class="status ${record.approve === '승인' ? 'ok' : record.approve === '반려' ? 'error' : 'wait'}">${record.approve || '승인대기'}</span></td>
@@ -1225,10 +1302,16 @@
                         `;
                         count++;
                         totalHours += course.hours;
-                        if (record.approve === '승인') completedCount++;
+                        completedCount++;
                     }
                 }
+                    });
+                }
             });
+
+            if (count === 0) {
+                tbody.innerHTML = '<tr><td colspan="9">검색 조건에 맞는 이수 기록이 없습니다.</td></tr>';
+            }
 
             document.getElementById('personalReportSummary').innerHTML = `
                 <strong>검색 결과:</strong> 총 ${count}건 | 
@@ -1273,13 +1356,16 @@
                         if (course) {
                             const recordDate = record.date;
                             const isInRange = (!startDate || recordDate >= startDate) && (!endDate || recordDate <= endDate);
+                            const isApproved = record.approve === '승인';
                             
-                            if (isInRange) {
+                            if (isInRange && isApproved) {
                                 const row = tbody.insertRow();
                                 row.innerHTML = `
                                     <td>${auditor.info.dept}</td>
                                     <td>${name}</td>
                                     <td>${course.name}</td>
+                                    <td>${course.desc || '-'}</td>
+                                    <td>${course.startDate ? `${course.startDate} ~ ${course.endDate}` : '-'}</td>
                                     <td>${recordDate}</td>
                                     <td>${course.hours}시간</td>
                                     <td><span class="status ${record.approve === '승인' ? 'ok' : record.approve === '반려' ? 'error' : 'wait'}">${record.approve || '승인대기'}</span></td>
@@ -1289,10 +1375,8 @@
                                 totalHours += course.hours;
                                 deptStats[auditor.info.dept].total++;
                                 deptStats[auditor.info.dept].hours += course.hours;
-                                if (record.approve === '승인') {
-                                    completedCount++;
-                                    deptStats[auditor.info.dept].completed++;
-                                }
+                                completedCount++;
+                                deptStats[auditor.info.dept].completed++;
                             }
                         }
                     });
@@ -1300,7 +1384,7 @@
             });
 
             if (count === 0) {
-                tbody.innerHTML = '<tr><td colspan="7">검색 조건에 맞는 이수 기록이 없습니다.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9">검색 조건에 맞는 이수 기록이 없습니다.</td></tr>';
             }
 
             let summaryText = `<strong>검색 결과:</strong> 총 ${count}건 | <strong>총 이수시간:</strong> ${totalHours}시간 | <strong>승인 완료:</strong> ${completedCount}건`;
@@ -1360,12 +1444,16 @@
                             <span>${auditor?.info?.dept || '-'}</span>
                         </div>
                         <div class="info-item">
-                            <label>직급:</label>
-                            <span>${auditor?.info?.rank || '-'}</span>
+                            <label>교육사업명:</label>
+                            <span>${course?.name || '-'}</span>
                         </div>
                         <div class="info-item">
-                            <label>교육명:</label>
-                            <span>${course?.name || '-'}</span>
+                            <label>세부과정(프로그램)명:</label>
+                            <span>${course?.desc || '-'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>교육기간:</label>
+                            <span>${course?.startDate ? `${course.startDate} ~ ${course.endDate}` : '-'}</span>
                         </div>
                         <div class="info-item">
                             <label>이수일자:</label>
@@ -1976,8 +2064,8 @@
             const endDateFilter = document.getElementById('endDateInput').value;
             
             renderCourseTable(c => {
-                // 교육명 필터
-                const nameMatch = c.name.toLowerCase().includes(nameFilter);
+                // 교육사업명 필터
+                const nameMatch = !nameFilter || c.name.toLowerCase().includes(nameFilter);
                 
                 // 필수여부 필터
                 const typeMatch = typeFilter === '전체' || c.type === typeFilter;
@@ -1999,6 +2087,32 @@
         });
         document.getElementById('courseSearchForm').addEventListener('reset', () => setTimeout(renderCourseTable, 0));
         
+        // 교육과정 테이블 행 클릭 이벤트
+        document.addEventListener('click', function(e) {
+            const courseTable = document.getElementById('courseTable');
+            if (courseTable && courseTable.contains(e.target)) {
+                const row = e.target.closest('tr');
+                if (row && row.dataset.id && !e.target.closest('.manage-buttons')) {
+                    const courseId = row.dataset.id;
+                    console.log('교육과정 행 클릭됨, ID:', courseId, '타입:', typeof courseId);
+                    console.log('db.courses 전체:', db.courses);
+                    console.log('db.courses ID들:', db.courses.map(c => ({ id: c.id, type: typeof c.id })));
+                    
+                    const course = db.courses.find(c => c.id == courseId); // == 사용 (타입 변환)
+                    if (course) {
+                        console.log('교육과정 데이터 찾음:', course);
+                        showCourseDetailPopup(course);
+                    } else {
+                        console.log('교육과정 데이터를 찾을 수 없음');
+                        // 모든 교육과정 ID와 비교해보기
+                        db.courses.forEach(c => {
+                            console.log(`비교: ${c.id} (${typeof c.id}) == ${courseId} (${typeof courseId}) = ${c.id == courseId}`);
+                        });
+                    }
+                }
+            }
+        });
+        
         // API 동기화 버튼
         document.getElementById('sync-api-btn').addEventListener('click', () => {
             syncWithAPI();
@@ -2010,14 +2124,24 @@
         });
 
         
+        // Bulk Insert 버튼 이벤트
+        document.getElementById('bulk-insert-btn').addEventListener('click', () => {
+            showBulkInsertModal();
+        });
+
+        // 권한 전환 버튼 이벤트
+        document.getElementById('switchUserBtn').addEventListener('click', () => {
+            switchUserRole();
+        });
+
         document.getElementById('add-course-btn').addEventListener('click', () => {
             try {
                 // 현재 로그인한 사용자 정보 가져오기
                 const currentUser = getCurrentUser();
                 
             const formHtml = `
-                <div class="form-group"><label for="modal-name">교육명</label><input type="text" id="modal-name" name="name" required></div>
-                <div class="form-group"><label for="modal-desc">교육 정보</label><textarea id="modal-desc" name="desc" rows="3" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;"></textarea></div>
+                <div class="form-group"><label for="modal-name">교육사업명</label><input type="text" id="modal-name" name="name" required></div>
+                <div class="form-group"><label for="modal-desc">세부과정(프로그램)명</label><textarea id="modal-desc" name="desc" rows="3" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;"></textarea></div>
                 <div class="form-group"><label for="modal-startDate">시작일</label><input type="date" id="modal-startDate" name="startDate" required></div>
                 <div class="form-group"><label for="modal-endDate">종료일</label><input type="date" id="modal-endDate" name="endDate" required></div>
                 <div class="form-group"><label for="modal-type">필수여부</label><select id="modal-type" name="type"><option>필수</option><option>선택</option></select></div>
@@ -2042,8 +2166,8 @@
             if (btn.classList.contains('btn-edit-course')) {
                 const course = db.courses.find(c => c.id == id);
                 const formHtml = `
-                    <div class="form-group"><label for="modal-name">교육명</label><input type="text" id="modal-name" name="name" required></div>
-                    <div class="form-group"><label for="modal-desc">교육 정보</label><textarea id="modal-desc" name="desc" rows="3" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;"></textarea></div>
+                    <div class="form-group"><label for="modal-name">교육사업명</label><input type="text" id="modal-name" name="name" required></div>
+                    <div class="form-group"><label for="modal-desc">세부과정(프로그램)명</label><textarea id="modal-desc" name="desc" rows="3" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;"></textarea></div>
                     <div class="form-group"><label for="modal-startDate">시작일</label><input type="date" id="modal-startDate" name="startDate" required></div>
                     <div class="form-group"><label for="modal-endDate">종료일</label><input type="date" id="modal-endDate" name="endDate" required></div>
                     <div class="form-group"><label for="modal-type">필수여부</label><select id="modal-type" name="type"><option>필수</option><option>선택</option></select></div>
@@ -2065,6 +2189,12 @@
             e.preventDefault();
             const dept = document.getElementById('deptSelect').value;
             const nameFilter = document.getElementById('auditorNameInput').value.toLowerCase();
+            const courseNameFilter = document.getElementById('courseNameSearchInput').value.toLowerCase();
+            const courseDescFilter = document.getElementById('courseDescSearchInput').value.toLowerCase();
+            const coursePeriodStart = document.getElementById('coursePeriodStartInput').value;
+            const coursePeriodEnd = document.getElementById('coursePeriodEndInput').value;
+            const completionStart = document.getElementById('completionStartInput').value;
+            const completionEnd = document.getElementById('completionEndInput').value;
             const statusFilter = document.getElementById('statusSelect').value;
             currentAuditor = nameFilter; // 심사자 이름으로 설정
             currentStatus = statusFilter; // 상태 필터 설정
@@ -2268,8 +2398,9 @@
             e.preventDefault();
             const startDate = document.getElementById('personalStartDate').value;
             const endDate = document.getElementById('personalEndDate').value;
+            const deptFilter = document.getElementById('personalDeptSelect').value;
             const auditorName = document.getElementById('personalAuditorInput').value.trim();
-            renderPersonalReport(startDate, endDate, auditorName);
+            renderPersonalReport(startDate, endDate, deptFilter, auditorName);
         });
         personalReportForm.addEventListener('reset', () => {
             document.getElementById('personalReportSummary').innerHTML = '';
@@ -2313,7 +2444,7 @@
             const data = [];
             
             // 헤더 추가
-            const headers = ['부서', '성명', '교육과정', '이수일자', '인정시간', '상태', '데이터소스'];
+            const headers = ['부서', '성명', '교육사업명', '세부과정(프로그램)명', '교육기간', '이수일자', '인정시간', '상태', '데이터소스'];
             data.push(headers);
             
             // 데이터 추가
@@ -2342,7 +2473,7 @@
             const data = [];
             
             // 헤더 추가
-            const headers = ['부서', '성명', '교육과정', '이수일자', '인정시간', '상태', '데이터소스'];
+            const headers = ['부서', '성명', '교육사업명', '세부과정(프로그램)명', '교육기간', '이수일자', '인정시간', '상태', '데이터소스'];
             data.push(headers);
             
             // 데이터 추가
@@ -2444,8 +2575,22 @@
             // 기본값 반환 (기존 데이터에 있는 심사자로 설정)
             return {
                 orgName: "신약심사부",
-                userName: "홍길동"
+                userName: "홍길동",
+                role: "EDUCATION_MANAGER", // 교육 관리 권한
+                permissions: ["COURSE_MANAGE", "BULK_INSERT", "RECORD_MANAGE"]
             };
+        };
+
+        // 권한 체크 함수
+        const hasPermission = (permission) => {
+            const currentUser = getCurrentUser();
+            return currentUser.permissions && currentUser.permissions.includes(permission);
+        };
+
+        // 교육 관리 권한 체크
+        const isEducationManager = () => {
+            const currentUser = getCurrentUser();
+            return currentUser.role === "EDUCATION_MANAGER" || hasPermission("COURSE_MANAGE");
         };
 
         const updateUserInfo = () => {
@@ -2757,9 +2902,145 @@
             });
         });
 
+        // --- 교육과정 상세 정보 팝업 ---
+        const showCourseDetailPopup = (course) => {
+            console.log('showCourseDetailPopup 호출됨, course:', course);
+            // 별도 HTML 파일을 팝업으로 열기
+            const popup = window.open('course-detail.html', 'courseDetailPopup', 'width=900,height=700,scrollbars=yes,resizable=yes');
+            
+            if (!popup) {
+                console.error('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
+                alert('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
+                return;
+            }
+            
+            // 팝업이 로드된 후 데이터 전송
+            popup.addEventListener('load', () => {
+                console.log('팝업 로드 완료, 데이터 전송 중...');
+                popup.postMessage({
+                    type: 'COURSE_DETAIL',
+                    course: course
+                }, '*');
+            });
+            
+            // 팝업 로드 실패 시 처리
+            setTimeout(() => {
+                if (popup.closed) {
+                    console.log('팝업이 닫혔습니다.');
+                } else {
+                    console.log('팝업이 열렸습니다.');
+                }
+            }, 1000);
+        };
+
+        // --- Bulk Insert 기능 (엑셀 파일 처리) ---
+        const showBulkInsertModal = () => {
+            if (!isEducationManager()) {
+                alert('교육 관리 권한이 필요합니다.');
+                return;
+            }
+
+            // 별도 HTML 파일을 팝업으로 열기
+            const popup = window.open('bulk-insert.html', 'bulkInsertPopup', 'width=900,height=700,scrollbars=yes,resizable=yes');
+        };
+
+        // 팝업에서 전달받은 데이터 처리
+        const handleBulkInsertData = (coursesData) => {
+            if (!isEducationManager()) {
+                alert('교육 관리 권한이 필요합니다.');
+                return;
+            }
+
+            if (coursesData.length === 0) {
+                alert('등록할 교육과정이 없습니다.');
+                return;
+            }
+
+            // 교육과정 추가
+            const newCourses = coursesData.map((course, index) => ({
+                id: db.courses.length + index + 1,
+                name: course.name,
+                desc: course.desc,
+                startDate: course.startDate,
+                endDate: course.endDate,
+                type: course.type,
+                hours: course.hours,
+                regDate: new Date().toISOString().slice(0, 10),
+                dataSource: "EXTERNAL",
+                orgName: course.orgName,
+                registrant: course.registrant
+            }));
+
+            db.courses.push(...newCourses);
+            localStorage.setItem('eduDb', JSON.stringify(db));
+            
+            alert(`${newCourses.length}개의 교육과정이 성공적으로 등록되었습니다.`);
+            loadCourses();
+        };
+
+        // 권한에 따른 UI 업데이트
+        const updateUIByPermission = () => {
+            const bulkInsertBtn = document.getElementById('bulk-insert-btn');
+            
+            if (isEducationManager()) {
+                if (bulkInsertBtn) {
+                    bulkInsertBtn.style.display = 'inline-block';
+                }
+            } else {
+                if (bulkInsertBtn) {
+                    bulkInsertBtn.style.display = 'none';
+                }
+            }
+        };
+
+        // 사용자 권한 전환 기능
+        const switchUserRole = () => {
+            const currentUser = getCurrentUser();
+            const isManager = isEducationManager();
+            
+            if (isManager) {
+                // 교육 관리자에서 일반 사용자로 전환
+                const newUser = {
+                    orgName: "신약심사부",
+                    userName: "김일반",
+                    role: "AUDITOR",
+                    permissions: ["RECORD_MANAGE"]
+                };
+                localStorage.setItem('currentUser', JSON.stringify(newUser));
+            } else {
+                // 일반 사용자에서 교육 관리자로 전환
+                const newUser = {
+                    orgName: "신약심사부",
+                    userName: "홍길동",
+                    role: "EDUCATION_MANAGER",
+                    permissions: ["COURSE_MANAGE", "BULK_INSERT", "RECORD_MANAGE"]
+                };
+                localStorage.setItem('currentUser', JSON.stringify(newUser));
+            }
+            
+            updateUserInfo();
+            updateUIByPermission();
+            loadCourses(); // 테이블 새로고침
+        };
+
+        // 팝업 메시지 리스너
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'bulkInsertCourses') {
+                handleBulkInsertData(event.data.data);
+            } else if (event.data.type === 'EDIT_COURSE') {
+                // 교육과정 수정 요청 처리
+                const course = event.data.course;
+                if (course) {
+                    // 기존 수정 모달 열기 로직 사용
+                    showModal('교육과정 수정', 'course', course);
+                }
+            }
+        });
+
         // --- 앱 시작 ---
         initData();
         updateUserInfo();
+        updateUIByPermission();
         
         // 초기 검색 결과 개수 표시
         const searchResultInfo = document.getElementById('searchResultInfo');

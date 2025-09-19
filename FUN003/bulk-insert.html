@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>교육과정 대량 등록</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f7f8fa; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: #2563eb; color: white; padding: 20px; text-align: center; }
+        .header h1 { font-size: 24px; margin: 0; }
+        .content { padding: 30px; }
+        .info-box { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 20px; margin-bottom: 30px; }
+        .info-box h3 { color: #2563eb; margin-bottom: 15px; font-size: 18px; }
+        .info-box ul { margin: 0; padding-left: 20px; }
+        .info-box li { margin-bottom: 8px; color: #374151; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #374151; }
+        .form-group input[type="file"] { width: 100%; padding: 12px; border: 2px dashed #d1d5db; border-radius: 8px; background: #f9fafb; cursor: pointer; }
+        .form-group input[type="file"]:hover { border-color: #2563eb; background: #f0f9ff; }
+        .btn { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin-right: 10px; }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-secondary { background: #6b7280; color: white; }
+        .btn-secondary:hover { background: #4b5563; }
+        .btn-success { background: #059669; color: white; }
+        .btn-success:hover { background: #047857; }
+        .preview-section { margin-top: 30px; display: none; }
+        .preview-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .preview-table th, .preview-table td { padding: 12px; text-align: left; border: 1px solid #e5e7eb; }
+        .preview-table th { background: #f3f4f6; font-weight: 600; }
+        .preview-table tr:nth-child(even) { background: #f9fafb; }
+        .template-section { margin-top: 20px; padding: 20px; background: #f9fafb; border-radius: 8px; }
+        .template-section h4 { margin-bottom: 15px; color: #374151; }
+        .error { color: #dc2626; background: #fef2f2; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .success { color: #059669; background: #f0fdf4; padding: 15px; border-radius: 8px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 교육과정 대량 등록</h1>
+        </div>
+        <div class="content">
+            <div class="info-box">
+                <h3>📋 등록 안내</h3>
+                <ul>
+                    <li>Excel 파일(.xlsx)을 업로드하여 여러 교육과정을 한 번에 등록할 수 있습니다.</li>
+                    <li>파일 형식: 교육사업명, 세부과정(프로그램)명, 시작일, 종료일, 필수여부, 인정시간, 교육기관, 등록자 순서로 작성해주세요.</li>
+                    <li>필수여부는 '필수' 또는 '선택'으로 입력해주세요.</li>
+                    <li>시작일과 종료일은 YYYY-MM-DD 형식으로 입력해주세요.</li>
+                </ul>
+            </div>
+            
+            <div class="template-section">
+                <h4>📄 엑셀 템플릿 다운로드</h4>
+                <p>아래 버튼을 클릭하여 템플릿 파일을 다운로드하고, 데이터를 입력한 후 업로드해주세요.</p>
+                <button id="downloadTemplate" class="btn btn-success">템플릿 다운로드</button>
+            </div>
+            
+            <div class="form-group">
+                <label for="excelFileInput">Excel 파일 선택</label>
+                <input type="file" id="excelFileInput" accept=".xlsx" />
+            </div>
+            
+            <div id="previewSection" class="preview-section">
+                <h4>미리보기</h4>
+                <div id="previewTable"></div>
+                <div style="margin-top: 20px;">
+                    <button id="confirmInsert" class="btn btn-primary">등록하기</button>
+                    <button id="cancelInsert" class="btn btn-secondary">취소</button>
+                </div>
+            </div>
+            
+            <div id="messageArea"></div>
+        </div>
+    </div>
+    
+    <script>
+        let coursesData = [];
+        
+        // 템플릿 다운로드
+        document.getElementById('downloadTemplate').addEventListener('click', function() {
+            const templateData = [
+                ['교육사업명', '세부과정(프로그램)명', '시작일', '종료일', '필수여부', '인정시간', '교육기관', '등록자'],
+                ['의약품 안전성 모니터링', '의약품 안전성 모니터링 및 부작용 관리 실무', '2025-03-15', '2025-03-20', '필수', '6', '외부 교육기관', '김안전'],
+                ['의약품 품질관리 전문가 과정', '의약품 품질관리 전문가 양성을 위한 심화 과정', '2025-05-01', '2025-05-15', '선택', '20', '외부 교육기관', '이품질']
+            ];
+            
+            const ws = XLSX.utils.aoa_to_sheet(templateData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '교육과정');
+            
+            XLSX.writeFile(wb, '교육과정_대량등록_템플릿.xlsx');
+        });
+        
+        // 파일 업로드 처리
+        document.getElementById('excelFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    if (jsonData.length < 2) {
+                        showMessage('파일에 데이터가 없습니다.', 'error');
+                        return;
+                    }
+                    
+                    // 헤더 제거하고 데이터 파싱
+                    const headers = jsonData[0];
+                    coursesData = [];
+                    
+                    for (let i = 1; i < jsonData.length; i++) {
+                        const row = jsonData[i];
+                        if (row.length >= 6) {
+                            coursesData.push({
+                                name: row[0] || '',
+                                desc: row[1] || '',
+                                startDate: row[2] || '',
+                                endDate: row[3] || '',
+                                type: row[4] || '',
+                                hours: parseInt(row[5]) || 0,
+                                orgName: row[6] || '외부 교육기관',
+                                registrant: row[7] || '홍길동'
+                            });
+                        }
+                    }
+                    
+                    if (coursesData.length > 0) {
+                        showPreview();
+                    } else {
+                        showMessage('유효한 데이터를 찾을 수 없습니다.', 'error');
+                    }
+                } catch (error) {
+                    showMessage('파일을 읽는 중 오류가 발생했습니다: ' + error.message, 'error');
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        });
+        
+        // 미리보기 표시
+        function showPreview() {
+            const previewSection = document.getElementById('previewSection');
+            const previewTable = document.getElementById('previewTable');
+            
+                            let tableHtml = '<table class="preview-table">' +
+                                '<thead>' +
+                                    '<tr>' +
+                                        '<th>교육사업명</th>' +
+                                        '<th>시작일</th>' +
+                                        '<th>종료일</th>' +
+                                        '<th>필수여부</th>' +
+                                        '<th>인정시간</th>' +
+                                        '<th>교육기관</th>' +
+                                    '</tr>' +
+                                '</thead>' +
+                                '<tbody>';
+            
+            coursesData.forEach(function(course, index) {
+                tableHtml += '<tr>' +
+                    '<td>' + course.name + '</td>' +
+                    '<td>' + course.startDate + '</td>' +
+                    '<td>' + course.endDate + '</td>' +
+                    '<td>' + course.type + '</td>' +
+                    '<td>' + course.hours + '시간</td>' +
+                    '<td>' + course.orgName + '</td>' +
+                    '</tr>';
+            });
+            
+            tableHtml += '</tbody></table>';
+            previewTable.innerHTML = tableHtml;
+            previewSection.style.display = 'block';
+            
+            showMessage(coursesData.length + '개의 교육과정을 찾았습니다. 미리보기를 확인하고 등록해주세요.', 'success');
+        }
+        
+        // 등록 확인
+        document.getElementById('confirmInsert').addEventListener('click', function() {
+            if (coursesData.length === 0) {
+                showMessage('등록할 데이터가 없습니다.', 'error');
+                return;
+            }
+            
+            // 부모 창에 데이터 전달
+            window.opener.postMessage({
+                type: 'bulkInsertCourses',
+                data: coursesData
+            }, '*');
+            
+            showMessage('교육과정이 성공적으로 등록되었습니다!', 'success');
+            
+            setTimeout(function() {
+                window.close();
+            }, 2000);
+        });
+        
+        // 취소
+        document.getElementById('cancelInsert').addEventListener('click', function() {
+            window.close();
+        });
+        
+        // 메시지 표시
+        function showMessage(message, type) {
+            const messageArea = document.getElementById('messageArea');
+            messageArea.innerHTML = '<div class="' + type + '">' + message + '</div>';
+        }
+    </script>
+</body>
+</html>
